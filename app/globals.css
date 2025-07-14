@@ -3,15 +3,12 @@
 @tailwind utilities;
 
 body {
-  font-family: "Montserrat", sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
-  }
-  .font-montserrat {
-    font-family: "Montserrat", sans-serif;
   }
 }
 
@@ -92,6 +89,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-montserrat;
+    @apply bg-background text-foreground;
   }
 }
