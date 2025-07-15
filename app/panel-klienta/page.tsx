@@ -23,6 +23,10 @@ import {
   CheckCircle,
 } from "lucide-react"
 
+/**
+ * Lightweight placeholder until the full client dashboard is finished.
+ * Keeps the `/panel-klienta` route compiling and deployable.
+ */
 export default function PanelKlientaPage() {
   const { user, isAuthenticated } = useAuth()
   const [activeTab, setActiveTab] = useState("sprawy")
@@ -55,13 +59,14 @@ export default function PanelKlientaPage() {
       analysis: {
         id: "1",
         caseId: "1",
-        content: "Otrzymany nakaz zapłaty jest prawidłowy pod względem formalnym. Został wydany przez właściwy sąd i zawiera wszystkie wymagane elementy. Jednakże istnieją podstawy do złożenia sprzeciwu, szczególnie w zakresie wysokości dochodzonej kwoty oraz odsetek. Analiza dokumentów wskazuje na możliwość zakwestionowania części roszczeń...",
+        content:
+          "Otrzymany nakaz zapłaty jest prawidłowy pod względem formalnym. Został wydany przez właściwy sąd i zawiera wszystkie wymagane elementy. Jednakże istnieją podstawy do złożenia sprzeciwu, szczególnie w zakresie wysokości dochodzonej kwoty oraz odsetek. Analiza dokumentów wskazuje na możliwość zakwestionowania części roszczeń...",
         summary: "Nakaz zapłaty formalnie prawidłowy, ale istnieją podstawy do sprzeciwu",
         recommendations: [
           "Złożenie sprzeciwu w terminie 14 dni od doręczenia",
           "Przygotowanie dowodów na poparcie stanowiska",
           "Rozważenie ugody pozasądowej",
-          "Analiza wysokości odsetek i kosztów"
+          "Analiza wysokości odsetek i kosztów",
         ],
         possibleDocuments: [
           {
@@ -70,7 +75,7 @@ export default function PanelKlientaPage() {
             description: "Profesjonalnie przygotowany sprzeciw z uzasadnieniem prawnym",
             price: 89,
             estimatedTime: "24h",
-            category: "Pisma procesowe"
+            category: "Pisma procesowe",
           },
           {
             id: "2",
@@ -78,7 +83,7 @@ export default function PanelKlientaPage() {
             description: "Wniosek o rozłożenie należności na raty płatne",
             price: 59,
             estimatedTime: "12h",
-            category: "Wnioski"
+            category: "Wnioski",
           },
           {
             id: "3",
@@ -86,12 +91,13 @@ export default function PanelKlientaPage() {
             description: "Projekt ugody pozasądowej z wierzycielem",
             price: 79,
             estimatedTime: "18h",
-            category: "Ugody"
+            category: "Ugody",
           },
         ],
         price: 59,
         status: "completed",
-        previewContent: "Otrzymany nakaz zapłaty jest prawidłowy pod względem formalnym. Został wydany przez właściwy sąd i zawiera wszystkie wymagane elementy...",
+        previewContent:
+          "Otrzymany nakaz zapłaty jest prawidłowy pod względem formalnym. Został wydany przez właściwy sąd i zawiera wszystkie wymagane elementy...",
         createdAt: new Date("2024-01-16"),
       },
       generatedDocuments: [],
@@ -153,19 +159,17 @@ export default function PanelKlientaPage() {
   }
 
   if (!isAuthenticated) {
-    return <div>Ładowanie...</div>
+    return <div className="p-8">Ładowanie…</div>
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-montserrat">
+    <div className="min-h-screen flex flex-col font-montserrat bg-gray-50">
       <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} showMenuButton />
 
       <div className="flex flex-1">
         {/* Sidebar */}
         <div
-          className={`bg-white shadow-lg transition-all duration-300 ${
-            sidebarOpen ? "w-64" : "w-64 hidden lg:block"
-          }`}
+          className={`bg-white shadow-lg transition-all duration-300 ${sidebarOpen ? "w-64" : "w-64 hidden lg:block"}`}
         >
           <div className="p-6">
             <div className="flex items-center mb-6">
@@ -281,7 +285,7 @@ export default function PanelKlientaPage() {
                           <div className="bg-gray-50 p-4 rounded-lg mb-4">
                             <h5 className="font-medium mb-2">Podsumowanie:</h5>
                             <p className="text-sm text-gray-700 mb-3">{case_.analysis.summary}</p>
-                            
+
                             <div className="mb-3">
                               <h6 className="text-sm font-medium mb-1">Zalecenia:</h6>
                               <ul className="text-sm text-gray-600 space-y-1">
@@ -295,8 +299,8 @@ export default function PanelKlientaPage() {
                             </div>
 
                             <div className="flex space-x-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleViewFullAnalysis(case_.analysis!.id)}
                               >
@@ -312,7 +316,10 @@ export default function PanelKlientaPage() {
                               <h5 className="text-sm font-medium">Dostępne pisma do zamówienia:</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {case_.analysis.possibleDocuments.map((doc) => (
-                                  <Card key={doc.id} className="border border-blue-200 hover:shadow-md transition-shadow">
+                                  <Card
+                                    key={doc.id}
+                                    className="border border-blue-200 hover:shadow-md transition-shadow"
+                                  >
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start mb-2">
                                         <h6 className="text-sm font-medium leading-tight">{doc.name}</h6>
@@ -328,8 +335,8 @@ export default function PanelKlientaPage() {
                                           {doc.category}
                                         </Badge>
                                       </div>
-                                      <Button 
-                                        size="sm" 
+                                      <Button
+                                        size="sm"
                                         className="w-full text-xs"
                                         onClick={() => handlePurchaseDocument(doc.id)}
                                       >
@@ -339,4 +346,25 @@ export default function PanelKlientaPage() {
                                     </CardContent>
                                   </Card>
                                 ))}
-                \
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeTab === "nowa-sprawa" && (
+            <div className="p-8">
+              <h1 className="text-3xl font-bold text-gray-800">Panel klienta — w&nbsp;przygotowaniu</h1>
+            </div>
+          )}
+          {/* Additional tabs can be added here */}
+        </div>
+      </div>
+    </div>
+  )
+}
