@@ -1,48 +1,42 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js"
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                     */
-/* -------------------------------------------------------------------------- */
+/**
+ * Returns `true` only when both public Supabase env-vars are available.
+ */
+export const isSupabaseConfigured = (): boolean =>
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-export function isSupabaseConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-}
-
-/* -------------------------------------------------------------------------- */
-/* Browser-side singleton                                                      */
-/* -------------------------------------------------------------------------- */
-
-let _client: SupabaseClient | null = null
-
-function buildClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  return createSupabaseClient(url, key)
-}
-
-function buildMockClient(): SupabaseClient {
-  type AuthErr = { message: string }
-  const err = (msg: string) => Promise.resolve({ data: null as never, error: { message: msg } as AuthErr })
-
-  return {
-    auth: {
-      signInWithPassword: () => err("Supabase not configured"),
-      signUp: () => err("Supabase not configured"),
-      signOut: () => Promise.resolve({ error: { message: "Supabase not configured" } as AuthErr }),
-      getSession: () =>
-        Promise.resolve({
-          data: { session: null },
-          error: { message: "Supabase not configured" } as AuthErr,
-        }),
-    },
-  } as unknown as SupabaseClient
-}
+/**
+ * Lazy singleton creator.
+ * When env-vars are missing we return a **mock client** so the app can still run
+ * in preview / local builds without crashing. Auth methods then surface a
+ * predictable `"Supabase not configured"` error.
+ */
+let cached: SupabaseClient | null = null
 
 export function createClient(): SupabaseClient {
-  if (_client) return _client
-  _client = isSupabaseConfigured() ? buildClient() : buildMockClient()
-  return _client
+  if (!isSupabaseConfigured()) return mockClient as unknown as SupabaseClient
+
+  if (!cached) {
+    cached = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+    )
+  }
+  return cached
 }
 
-/* Preferred singleton export */
-export const supabase = createClient()
+/* -------------------------------------------------------------------------- */
+/* Fallback – minimal mock Supabase client                                    */
+/* -------------------------------------------------------------------------- */
+
+const supabaseError = { message: "Supabase not configured" }
+
+const mockClient = {
+  auth: {
+    signInWithPassword: async () => ({ data: { user: null }, error: supabaseError }),
+    signUp: async () => ({ data: { user: null }, error: supabaseError }),
+    signOut: async () => ({ error: supabaseError }),
+    getSession: async () => ({ data: { session: null }, error: supabaseError }),
+  },
+}
