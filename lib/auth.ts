@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { createClient } from "@/lib/supabase/client" // Import Supabase client
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 
 export interface User {
   id: string
@@ -18,7 +18,6 @@ interface AuthStore {
   login: (user: User) => void
   logout: () => void
   updateUser: (updates: Partial<User>) => void
-  // New: Supabase specific actions
   signInWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>
   signUpWithEmail: (
     email: string,
@@ -34,131 +33,117 @@ export const useAuth = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+
+      /* ------------------------------------------------------------ */
+      /* Local state helpers                                          */
+      /* ------------------------------------------------------------ */
       login: (user) => set({ user, isAuthenticated: true }),
       logout: () => set({ user: null, isAuthenticated: false }),
       updateUser: (updates) => {
-        const currentUser = get().user
-        if (currentUser) {
-          set({ user: { ...currentUser, ...updates } })
-        }
+        const current = get().user
+        if (current) set({ user: { ...current, ...updates } })
       },
+
+      /* ------------------------------------------------------------ */
+      /* Supabase helpers                                             */
+      /* ------------------------------------------------------------ */
       signInWithEmail: async (email, password) => {
+        if (!isSupabaseConfigured()) {
+          return { user: null, error: "Logowanie chwilowo niedostępne (Supabase not configured)." }
+        }
+
         const supabase = createClient()
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-        if (error) {
-          console.error("Login error:", error.message)
-          return { user: null, error: error.message }
+        if (error) return { user: null, error: error.message }
+
+        const u = data.user
+        if (!u) return { user: null, error: "Nieoczekiwany błąd logowania." }
+
+        const user: User = {
+          id: u.id,
+          email: u.email || "",
+          name: u.user_metadata?.name || u.email?.split("@")[0] || "Użytkownik",
+          role: (u.user_metadata?.role as User["role"]) || "client",
+          createdAt: new Date(u.created_at),
+          phone: u.phone || undefined,
+          avatar: u.user_metadata?.avatar || undefined,
+        }
+        set({ user, isAuthenticated: true })
+        return { user, error: null }
+      },
+
+      signUpWithEmail: async (email, password, name) => {
+        if (!isSupabaseConfigured()) {
+          return { user: null, error: "Rejestracja chwilowo niedostępna (Supabase not configured)." }
         }
 
-        if (data.user) {
-          const user: User = {
-            id: data.user.id,
-            email: data.user.email || "",
-            name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Użytkownik",
-            role: (data.user.user_metadata?.role as "client" | "operator" | "admin") || "client",
-            createdAt: new Date(data.user.created_at),
-            phone: data.user.phone || undefined,
-            avatar: data.user.user_metadata?.avatar || undefined,
-          }
-          set({ user, isAuthenticated: true })
-          return { user, error: null }
-        }
-        return { user: null, error: "Nieoczekiwany błąd logowania." }
-      },
-      signUpWithEmail: async (email, password, name) => {
         const supabase = createClient()
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: { name, role: "client" }, // Default role for new sign-ups
-          },
+          options: { data: { name, role: "client" } },
         })
 
-        if (error) {
-          console.error("Sign up error:", error.message)
-          return { user: null, error: error.message }
-        }
+        if (error) return { user: null, error: error.message }
 
-        if (data.user) {
-          const user: User = {
-            id: data.user.id,
-            email: data.user.email || "",
-            name: data.user.user_metadata?.name || name,
-            role: (data.user.user_metadata?.role as "client" | "operator" | "admin") || "client",
-            createdAt: new Date(data.user.created_at),
-            phone: data.user.phone || undefined,
-            avatar: data.user.user_metadata?.avatar || undefined,
-          }
-          set({ user, isAuthenticated: true })
-          return { user, error: null }
+        const u = data.user
+        if (!u) return { user: null, error: "Nieoczekiwany błąd rejestracji." }
+
+        const user: User = {
+          id: u.id,
+          email: u.email || "",
+          name: u.user_metadata?.name || name,
+          role: (u.user_metadata?.role as User["role"]) || "client",
+          createdAt: new Date(u.created_at),
+          phone: u.phone || undefined,
+          avatar: u.user_metadata?.avatar || undefined,
         }
-        return { user: null, error: "Nieoczekiwany błąd rejestracji." }
+        set({ user, isAuthenticated: true })
+        return { user, error: null }
       },
+
       signOut: async () => {
-        const supabase = createClient()
-        const { error } = await supabase.auth.signOut()
-        if (error) {
-          console.error("Logout error:", error.message)
-          return { error: error.message }
+        if (!isSupabaseConfigured()) {
+          set({ user: null, isAuthenticated: false })
+          return { error: null }
         }
-        set({ user: null, isAuthenticated: false })
-        return { error: null }
+        const { error } = await createClient().auth.signOut()
+        if (!error) set({ user: null, isAuthenticated: false })
+        return { error: error?.message || null }
       },
-      fetchUserSession: async () => {
-        const supabase = createClient()
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
 
-        if (error) {
-          console.error("Error fetching session:", error.message)
+      fetchUserSession: async () => {
+        if (!isSupabaseConfigured()) {
+          /* Silent no-op when Supabase isn’t configured. */
+          return
+        }
+        const { data, error } = await createClient().auth.getSession()
+
+        if (error || !data.session?.user) {
           set({ user: null, isAuthenticated: false })
           return
         }
 
-        if (session?.user) {
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || "",
-            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Użytkownik",
-            role: (session.user.user_metadata?.role as "client" | "operator" | "admin") || "client",
-            createdAt: new Date(session.user.created_at),
-            phone: session.user.phone || undefined,
-            avatar: session.user.user_metadata?.avatar || undefined,
-          }
-          set({ user, isAuthenticated: true })
-        } else {
-          set({ user: null, isAuthenticated: false })
-        }
+        const u = data.session.user
+        set({
+          user: {
+            id: u.id,
+            email: u.email || "",
+            name: u.user_metadata?.name || u.email?.split("@")[0] || "Użytkownik",
+            role: (u.user_metadata?.role as User["role"]) || "client",
+            createdAt: new Date(u.created_at),
+            phone: u.phone || undefined,
+            avatar: u.user_metadata?.avatar || undefined,
+          },
+          isAuthenticated: true,
+        })
       },
     }),
     {
       name: "auth-storage",
-      // Only store user and isAuthenticated in local storage
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
-      // Hydrate the store on load
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Fetch the latest session from Supabase on rehydration
-          state.fetchUserSession()
-        }
-      },
+      partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
+      onRehydrateStorage: () => (s) => s?.fetchUserSession(),
     },
   ),
 )
-
-// Remove mockLogin as it's no longer needed with real auth
-// export const mockLogin = (email: string, role: "client" | "operator" | "admin" = "client") => {
-//   const user: User = {
-//     id: Math.random().toString(36).substr(2, 9),
-//     email,
-//     name: email.split("@")[0],
-//     role,
-//     createdAt: new Date(),
-//   }
-//   useAuth.getState().login(user)
-//   return user
-// }
