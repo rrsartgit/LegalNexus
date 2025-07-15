@@ -5,7 +5,20 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Clock, Shield, CheckCircle, Upload, Star, ArrowRight, Users, Award } from "lucide-react"
+import {
+  FileText,
+  Clock,
+  Shield,
+  CheckCircle,
+  Upload,
+  Star,
+  ArrowRight,
+  Users,
+  Award,
+  Phone,
+  Mail,
+  MapPin,
+} from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -293,6 +306,42 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Gwarancja Jakości</h3>
                 <p className="text-gray-600">Wszystkie dokumenty przygotowywane przez doświadczonych prawników</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Skontaktuj się z nami</h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Masz pytania? Chętnie odpowiemy! Skontaktuj się z nami telefonicznie, mailowo lub odwiedź nasze biuro w
+                Gdańsku.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Phone className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Telefon</h3>
+                <p className="text-gray-600">+48 123 456 789</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Mail className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Email</h3>
+                <p className="text-gray-600">kontakt@legalnexus.pl</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <MapPin className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Adres</h3>
+                <p className="text-gray-600">ul. Prawnicza 10, 80-800 Gdańsk, Polska</p>
               </div>
             </div>
           </div>
