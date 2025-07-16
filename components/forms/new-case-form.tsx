@@ -16,7 +16,7 @@ interface NewCaseFormProps {
   onSuccess: () => void
 }
 
-export function NewCaseForm({ onSuccess }: NewCaseFormProps) {
+export default function NewCaseForm({ onSuccess }: NewCaseFormProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
