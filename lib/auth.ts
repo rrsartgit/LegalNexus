@@ -150,3 +150,11 @@ export const mockLogin = (email: string, role: User["role"] = "client"): User =>
   useAuth.getState().login(user)
   return user
 }
+
+/**
+ * Dev-only helper preserved for legacy imports and tests.
+ * Clears any mock session created with `mockLogin`.
+ */
+export const mockLogout = (): void => {
+  useAuth.getState().logout()
+}
