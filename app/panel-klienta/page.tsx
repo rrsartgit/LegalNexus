@@ -21,7 +21,9 @@ import {
   CreditCard,
   Clock,
   CheckCircle,
+  ArrowLeft,
 } from "lucide-react"
+import NewCaseForm from "@/components/forms/new-case-form" // Import NewCaseForm component
 
 /**
  * Lightweight placeholder until the full client dashboard is finished.
@@ -358,8 +360,26 @@ export default function PanelKlientaPage() {
             </div>
           )}
           {activeTab === "nowa-sprawa" && (
-            <div className="p-8">
-              <h1 className="text-3xl font-bold text-gray-800">Panel klienta — w&nbsp;przygotowaniu</h1>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-900">Nowa Sprawa</h1>
+                <Button variant="outline" onClick={() => setActiveTab("sprawy")}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Powrót do Spraw
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dodaj Nową Sprawę</CardTitle>
+                  <p className="text-gray-600">
+                    Wypełnij formularz i prześlij dokumenty, aby rozpocząć proces analizy prawnej
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <NewCaseForm onSuccess={() => setActiveTab("sprawy")} />
+                </CardContent>
+              </Card>
             </div>
           )}
           {/* Additional tabs can be added here */}
