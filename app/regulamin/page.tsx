@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, FileText, CheckCircle, Phone } from "lucide-react"
 import Link from "next/link"
-import Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 
 export default function RegulaminPage() {
   const sections = [
