@@ -1,116 +1,133 @@
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function KancelarieLoading() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-montserrat">
-      <Header />
-
-      <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        {/* Back button skeleton */}
-        <div className="mb-6">
-          <Skeleton className="h-10 w-48" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Skeleton */}
+        <div className="mb-8 text-center">
+          <Skeleton className="mx-auto mb-4 h-12 w-96" />
+          <Skeleton className="mx-auto h-6 w-[600px]" />
         </div>
 
-        {/* Title and description skeleton */}
-        <div className="mb-8">
-          <Skeleton className="h-10 w-96 mb-4" />
-          <Skeleton className="h-6 w-full max-w-2xl" />
-        </div>
-
-        {/* Search filters skeleton */}
-        <Card className="mb-8">
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Search and Filters Skeleton */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="md:col-span-2">
+              <Skeleton className="mb-2 h-4 w-32" />
               <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <div className="flex gap-2">
-                <Skeleton className="h-10 flex-1" />
-                <Skeleton className="h-10 w-20" />
-              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Results summary skeleton */}
-        <div className="mb-6">
-          <Skeleton className="h-6 w-64" />
+            <div>
+              <Skeleton className="mb-2 h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div>
+              <Skeleton className="mb-2 h-4 w-28" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-between">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-32" />
+          </div>
         </div>
 
-        {/* Law firms grid skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Results Count Skeleton */}
+        <div className="mb-6 flex items-center justify-between">
+          <Skeleton className="h-6 w-48" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+
+        {/* Law Firms Grid Skeleton */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
+            <Card key={index} className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="mb-2 h-6 w-48" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {/* Address skeleton */}
-                  <div className="flex items-start">
-                    <Skeleton className="h-4 w-4 mr-2 mt-0.5" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-full mb-1" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </div>
+              <CardContent className="space-y-4">
+                {/* Address */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-40" />
                   </div>
-
-                  {/* Contact skeleton */}
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <Skeleton className="h-4 w-4 mr-2" />
-                      <Skeleton className="h-4 w-32" />
-                    </div>
-                    <div className="flex items-center">
-                      <Skeleton className="h-4 w-4 mr-2" />
-                      <Skeleton className="h-4 w-48" />
-                    </div>
-                    <div className="flex items-center">
-                      <Skeleton className="h-4 w-4 mr-2" />
-                      <Skeleton className="h-4 w-36" />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
+                </div>
 
-                  {/* Lawyers count skeleton */}
-                  <div className="flex items-center">
-                    <Skeleton className="h-4 w-4 mr-2" />
-                    <Skeleton className="h-4 w-24" />
+                {/* Contact */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-36" />
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-44" />
+                  </div>
+                </div>
 
-                  {/* Specializations skeleton */}
-                  <div className="flex flex-wrap gap-1 mt-3">
+                {/* Specializations */}
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <div className="flex flex-wrap gap-1">
                     <Skeleton className="h-6 w-20" />
                     <Skeleton className="h-6 w-24" />
                     <Skeleton className="h-6 w-16" />
                   </div>
+                </div>
 
-                  {/* Button skeleton */}
-                  <div className="pt-3">
-                    <Skeleton className="h-8 w-full" />
+                {/* Lawyers */}
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-28" />
                   </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-4">
+                  <Skeleton className="h-9 flex-1" />
+                  <Skeleton className="h-9 w-24" />
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Pagination skeleton */}
-        <div className="flex justify-center items-center space-x-4">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-6 w-20" />
-          <Skeleton className="h-10 w-24" />
+        {/* Pagination Skeleton */}
+        <div className="mt-8 flex items-center justify-center gap-2">
+          <Skeleton className="h-10 w-20" />
+          <div className="flex gap-1">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 w-10" />
+            ))}
+          </div>
+          <Skeleton className="h-10 w-20" />
         </div>
-      </main>
 
-      <Footer />
+        {/* Loading Message */}
+        <div className="mt-8 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-blue-600">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+            <span className="text-sm font-medium">Ładowanie kancelarii prawnych...</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
