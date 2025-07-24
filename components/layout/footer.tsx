@@ -1,31 +1,34 @@
 "use client"
 
-import Link from "next/link"
 import { Scale, MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Instagram } from "lucide-react"
 
-export function Footer() {
+interface FooterProps {
+  onSectionChange: (section: string) => void
+}
+
+export function Footer({ onSectionChange }: FooterProps) {
   const currentYear = new Date().getFullYear()
 
   const services = [
-    { name: "Analiza dokumentów", href: "/analiza-dokumentow" },
-    { name: "Pisma prawne", href: "/pisma-prawne" },
-    { name: "Konsultacje", href: "/konsultacje" },
-    { name: "Reprezentacja", href: "/reprezentacja" },
+    { name: "Analiza dokumentów", section: "analiza-dokumentow" },
+    { name: "Pisma prawne", section: "pisma-prawne" },
+    { name: "Konsultacje", section: "konsultacje" },
+    { name: "Reprezentacja", section: "reprezentacja" },
   ]
 
   const information = [
-    { name: "Regulamin", href: "/regulamin" },
-    { name: "Polityka prywatności", href: "/polityka-prywatnosci" },
-    { name: "RODO", href: "/rodo" },
-    { name: "FAQ", href: "/faq" },
+    { name: "Regulamin", section: "regulamin" },
+    { name: "Polityka prywatności", section: "polityka-prywatnosci" },
+    { name: "RODO", section: "rodo" },
+    { name: "FAQ", section: "faq" },
   ]
 
   const companyLinks = [
-    { name: "O nas", href: "/o-nas" },
-    { name: "Jak to działa", href: "/jak-to-dziala" },
-    { name: "Cennik", href: "/cennik" },
-    { name: "Blog", href: "/blog" },
-    { name: "Kontakt", href: "/kontakt" },
+    { name: "O nas", section: "o-nas" },
+    { name: "Jak to działa", section: "jak-to-dziala" },
+    // { name: "Cennik", section: "cennik" }, // Commented out as requested
+    { name: "Blog", section: "blog" },
+    { name: "Kontakt", section: "kontakt" },
   ]
 
   const socialLinks = [
@@ -41,10 +44,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-400 mb-4">
+            <button
+              onClick={() => onSectionChange("home")}
+              className="flex items-center gap-2 font-bold text-xl text-blue-400 mb-4 hover:text-blue-300 transition-colors"
+            >
               <Scale className="h-7 w-7" />
               LegalNexus
-            </Link>
+            </button>
             <p className="text-sm leading-relaxed mb-4">
               Profesjonalna pomoc prawna online. Szybko, skutecznie i bezpiecznie.
             </p>
@@ -70,9 +76,12 @@ export function Footer() {
             <ul className="space-y-2">
               {services.map((item, index) => (
                 <li key={index}>
-                  <Link href={item.href} className="text-sm hover:text-blue-400 transition-colors">
+                  <button
+                    onClick={() => onSectionChange(item.section)}
+                    className="text-sm hover:text-blue-400 transition-colors text-left"
+                  >
                     {item.name}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -84,9 +93,12 @@ export function Footer() {
             <ul className="space-y-2">
               {information.map((item, index) => (
                 <li key={index}>
-                  <Link href={item.href} className="text-sm hover:text-blue-400 transition-colors">
+                  <button
+                    onClick={() => onSectionChange(item.section)}
+                    className="text-sm hover:text-blue-400 transition-colors text-left"
+                  >
                     {item.name}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -98,9 +110,12 @@ export function Footer() {
             <ul className="space-y-2">
               {companyLinks.map((item, index) => (
                 <li key={index}>
-                  <Link href={item.href} className="text-sm hover:text-blue-400 transition-colors">
+                  <button
+                    onClick={() => onSectionChange(item.section)}
+                    className="text-sm hover:text-blue-400 transition-colors text-left"
+                  >
                     {item.name}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
