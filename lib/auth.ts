@@ -1,92 +1,66 @@
-export interface User {
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, createContext, useContext } from "react"
+
+interface User {
   id: string
-  email: string
   name: string
-  role: "admin" | "user" | "lawyer"
-  avatar?: string
+  email: string
+  role: "admin" | "client" | "operator"
 }
 
-// Mock user data
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "admin@legalapinexus.pl",
-    name: "Administrator",
-    role: "admin",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "2",
-    email: "user@example.com",
-    name: "Jan Kowalski",
-    role: "user",
-    avatar: "/placeholder-user.jpg",
-  },
-]
+interface AuthContextType {
+  user: User | null
+  isAuthenticated: boolean
+  role: string | null
+}
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  role: null,
+})
+
+export function useAuth() {
+  return useContext(AuthContext)
+}
 
 // Mock authentication functions
-export async function signIn(email: string, password: string): Promise<User | null> {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+export function mockLogin(email: string, password: string) {
+  // Mock user data
+  const mockUser: User = {
+    id: "1",
+    name: "Jan Kowalski",
+    email: email,
+    role: "client",
+  }
 
-  // Mock authentication logic
-  const user = mockUsers.find((u) => u.email === email)
-  if (user && password === "password") {
-    // Store user in localStorage for persistence
-    if (typeof window !== "undefined") {
-      localStorage.setItem("currentUser", JSON.stringify(user))
+  localStorage.setItem("user", JSON.stringify(mockUser))
+  window.location.reload()
+}
+
+export function mockLogout() {
+  localStorage.removeItem("user")
+  window.location.reload()
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
     }
-    return user
-  }
-  return null
-}
+  }, [])
 
-export async function signUp(email: string, password: string, name: string): Promise<User | null> {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // Mock user creation
-  const newUser: User = {
-    id: Date.now().toString(),
-    email,
-    name,
-    role: "user",
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    role: user?.role || null,
   }
 
-  // Store user in localStorage for persistence
-  if (typeof window !== "undefined") {
-    localStorage.setItem("currentUser", JSON.stringify(newUser))
-  }
-
-  return newUser
-}
-
-export function getCurrentUser(): User | null {
-  if (typeof window === "undefined") return null
-
-  const userStr = localStorage.getItem("currentUser")
-  if (!userStr) return null
-
-  try {
-    return JSON.parse(userStr)
-  } catch {
-    return null
-  }
-}
-
-export function mockLogout(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("currentUser")
-    // Redirect to home page
-    window.location.href = "/"
-  }
-}
-
-export function isAuthenticated(): boolean {
-  return getCurrentUser() !== null
-}
-
-export function hasRole(role: string): boolean {
-  const user = getCurrentUser()
-  return user?.role === role
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
