@@ -1,16 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import kancelarie, klienci, sprawy
+from fastapi.staticfiles import StaticFiles
+from app.api.v1.endpoints import auth, orders, documents, analyses, payments, users
 from app.core.config import settings
 from app.db.session import engine
-from app.models import kancelaria
+from app.models import base
+import os
 
 # Create database tables
-kancelaria.Base.metadata.create_all(bind=engine)
+base.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="API Kancelarii Prawnej",
-    description="Kompleksowe rozwiązanie backendowe do zarządzania kancelariami prawnymi",
+    title="Platforma Analizy Dokumentów",
+    description="System zarządzania zleceniami analizy dokumentów prawnych",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -25,14 +27,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static files for uploaded documents
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 # Include routers
-app.include_router(kancelarie.router, prefix="/api/v1/kancelarie", tags=["kancelarie"])
-app.include_router(klienci.router, prefix="/api/v1/klienci", tags=["klienci"])
-app.include_router(sprawy.router, prefix="/api/v1/sprawy", tags=["sprawy"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
+app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
+app.include_router(documents.router, prefix="/api/v1/documents", tags=["documents"])
+app.include_router(analyses.router, prefix="/api/v1/analyses", tags=["analyses"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
 @app.get("/")
 async def root():
-    return {"message": "API Kancelarii Prawnej - v1.0.0", "status": "running"}
+    return {
+        "message": "Platforma Analizy Dokumentów - v1.0.0", 
+        "status": "running",
+        "description": "System zarządzania zleceniami analizy dokumentów prawnych"
+    }
 
 @app.get("/health")
 async def health_check():
