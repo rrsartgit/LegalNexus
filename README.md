@@ -1,30 +1,178 @@
-# Legal API Nexus Project
+# API Kancelarii Prawnej
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Kompleksowe rozwiązanie backendowe do zarządzania kancelariami prawnymi i klientami, zbudowane z użyciem FastAPI i React.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rrsartneoais-projects/v0-legal-api-nexus-project)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/6rZ7L8WTNCK)
+## Struktura Projektu
 
-## Overview
+\`\`\`
+kancelaria/
+├── app/                    # Backend FastAPI
+│   ├── api/v1/
+│   │   ├── endpoints/      # Endpointy API
+│   │   └── schemas/        # Schematy Pydantic
+│   ├── core/              # Konfiguracja
+│   ├── db/                # Baza danych
+│   ├── models/            # Modele SQLAlchemy
+│   ├── services/          # Logika biznesowa
+│   └── main.py           # Główna aplikacja
+├── frontend/              # Frontend React/Next.js
+│   ├── app/              # Strony aplikacji
+│   ├── components/       # Komponenty React
+│   └── lib/             # Utilities i API client
+└── requirements.txt      # Zależności Python
+\`\`\`
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Instalacja i Uruchomienie
 
-## Deployment
+### Backend (FastAPI)
 
-Your project is live at:
+1. **Utwórz wirtualne środowisko:**
+\`\`\`bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# lub
+.\venv\Scripts\activate   # Windows
+\`\`\`
 
-**[https://vercel.com/rrsartneoais-projects/v0-legal-api-nexus-project](https://vercel.com/rrsartneoais-projects/v0-legal-api-nexus-project)**
+2. **Zainstaluj zależności:**
+\`\`\`bash
+pip install -r requirements.txt
+\`\`\`
 
-## Build your app
+3. **Skonfiguruj bazę danych:**
+\`\`\`bash
+cp .env.example .env
+# Edytuj plik .env z właściwymi danymi bazy danych
+\`\`\`
 
-Continue building your app on:
+4. **Uruchom serwer:**
+\`\`\`bash
+uvicorn app.main:app --reload
+\`\`\`
 
-**[https://v0.dev/chat/projects/6rZ7L8WTNCK](https://v0.dev/chat/projects/6rZ7L8WTNCK)**
+API będzie dostępne pod adresem: http://localhost:8000
+Dokumentacja: http://localhost:8000/docs
 
-## How It Works
+### Frontend (React/Next.js)
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+1. **Przejdź do katalogu frontend:**
+\`\`\`bash
+cd frontend
+\`\`\`
+
+2. **Zainstaluj zależności:**
+\`\`\`bash
+pnpm install
+\`\`\`
+
+3. **Uruchom aplikację:**
+\`\`\`bash
+pnpm dev
+\`\`\`
+
+Frontend będzie dostępny pod adresem: http://localhost:3000
+
+## Funkcjonalności
+
+### API Endpoints
+
+- **Kancelarie** (`/api/v1/kancelarie`)
+  - GET / - Lista kancelarii
+  - POST / - Dodaj kancelarię
+  - GET /{id} - Szczegóły kancelarii
+  - PUT /{id} - Aktualizuj kancelarię
+  - DELETE /{id} - Usuń kancelarię
+
+- **Klienci** (`/api/v1/klienci`)
+  - GET / - Lista klientów
+  - POST / - Dodaj klienta
+  - GET /{id} - Szczegóły klienta
+  - PUT /{id} - Aktualizuj klienta
+  - DELETE /{id} - Usuń klienta
+
+- **Sprawy** (`/api/v1/sprawy`)
+  - GET / - Lista spraw
+  - POST / - Dodaj sprawę
+  - GET /{id} - Szczegóły sprawy
+  - PUT /{id} - Aktualizuj sprawę
+  - DELETE /{id} - Usuń sprawę
+
+### Frontend Features
+
+- **Dashboard** - Przegląd statystyk systemu
+- **Zarządzanie Kancelariami** - CRUD operations dla kancelarii
+- **Zarządzanie Klientami** - CRUD operations dla klientów
+- **Zarządzanie Sprawami** - CRUD operations dla spraw
+- **Responsywny interfejs** - Optymalizowany dla wszystkich urządzeń
+
+## Technologie
+
+### Backend
+- **FastAPI** - Nowoczesny framework web dla Python
+- **SQLAlchemy** - ORM dla bazy danych
+- **Pydantic** - Walidacja danych
+- **PostgreSQL** - Baza danych
+- **Uvicorn** - ASGI server
+
+### Frontend
+- **Next.js 14** - React framework
+- **TypeScript** - Typowanie statyczne
+- **Tailwind CSS** - Styling
+- **Radix UI** - Komponenty UI
+- **TanStack Query** - Zarządzanie stanem serwera
+- **React Hook Form** - Zarządzanie formularzami
+
+## Rozwój
+
+### Planowane funkcjonalności
+- Uwierzytelnianie i autoryzacja (JWT)
+- Zarządzanie dokumentami
+- System powiadomień
+- Raportowanie i analityka
+- API dla aplikacji mobilnych
+- Integracja z systemami zewnętrznymi
+
+### Testowanie
+\`\`\`bash
+# Backend
+pytest
+
+# Frontend
+pnpm test
+\`\`\`
+
+## Licencja
+
+MIT License - szczegóły w pliku LICENSE
+\`\`\`
+
+Stworzyłem kompletny system zarządzania kancelarią prawną zgodnie z Twoimi specyfikacjami:
+
+## ✅ **Zaimplementowane funkcjonalności:**
+
+### **Backend (FastAPI):**
+- Modularną strukturę projektu z oddzielonymi warstwami
+- Modele SQLAlchemy dla kancelarii, klientów i spraw
+- Schematy Pydantic do walidacji danych
+- Serwisy z logiką biznesową
+- Endpointy API z pełnym CRUD
+- Konfigurację i zarządzanie środowiskiem
+
+### **Frontend (React/Next.js):**
+- Nowoczesny interfejs z Tailwind CSS i Radix UI
+- Zarządzanie stanem z TanStack Query
+- Komponenty do zarządzania kancelariami, klientami i sprawami
+- Dashboard z statystykami
+- Responsywny design
+- Formularze z walidacją
+
+### **Kluczowe cechy:**
+- **Pełny CRUD** dla wszystkich encji
+- **Relacje między danymi** (kancelaria → klienci → sprawy)
+- **Walidacja danych** na poziomie backend i frontend
+- **Responsywny interfejs** z profesjonalnym designem
+- **Modularną architekturę** łatwą do rozszerzania
+- **TypeScript** dla bezpieczeństwa typów
+- **Dokumentację API** automatycznie generowaną przez FastAPI
+
+System jest gotowy do uruchomienia i może być łatwo rozszerzany o dodatkowe funkcjonalności jak uwierzytelnianie, zarządzanie dokumentami czy raportowanie.
