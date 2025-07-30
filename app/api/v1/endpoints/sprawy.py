@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.services.kancelaria_service import KancelariaService
 from app.api.v1.schemas.kancelaria import Sprawa, SprawaCreate, SprawaUpdate
@@ -14,17 +14,32 @@ def create_sprawa(
 ):
     """Rejestruje nową sprawę."""
     service = KancelariaService(db)
-    return service.create_sprawa(sprawa)
+    try:
+        return service.create_sprawa(sprawa)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Błąd podczas tworzenia sprawy: {str(e)}"
+        )
 
 @router.get("/", response_model=List[Sprawa])
 def get_sprawy(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    kancelaria_id: Optional[int] = Query(None),
+    klient_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """Zwraca listę spraw z możliwością filtrowania."""
     service = KancelariaService(db)
-    return service.get_sprawy(skip=skip, limit=limit)
+    return service.get_sprawy(
+        skip=skip, 
+        limit=limit, 
+        kancelaria_id=kancelaria_id, 
+        klient_id=klient_id, 
+        status=status
+    )
 
 @router.get("/{sprawa_id}", response_model=Sprawa)
 def get_sprawa(
@@ -69,3 +84,9 @@ def delete_sprawa(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Sprawa nie została znaleziona"
         )
+
+@router.get("/stats/summary")
+def get_stats_summary(db: Session = Depends(get_db)):
+    """Zwraca statystyki systemu."""
+    service = KancelariaService(db)
+    return service.get_stats()

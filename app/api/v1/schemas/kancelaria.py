@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
+from decimal import Decimal
 
 # Kancelaria schemas
 class KancelariaBase(BaseModel):
@@ -76,7 +77,7 @@ class SprawaBase(BaseModel):
     opis: Optional[str] = None
     kategoria: Optional[str] = None
     status: str = "aktywna"
-    wartosc_sprawy: Optional[int] = None
+    wartosc_sprawy: Optional[Decimal] = None
 
 class SprawaCreate(SprawaBase):
     kancelaria_id: int
@@ -87,7 +88,7 @@ class SprawaUpdate(BaseModel):
     opis: Optional[str] = None
     kategoria: Optional[str] = None
     status: Optional[str] = None
-    wartosc_sprawy: Optional[int] = None
+    wartosc_sprawy: Optional[Decimal] = None
     data_zakonczenia: Optional[datetime] = None
 
 class Sprawa(SprawaBase):
@@ -101,3 +102,16 @@ class Sprawa(SprawaBase):
     
     class Config:
         from_attributes = True
+
+# Response schemas with relationships
+class KancelariaWithRelations(Kancelaria):
+    klienci: List[Klient] = []
+    sprawy: List[Sprawa] = []
+
+class KlientWithRelations(Klient):
+    kancelaria: Optional[Kancelaria] = None
+    sprawy: List[Sprawa] = []
+
+class SprawaWithRelations(Sprawa):
+    kancelaria: Optional[Kancelaria] = None
+    klient: Optional[Klient] = None

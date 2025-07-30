@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.services.kancelaria_service import KancelariaService
 from app.api.v1.schemas.kancelaria import Kancelaria, KancelariaCreate, KancelariaUpdate
@@ -14,17 +14,24 @@ def create_kancelaria(
 ):
     """Tworzy nową kancelarię prawną."""
     service = KancelariaService(db)
-    return service.create_kancelaria(kancelaria)
+    try:
+        return service.create_kancelaria(kancelaria)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Błąd podczas tworzenia kancelarii: {str(e)}"
+        )
 
 @router.get("/", response_model=List[Kancelaria])
 def get_kancelarie(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    aktywna: Optional[bool] = Query(None),
     db: Session = Depends(get_db)
 ):
     """Zwraca listę wszystkich kancelarii prawnych."""
     service = KancelariaService(db)
-    return service.get_kancelarie(skip=skip, limit=limit)
+    return service.get_kancelarie(skip=skip, limit=limit, aktywna=aktywna)
 
 @router.get("/{kancelaria_id}", response_model=Kancelaria)
 def get_kancelaria(

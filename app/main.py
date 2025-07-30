@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints import kancelarie, klienci, sprawy
 from app.core.config import settings
+from app.db.session import engine
+from app.models import kancelaria
+
+# Create database tables
+kancelaria.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="API Kancelarii Prawnej",
@@ -14,7 +19,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=["http://localhost:3000", "https://preview-legal-api-nexus-project-*.vusercontent.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,7 +32,7 @@ app.include_router(sprawy.router, prefix="/api/v1/sprawy", tags=["sprawy"])
 
 @app.get("/")
 async def root():
-    return {"message": "API Kancelarii Prawnej - v1.0.0"}
+    return {"message": "API Kancelarii Prawnej - v1.0.0", "status": "running"}
 
 @app.get("/health")
 async def health_check():

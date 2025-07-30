@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
@@ -19,8 +19,8 @@ class Kancelaria(Base):
     data_aktualizacji = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    klienci = relationship("Klient", back_populates="kancelaria")
-    sprawy = relationship("Sprawa", back_populates="kancelaria")
+    klienci = relationship("Klient", back_populates="kancelaria", cascade="all, delete-orphan")
+    sprawy = relationship("Sprawa", back_populates="kancelaria", cascade="all, delete-orphan")
 
 class Klient(Base):
     __tablename__ = "klienci"
@@ -43,7 +43,7 @@ class Klient(Base):
     
     # Relationships
     kancelaria = relationship("Kancelaria", back_populates="klienci")
-    sprawy = relationship("Sprawa", back_populates="klient")
+    sprawy = relationship("Sprawa", back_populates="klient", cascade="all, delete-orphan")
 
 class Sprawa(Base):
     __tablename__ = "sprawy"
@@ -56,7 +56,7 @@ class Sprawa(Base):
     status = Column(String(50), default="aktywna")  # aktywna, zawieszona, zakonczona
     data_rozpoczecia = Column(DateTime(timezone=True), server_default=func.now())
     data_zakonczenia = Column(DateTime(timezone=True))
-    wartosc_sprawy = Column(Integer)  # w groszach
+    wartosc_sprawy = Column(Numeric(10, 2))  # wartość w PLN
     data_utworzenia = Column(DateTime(timezone=True), server_default=func.now())
     data_aktualizacji = Column(DateTime(timezone=True), onupdate=func.now())
     

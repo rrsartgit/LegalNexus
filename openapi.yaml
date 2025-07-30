@@ -1,0 +1,108 @@
+openapi: 3.0.0
+info:
+  title: API Kancelarii Prawnej
+  description: Kompleksowe rozwiązanie backendowe do zarządzania kancelariami prawnymi
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+paths:
+  /api/v1/kancelarie:
+    get:
+      summary: Pobierz listę kancelarii
+      tags:
+        - kancelarie
+      parameters:
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: aktywna
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Lista kancelarii
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Kancelaria'
+    post:
+      summary: Utwórz nową kancelarię
+      tags:
+        - kancelarie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KancelariaCreate'
+      responses:
+        '201':
+          description: Kancelaria utworzona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kancelaria'
+components:
+  schemas:
+    Kancelaria:
+      type: object
+      properties:
+        id:
+          type: integer
+        nazwa:
+          type: string
+        adres:
+          type: string
+        telefon:
+          type: string
+        email:
+          type: string
+          format: email
+        nip:
+          type: string
+        regon:
+          type: string
+        opis:
+          type: string
+        aktywna:
+          type: boolean
+        data_utworzenia:
+          type: string
+          format: date-time
+        data_aktualizacji:
+          type: string
+          format: date-time
+    KancelariaCreate:
+      type: object
+      required:
+        - nazwa
+      properties:
+        nazwa:
+          type: string
+        adres:
+          type: string
+        telefon:
+          type: string
+        email:
+          type: string
+          format: email
+        nip:
+          type: string
+        regon:
+          type: string
+        opis:
+          type: string
+        aktywna:
+          type: boolean
+          default: true

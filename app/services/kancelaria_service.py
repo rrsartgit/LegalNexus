@@ -22,8 +22,11 @@ class KancelariaService:
     def get_kancelaria(self, kancelaria_id: int) -> Optional[Kancelaria]:
         return self.db.query(Kancelaria).filter(Kancelaria.id == kancelaria_id).first()
     
-    def get_kancelarie(self, skip: int = 0, limit: int = 100) -> List[Kancelaria]:
-        return self.db.query(Kancelaria).offset(skip).limit(limit).all()
+    def get_kancelarie(self, skip: int = 0, limit: int = 100, aktywna: Optional[bool] = None) -> List[Kancelaria]:
+        query = self.db.query(Kancelaria)
+        if aktywna is not None:
+            query = query.filter(Kancelaria.aktywna == aktywna)
+        return query.offset(skip).limit(limit).all()
     
     def update_kancelaria(self, kancelaria_id: int, kancelaria_update: KancelariaUpdate) -> Optional[Kancelaria]:
         db_kancelaria = self.get_kancelaria(kancelaria_id)
@@ -54,8 +57,13 @@ class KancelariaService:
     def get_klient(self, klient_id: int) -> Optional[Klient]:
         return self.db.query(Klient).filter(Klient.id == klient_id).first()
     
-    def get_klienci(self, skip: int = 0, limit: int = 100) -> List[Klient]:
-        return self.db.query(Klient).offset(skip).limit(limit).all()
+    def get_klienci(self, skip: int = 0, limit: int = 100, kancelaria_id: Optional[int] = None, aktywny: Optional[bool] = None) -> List[Klient]:
+        query = self.db.query(Klient)
+        if kancelaria_id:
+            query = query.filter(Klient.kancelaria_id == kancelaria_id)
+        if aktywny is not None:
+            query = query.filter(Klient.aktywny == aktywny)
+        return query.offset(skip).limit(limit).all()
     
     def update_klient(self, klient_id: int, klient_update: KlientUpdate) -> Optional[Klient]:
         db_klient = self.get_klient(klient_id)
@@ -86,8 +94,15 @@ class KancelariaService:
     def get_sprawa(self, sprawa_id: int) -> Optional[Sprawa]:
         return self.db.query(Sprawa).filter(Sprawa.id == sprawa_id).first()
     
-    def get_sprawy(self, skip: int = 0, limit: int = 100) -> List[Sprawa]:
-        return self.db.query(Sprawa).offset(skip).limit(limit).all()
+    def get_sprawy(self, skip: int = 0, limit: int = 100, kancelaria_id: Optional[int] = None, klient_id: Optional[int] = None, status: Optional[str] = None) -> List[Sprawa]:
+        query = self.db.query(Sprawa)
+        if kancelaria_id:
+            query = query.filter(Sprawa.kancelaria_id == kancelaria_id)
+        if klient_id:
+            query = query.filter(Sprawa.klient_id == klient_id)
+        if status:
+            query = query.filter(Sprawa.status == status)
+        return query.offset(skip).limit(limit).all()
     
     def update_sprawa(self, sprawa_id: int, sprawa_update: SprawaUpdate) -> Optional[Sprawa]:
         db_sprawa = self.get_sprawa(sprawa_id)
@@ -106,3 +121,27 @@ class KancelariaService:
             self.db.commit()
             return True
         return False
+    
+    # Statistics methods
+    def get_stats(self) -> dict:
+        total_kancelarie = self.db.query(Kancelaria).count()
+        active_kancelarie = self.db.query(Kancelaria).filter(Kancelaria.aktywna == True).count()
+        total_klienci = self.db.query(Klient).count()
+        active_klienci = self.db.query(Klient).filter(Klient.aktywny == True).count()
+        total_sprawy = self.db.query(Sprawa).count()
+        active_sprawy = self.db.query(Sprawa).filter(Sprawa.status == "aktywna").count()
+        
+        return {
+            "kancelarie": {
+                "total": total_kancelarie,
+                "active": active_kancelarie
+            },
+            "klienci": {
+                "total": total_klienci,
+                "active": active_klienci
+            },
+            "sprawy": {
+                "total": total_sprawy,
+                "active": active_sprawy
+            }
+        }

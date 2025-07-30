@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.services.kancelaria_service import KancelariaService
 from app.api.v1.schemas.kancelaria import Klient, KlientCreate, KlientUpdate
@@ -14,17 +14,25 @@ def create_klient(
 ):
     """Dodaje nowego klienta."""
     service = KancelariaService(db)
-    return service.create_klient(klient)
+    try:
+        return service.create_klient(klient)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Błąd podczas tworzenia klienta: {str(e)}"
+        )
 
 @router.get("/", response_model=List[Klient])
 def get_klienci(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    kancelaria_id: Optional[int] = Query(None),
+    aktywny: Optional[bool] = Query(None),
     db: Session = Depends(get_db)
 ):
     """Zwraca listę wszystkich klientów."""
     service = KancelariaService(db)
-    return service.get_klienci(skip=skip, limit=limit)
+    return service.get_klienci(skip=skip, limit=limit, kancelaria_id=kancelaria_id, aktywny=aktywny)
 
 @router.get("/{klient_id}", response_model=Klient)
 def get_klient(
