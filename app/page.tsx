@@ -1345,7 +1345,7 @@ function FAQSection() {
     {
       question: "Jakie dokumenty mogę przesłać do analizy?",
       answer:
-        "Przyjmujemy dokumenty w formatach PDF, DOC, DOCX, JPG, PNG. Maksymalny rozmiar poje "Przyjmujemy dokumenty w formatach PDF, DOC, DOCX, JPG, PNG. Maksymalny rozmiar pojedynczego pliku to 10MB.",
+        "Przyjmujemy dokumenty w formatach PDF, DOC, DOCX, JPG, PNG. Maksymalny rozmiar pojedynczego pliku to 10MB.",
     },
     {
       question: "Czy mogę anulować zamówienie?",
@@ -1354,21 +1354,20 @@ function FAQSection() {
     },
     {
       question: "Jak mogę skontaktować się z prawnikiem?",
-      answer: \"Kontakt z prawnikiem odbywa się przez bezpieczną platformę wiadomości dostępną w panelu klienta.",
+      answer: "Kontakt z prawnikiem odbywa się przez bezpieczną platformę wiadomości dostępną w panelu klienta.",
     },
   ]
-  \
+
   return (
     <div className="py-20 bg-gray-50">
-      \
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
             FAQ
           </Badge>
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">Często zadawane pytania</h1>\
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Często zadawane pytania</h1>
           <p className="text-xl text-gray-600">
-            \ Znajdź odpowiedzi na najczęściej zadawane pytania dotyczące naszych usług
+            Znajdź odpowiedzi na najczęściej zadawane pytania dotyczące naszych usług
           </p>
         </div>
 
@@ -1452,6 +1451,10 @@ function ZamowAnalizeSection() {
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState<Section>("home")
 
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section as Section)
+  }
+
   const renderSection = () => {
     switch (activeSection) {
       case "home":
@@ -1495,7 +1498,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header onSectionChange={setActiveSection} activeSection={activeSection} />
+      <Header onSectionChange={handleSectionChange} activeSection={activeSection} />
       <main className="flex-1">{renderSection()}</main>
       <Footer />
     </div>
