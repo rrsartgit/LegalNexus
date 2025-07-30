@@ -8,9 +8,9 @@ import { Building2, Users, FileText, BarChart3 } from "lucide-react"
 import { KancelarieManager } from "../components/KancelarieManager"
 import { KlienciManager } from "../components/KlienciManager"
 import { SprawyManager } from "../components/SprawyManager"
-import { Dashboard } from "../components/Dashboard"
+import Dashboard from "@/components/Dashboard"
 
-export default function HomePage() {
+export default function Home() {
   const [activeTab, setActiveTab] = useState("dashboard")
 
   return (

@@ -1,71 +1,63 @@
 "use client"
 
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Users, FileText, TrendingUp, Clock, CheckCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Building2, Users, FileText, Plus, Activity } from "lucide-react"
+import { apiClient } from "@/lib/api"
 
-export function Dashboard() {
-  // Mock data - in real app this would come from API
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("overview")
+
+  // Fetch data using React Query
+  const { data: kancelarie = [], isLoading: loadingKancelarie } = useQuery({
+    queryKey: ["kancelarie"],
+    queryFn: () => apiClient.getKancelarie(),
+  })
+
+  const { data: klienci = [], isLoading: loadingKlienci } = useQuery({
+    queryKey: ["klienci"],
+    queryFn: () => apiClient.getKlienci(),
+  })
+
+  const { data: sprawy = [], isLoading: loadingSprawy } = useQuery({
+    queryKey: ["sprawy"],
+    queryFn: () => apiClient.getSprawy(),
+  })
+
   const stats = {
-    kancelarie: 12,
-    klienci: 156,
-    sprawy: 89,
-    sprawyAktywne: 34,
-  }
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: "kancelaria",
-      action: "Dodano nową kancelarię",
-      name: "Kancelaria Kowalski & Partnerzy",
-      time: "2 godziny temu",
-    },
-    { id: 2, type: "klient", action: "Zarejestrowano klienta", name: "Jan Nowak", time: "4 godziny temu" },
-    { id: 3, type: "sprawa", action: "Zaktualizowano sprawę", name: "Sprawa rozwodowa #123", time: "6 godzin temu" },
-    { id: 4, type: "sprawa", action: "Zamknięto sprawę", name: "Sprawa spadkowa #98", time: "1 dzień temu" },
-  ]
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "kancelaria":
-        return <Building2 className="h-4 w-4" />
-      case "klient":
-        return <Users className="h-4 w-4" />
-      case "sprawa":
-        return <FileText className="h-4 w-4" />
-      default:
-        return <Clock className="h-4 w-4" />
-    }
-  }
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case "kancelaria":
-        return "bg-blue-100 text-blue-800"
-      case "klient":
-        return "bg-green-100 text-green-800"
-      case "sprawa":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+    kancelarie: kancelarie.length,
+    klienci: klienci.length,
+    sprawy: sprawy.length,
+    aktywneSprawy: sprawy.filter((s) => s.status === "w_trakcie").length,
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Legal API Nexus</h1>
+          <p className="text-gray-600 mt-2">System zarządzania kancelariami prawnymi</p>
+        </div>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Dodaj nowy
+        </Button>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Kancelarie</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.kancelarie}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +2 w tym miesiącu
-            </p>
+            <div className="text-2xl font-bold">{loadingKancelarie ? "..." : stats.kancelarie}</div>
+            <p className="text-xs text-muted-foreground">Zarejestrowane kancelarie</p>
           </CardContent>
         </Card>
 
@@ -75,92 +67,210 @@ export function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.klienci}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +12 w tym miesiącu
-            </p>
+            <div className="text-2xl font-bold">{loadingKlienci ? "..." : stats.klienci}</div>
+            <p className="text-xs text-muted-foreground">Zarejestrowani klienci</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wszystkie Sprawy</CardTitle>
+            <CardTitle className="text-sm font-medium">Sprawy</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.sprawy}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +8 w tym miesiącu
-            </p>
+            <div className="text-2xl font-bold">{loadingSprawy ? "..." : stats.sprawy}</div>
+            <p className="text-xs text-muted-foreground">Wszystkie sprawy</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aktywne Sprawy</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Aktywne</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.sprawyAktywne}</div>
-            <p className="text-xs text-muted-foreground">
-              <Clock className="h-3 w-3 inline mr-1" />W trakcie realizacji
-            </p>
+            <div className="text-2xl font-bold">{loadingSprawy ? "..." : stats.aktywneSprawy}</div>
+            <p className="text-xs text-muted-foreground">Sprawy w trakcie</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ostatnia Aktywność</CardTitle>
-          <CardDescription>Najnowsze zmiany w systemie</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center space-x-4">
-                <div className={`p-2 rounded-full ${getActivityColor(activity.type)}`}>
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">{activity.action}</p>
-                  <p className="text-sm text-muted-foreground">{activity.name}</p>
-                </div>
-                <div className="text-sm text-muted-foreground">{activity.time}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Przegląd</TabsTrigger>
+          <TabsTrigger value="kancelarie">Kancelarie</TabsTrigger>
+          <TabsTrigger value="klienci">Klienci</TabsTrigger>
+          <TabsTrigger value="sprawy">Sprawy</TabsTrigger>
+        </TabsList>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Szybkie Akcje</CardTitle>
-          <CardDescription>Najczęściej wykonywane operacje</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-              <Building2 className="h-8 w-8 text-blue-600 mb-2" />
-              <h3 className="font-medium">Dodaj Kancelarię</h3>
-              <p className="text-sm text-muted-foreground">Zarejestruj nową kancelarię prawną</p>
-            </div>
-            <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-              <Users className="h-8 w-8 text-green-600 mb-2" />
-              <h3 className="font-medium">Dodaj Klienta</h3>
-              <p className="text-sm text-muted-foreground">Zarejestruj nowego klienta</p>
-            </div>
-            <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-              <FileText className="h-8 w-8 text-purple-600 mb-2" />
-              <h3 className="font-medium">Utwórz Sprawę</h3>
-              <p className="text-sm text-muted-foreground">Rozpocznij nową sprawę prawną</p>
-            </div>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ostatnie kancelarie</CardTitle>
+                <CardDescription>Najnowiej zarejestrowane kancelarie</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {kancelarie.slice(0, 5).map((kancelaria) => (
+                    <div key={kancelaria.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{kancelaria.nazwa}</p>
+                        <p className="text-sm text-gray-500">{kancelaria.email}</p>
+                      </div>
+                      <Badge variant={kancelaria.aktywna ? "default" : "secondary"}>
+                        {kancelaria.aktywna ? "Aktywna" : "Nieaktywna"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ostatnie sprawy</CardTitle>
+                <CardDescription>Najnowiej utworzone sprawy</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {sprawy.slice(0, 5).map((sprawa) => (
+                    <div key={sprawa.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{sprawa.tytul}</p>
+                        <p className="text-sm text-gray-500">ID: {sprawa.id}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          sprawa.status === "nowa"
+                            ? "default"
+                            : sprawa.status === "w_trakcie"
+                              ? "secondary"
+                              : sprawa.status === "zawieszona"
+                                ? "outline"
+                                : "destructive"
+                        }
+                      >
+                        {sprawa.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="kancelarie">
+          <Card>
+            <CardHeader>
+              <CardTitle>Zarządzanie kancelariami</CardTitle>
+              <CardDescription>Lista wszystkich zarejestrowanych kancelarii</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {kancelarie.map((kancelaria) => (
+                  <div key={kancelaria.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{kancelaria.nazwa}</h3>
+                        <p className="text-sm text-gray-600">{kancelaria.adres}</p>
+                        <p className="text-sm text-gray-600">
+                          {kancelaria.email} | {kancelaria.telefon}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={kancelaria.aktywna ? "default" : "secondary"}>
+                          {kancelaria.aktywna ? "Aktywna" : "Nieaktywna"}
+                        </Badge>
+                        <Button variant="outline" size="sm">
+                          Edytuj
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="klienci">
+          <Card>
+            <CardHeader>
+              <CardTitle>Zarządzanie klientami</CardTitle>
+              <CardDescription>Lista wszystkich zarejestrowanych klientów</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {klienci.map((klient) => (
+                  <div key={klient.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">
+                          {klient.imie} {klient.nazwisko}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {klient.email} | {klient.telefon}
+                        </p>
+                        <p className="text-sm text-gray-600">{klient.adres}</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Edytuj
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sprawy">
+          <Card>
+            <CardHeader>
+              <CardTitle>Zarządzanie sprawami</CardTitle>
+              <CardDescription>Lista wszystkich spraw w systemie</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {sprawy.map((sprawa) => (
+                  <div key={sprawa.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{sprawa.tytul}</h3>
+                        <p className="text-sm text-gray-600">{sprawa.opis}</p>
+                        <p className="text-xs text-gray-500">
+                          Utworzona: {new Date(sprawa.data_utworzenia).toLocaleDateString("pl-PL")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            sprawa.status === "nowa"
+                              ? "default"
+                              : sprawa.status === "w_trakcie"
+                                ? "secondary"
+                                : sprawa.status === "zawieszona"
+                                  ? "outline"
+                                  : "destructive"
+                          }
+                        >
+                          {sprawa.status.replace("_", " ")}
+                        </Badge>
+                        <Button variant="outline" size="sm">
+                          Edytuj
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
