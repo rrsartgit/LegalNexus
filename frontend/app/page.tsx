@@ -1,99 +1,60 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import LoginForm from "@/components/LoginForm"
+import RegisterForm from "@/components/RegisterForm"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Building2, Users, FileText, BarChart3 } from "lucide-react"
-import { KancelarieManager } from "../components/KancelarieManager"
-import { KlienciManager } from "../components/KlienciManager"
-import { SprawyManager } from "../components/SprawyManager"
-import Dashboard from "@/components/Dashboard"
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const { isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      router.push("/dashboard")
+    }
+  }, [isAuthenticated, loading, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Ładowanie...</div>
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return null // Will redirect to dashboard
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Legal API Nexus</h1>
-                <p className="text-sm text-gray-500">System zarządzania kancelariami prawnymi</p>
-              </div>
-            </div>
-            <Badge variant="secondary" className="text-sm">
-              v1.0.0
-            </Badge>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="mb-6">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold">Legal API Nexus</CardTitle>
+            <p className="text-gray-600">Platforma analizy dokumentów prawnych</p>
+          </CardHeader>
+        </Card>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="kancelarie" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Kancelarie
-            </TabsTrigger>
-            <TabsTrigger value="klienci" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Klienci
-            </TabsTrigger>
-            <TabsTrigger value="sprawy" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Sprawy
-            </TabsTrigger>
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Logowanie</TabsTrigger>
+            <TabsTrigger value="register">Rejestracja</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            <Dashboard />
+          <TabsContent value="login">
+            <LoginForm />
           </TabsContent>
 
-          <TabsContent value="kancelarie" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Zarządzanie Kancelariami</CardTitle>
-                <CardDescription>Dodawaj, edytuj i zarządzaj kancelariami prawnymi w systemie</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <KancelarieManager />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="klienci" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Zarządzanie Klientami</CardTitle>
-                <CardDescription>Dodawaj, edytuj i zarządzaj klientami kancelarii prawnych</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <KlienciManager />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sprawy" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Zarządzanie Sprawami</CardTitle>
-                <CardDescription>Dodawaj, edytuj i śledź sprawy prowadzone przez kancelarie</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SprawyManager />
-              </CardContent>
-            </Card>
+          <TabsContent value="register">
+            <RegisterForm />
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   )
 }
