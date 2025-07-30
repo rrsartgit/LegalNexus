@@ -3,11 +3,12 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
 import { Building2, Users, FileText, BarChart3 } from "lucide-react"
-import KancelarieManager from "@/components/KancelarieManager"
-import KlienciManager from "@/components/KlienciManager"
-import SprawyManager from "@/components/SprawyManager"
-import Dashboard from "@/components/Dashboard"
+import { KancelarieManager } from "../components/KancelarieManager"
+import { KlienciManager } from "../components/KlienciManager"
+import { SprawyManager } from "../components/SprawyManager"
+import { Dashboard } from "../components/Dashboard"
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -19,8 +20,14 @@ export default function HomePage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">System Zarządzania Kancelarią Prawną</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Legal API Nexus</h1>
+                <p className="text-sm text-gray-500">System zarządzania kancelariami prawnymi</p>
+              </div>
             </div>
+            <Badge variant="secondary" className="text-sm">
+              v1.0.0
+            </Badge>
           </div>
         </div>
       </header>
@@ -46,15 +53,15 @@ export default function HomePage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard">
+          <TabsContent value="dashboard" className="space-y-6">
             <Dashboard />
           </TabsContent>
 
-          <TabsContent value="kancelarie">
+          <TabsContent value="kancelarie" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Zarządzanie Kancelariami</CardTitle>
-                <CardDescription>Dodawaj, edytuj i zarządzaj kancelariami prawnymi w systemie.</CardDescription>
+                <CardDescription>Dodawaj, edytuj i zarządzaj kancelariami prawnymi w systemie</CardDescription>
               </CardHeader>
               <CardContent>
                 <KancelarieManager />
@@ -62,11 +69,11 @@ export default function HomePage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="klienci">
+          <TabsContent value="klienci" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Zarządzanie Klientami</CardTitle>
-                <CardDescription>Zarządzaj bazą klientów kancelarii prawnych.</CardDescription>
+                <CardDescription>Dodawaj, edytuj i zarządzaj klientami kancelarii prawnych</CardDescription>
               </CardHeader>
               <CardContent>
                 <KlienciManager />
@@ -74,11 +81,11 @@ export default function HomePage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="sprawy">
+          <TabsContent value="sprawy" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Zarządzanie Sprawami</CardTitle>
-                <CardDescription>Prowadź i zarządzaj sprawami klientów.</CardDescription>
+                <CardDescription>Dodawaj, edytuj i śledź sprawy prowadzone przez kancelarie</CardDescription>
               </CardHeader>
               <CardContent>
                 <SprawyManager />
