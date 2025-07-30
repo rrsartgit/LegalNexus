@@ -10,7 +10,7 @@ import { KlienciManager } from "../components/KlienciManager"
 import { SprawyManager } from "../components/SprawyManager"
 import Dashboard from "@/components/Dashboard"
 
-export default function Home() {
+export default function HomePage() {
   const [activeTab, setActiveTab] = useState("dashboard")
 
   return (

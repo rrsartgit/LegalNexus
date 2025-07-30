@@ -1,5 +1,3 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
-
 export interface Kancelaria {
   id: number
   nazwa: string
@@ -7,9 +5,8 @@ export interface Kancelaria {
   telefon: string
   email: string
   nip: string
-  regon: string
   data_utworzenia: string
-  aktywna: boolean
+  status: "aktywna" | "nieaktywna"
 }
 
 export interface Klient {
@@ -21,19 +18,20 @@ export interface Klient {
   adres: string
   pesel?: string
   nip?: string
+  typ: "osoba_fizyczna" | "osoba_prawna"
   data_utworzenia: string
-  kancelaria_id: number
 }
 
 export interface Sprawa {
   id: number
   tytul: string
   opis: string
+  klient_id: number
+  kancelaria_id: number
   status: "nowa" | "w_trakcie" | "zawieszona" | "zakonczona"
   data_utworzenia: string
   data_zakonczenia?: string
-  klient_id: number
-  kancelaria_id: number
+  wartosc?: number
 }
 
 export interface CreateKancelaria {
@@ -42,7 +40,6 @@ export interface CreateKancelaria {
   telefon: string
   email: string
   nip: string
-  regon: string
 }
 
 export interface CreateKlient {
@@ -53,7 +50,7 @@ export interface CreateKlient {
   adres: string
   pesel?: string
   nip?: string
-  kancelaria_id: number
+  typ: "osoba_fizyczna" | "osoba_prawna"
 }
 
 export interface CreateSprawa {
@@ -61,7 +58,10 @@ export interface CreateSprawa {
   opis: string
   klient_id: number
   kancelaria_id: number
+  wartosc?: number
 }
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
 
 class ApiClient {
   private baseUrl: string
@@ -70,108 +70,124 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
-    const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-      ...options,
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
+  // Kancelarie endpoints
+  async getKancelarie(): Promise<Kancelaria[]> {
+    const response = await fetch(`${this.baseUrl}/kancelarie`)
+    if (!response.ok) throw new Error("Failed to fetch kancelarie")
     return response.json()
   }
 
-  // Kancelarie endpoints
-  async getKancelarie(): Promise<Kancelaria[]> {
-    return this.request<Kancelaria[]>("/kancelarie")
-  }
-
   async getKancelaria(id: number): Promise<Kancelaria> {
-    return this.request<Kancelaria>(`/kancelarie/${id}`)
+    const response = await fetch(`${this.baseUrl}/kancelarie/${id}`)
+    if (!response.ok) throw new Error("Failed to fetch kancelaria")
+    return response.json()
   }
 
   async createKancelaria(data: CreateKancelaria): Promise<Kancelaria> {
-    return this.request<Kancelaria>("/kancelarie", {
+    const response = await fetch(`${this.baseUrl}/kancelarie`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to create kancelaria")
+    return response.json()
   }
 
   async updateKancelaria(id: number, data: Partial<CreateKancelaria>): Promise<Kancelaria> {
-    return this.request<Kancelaria>(`/kancelarie/${id}`, {
+    const response = await fetch(`${this.baseUrl}/kancelarie/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to update kancelaria")
+    return response.json()
   }
 
   async deleteKancelaria(id: number): Promise<void> {
-    return this.request<void>(`/kancelarie/${id}`, {
+    const response = await fetch(`${this.baseUrl}/kancelarie/${id}`, {
       method: "DELETE",
     })
+    if (!response.ok) throw new Error("Failed to delete kancelaria")
   }
 
   // Klienci endpoints
   async getKlienci(): Promise<Klient[]> {
-    return this.request<Klient[]>("/klienci")
+    const response = await fetch(`${this.baseUrl}/klienci`)
+    if (!response.ok) throw new Error("Failed to fetch klienci")
+    return response.json()
   }
 
   async getKlient(id: number): Promise<Klient> {
-    return this.request<Klient>(`/klienci/${id}`)
+    const response = await fetch(`${this.baseUrl}/klienci/${id}`)
+    if (!response.ok) throw new Error("Failed to fetch klient")
+    return response.json()
   }
 
   async createKlient(data: CreateKlient): Promise<Klient> {
-    return this.request<Klient>("/klienci", {
+    const response = await fetch(`${this.baseUrl}/klienci`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to create klient")
+    return response.json()
   }
 
   async updateKlient(id: number, data: Partial<CreateKlient>): Promise<Klient> {
-    return this.request<Klient>(`/klienci/${id}`, {
+    const response = await fetch(`${this.baseUrl}/klienci/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to update klient")
+    return response.json()
   }
 
   async deleteKlient(id: number): Promise<void> {
-    return this.request<void>(`/klienci/${id}`, {
+    const response = await fetch(`${this.baseUrl}/klienci/${id}`, {
       method: "DELETE",
     })
+    if (!response.ok) throw new Error("Failed to delete klient")
   }
 
   // Sprawy endpoints
   async getSprawy(): Promise<Sprawa[]> {
-    return this.request<Sprawa[]>("/sprawy")
+    const response = await fetch(`${this.baseUrl}/sprawy`)
+    if (!response.ok) throw new Error("Failed to fetch sprawy")
+    return response.json()
   }
 
   async getSprawa(id: number): Promise<Sprawa> {
-    return this.request<Sprawa>(`/sprawy/${id}`)
+    const response = await fetch(`${this.baseUrl}/sprawy/${id}`)
+    if (!response.ok) throw new Error("Failed to fetch sprawa")
+    return response.json()
   }
 
   async createSprawa(data: CreateSprawa): Promise<Sprawa> {
-    return this.request<Sprawa>("/sprawy", {
+    const response = await fetch(`${this.baseUrl}/sprawy`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to create sprawa")
+    return response.json()
   }
 
-  async updateSprawa(id: number, data: Partial<CreateSprawa & { status: Sprawa["status"] }>): Promise<Sprawa> {
-    return this.request<Sprawa>(`/sprawy/${id}`, {
+  async updateSprawa(id: number, data: Partial<CreateSprawa>): Promise<Sprawa> {
+    const response = await fetch(`${this.baseUrl}/sprawy/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    if (!response.ok) throw new Error("Failed to update sprawa")
+    return response.json()
   }
 
   async deleteSprawa(id: number): Promise<void> {
-    return this.request<void>(`/sprawy/${id}`, {
+    const response = await fetch(`${this.baseUrl}/sprawy/${id}`, {
       method: "DELETE",
     })
+    if (!response.ok) throw new Error("Failed to delete sprawa")
   }
 }
 
