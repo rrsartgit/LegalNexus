@@ -20,7 +20,7 @@ import {
   Gavel,
   BookOpen,
 } from "lucide-react"
-import { useAuth, mockLogout } from "@/lib/auth"
+import { useAuth } from "@/frontend/lib/auth" // Corrected import path
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useRouter } from "next/navigation" // Import useRouter
 
 interface HeaderProps {
   onSectionChange: (section: string) => void
@@ -37,18 +38,16 @@ interface HeaderProps {
 }
 
 export function Header({ onSectionChange, activeSection }: HeaderProps) {
-  const { user, isAuthenticated } = useAuth()
-  const [isScrolled, setIsScrolled] = useState(false)
+  const { user, isAuthenticated, signOut } = useAuth() // Use signOut from useAuth
+  const router = useRouter()
+  const [isScrolled, setIsScrolled] = useState(false) // Keep if needed for scroll effects
 
   const navItems = [
     { name: "Strona Główna", section: "home", icon: Home },
     { name: "Jak to działa", section: "jak-to-dziala", icon: Lightbulb },
     { name: "Funkcje", section: "funkcje", icon: BarChart },
-    // { name: "Cennik", section: "cennik", icon: DollarSign }, // Commented out as requested
-    // { name: "Kancelarie", section: "kancelarie", icon: Briefcase }, // Commented out as requested
     { name: "Blog", section: "blog", icon: BookOpen },
     { name: "Poradniki", section: "poradniki", icon: BookOpen },
-    // { name: "Dokumentacja API", section: "dokumentacja-api", icon: FileText }, // Commented out as requested
     { name: "O nas", section: "o-nas", icon: Users },
     { name: "Kontakt", section: "kontakt", icon: Phone },
   ]
@@ -67,9 +66,9 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
     { name: "FAQ", section: "faq", icon: Info },
   ]
 
-  const handleLogout = () => {
-    mockLogout()
-    onSectionChange("home") // Redirect to home page after logout
+  const handleLogout = async () => {
+    await signOut() // Call actual signOut function
+    router.push("/") // Redirect to home page after logout
   }
 
   const getPanelSection = () => {
@@ -148,21 +147,21 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-user.jpg" alt={user?.name || "User"} />
-                    <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+                    <AvatarImage src="/placeholder-user.jpg" alt={user?.email || "User"} /> {/* Use email for alt */}
+                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    <p className="text-sm font-medium leading-none">{user?.email}</p>
+                    <p className="text-xs leading-none text-muted-foreground">Rola: {user?.role}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {panelSection && (
-                  <DropdownMenuItem onClick={() => onSectionChange(panelSection)}>
+                  <DropdownMenuItem onClick={() => router.push(`/${panelSection}`)}>
                     <User className="mr-2 h-4 w-4" />
                     Mój Panel ({user?.role === "admin" ? "Admin" : user?.role === "client" ? "Klient" : "Operator"})
                   </DropdownMenuItem>

@@ -14,8 +14,6 @@ import { Label } from "@/components/ui/label"
 import {
   MapPin,
   Users,
-  Award,
-  Calendar,
   Scale,
   Building,
   Heart,
@@ -54,77 +52,33 @@ type Section =
   | "poradniki"
   | "zamow-analize"
 
-// Hero Section Component
+// New Hero Section Component
 function HeroSection() {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 text-white overflow-hidden">
+    <section className="relative min-h-[60vh] flex items-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 text-white overflow-hidden">
       <div className="absolute inset-0 bg-black/20" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <Badge variant="secondary" className="bg-blue-800 text-blue-100 hover:bg-blue-700">
-              NOWA GENERACJA
-            </Badge>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Profesjonalny System API dla Kancelarii Prawnych
-            </h1>
-
-            <p className="text-xl text-blue-100 leading-relaxed">
-              Zaawansowane rozwiązanie API z architekturą Domain-Driven Design, RESTful oraz profesjonalnymi SDK dla
-              wszystkich popularnych języków programowania.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                Poznaj API
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
-              >
-                Obejrzyj Demo
-              </Button>
-            </div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+        <div className="space-y-6">
+          <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gavel className="h-12 w-12 text-white" />
           </div>
-
-          <div className="relative">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4 gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <div className="ml-auto text-sm text-white/80">API Console</div>
-                </div>
-
-                <div className="bg-gray-900 rounded-lg p-4 mb-4 overflow-x-auto">
-                  <pre className="text-green-400 text-sm">
-                    <code>{`GET /api/v1/law-firms/123
-Accept: application/vnd.api+json
-Authorization: Bearer YOUR_API_KEY`}</code>
-                  </pre>
-                </div>
-
-                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-blue-300 text-sm">
-                    <code>{`{
-  "data": {
-    "type": "law-firms",
-    "id": "123",
-    "attributes": {
-      "name": "Kowalski i Wspólnicy",
-      "specializations": ["prawo spółek", "podatki"],
-      "lawyers_count": 12
-    }
-  }
-}`}</code>
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">PROFESJONALNA POMOC PRAWNA</h1>
+          <p className="text-xl text-blue-100 leading-relaxed max-w-3xl mx-auto">
+            Otrzymałeś pismo prawne? Pomożemy Ci! Analizujemy dokumenty prawne i przygotowujemy odpowiedzi w ciągu 24
+            godzin. Profesjonalnie, szybko i w przystępnej cenie.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+              Zamów Analizę
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
+            >
+              Zobacz Przykłady
+            </Button>
           </div>
         </div>
       </div>
@@ -132,7 +86,7 @@ Authorization: Bearer YOUR_API_KEY`}</code>
   )
 }
 
-// Features Section Component
+// Features Section Component (unchanged)
 function FeaturesSection() {
   const features = [
     {
@@ -185,7 +139,7 @@ function FeaturesSection() {
   )
 }
 
-// Stats Section Component
+// Stats Section Component (unchanged)
 function StatsSection() {
   const stats = [
     { value: "200+", label: "Kancelarii korzysta", icon: Building },
@@ -213,7 +167,7 @@ function StatsSection() {
   )
 }
 
-// AI Assistant Component
+// AI Assistant Component (unchanged)
 function AIAssistant() {
   const [message, setMessage] = useState("")
 
@@ -311,10 +265,9 @@ function HomeSection() {
 
   return (
     <>
-      {/* Removed HeroSection */}
+      <HeroSection /> {/* Re-added the new HeroSection */}
       <StatsSection />
       <FeaturesSection />
-
       {/* Services Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -362,7 +315,6 @@ function HomeSection() {
           </div>
         </div>
       </section>
-
       {/* How it works */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -389,13 +341,12 @@ function HomeSection() {
           </div>
         </div>
       </section>
-
       <AIAssistant />
     </>
   )
 }
 
-// Jak to działa Section
+// Jak to działa Section (unchanged)
 function JakToDzialaSection() {
   const steps = [
     {
@@ -468,7 +419,7 @@ function JakToDzialaSection() {
   )
 }
 
-// Funkcje Section
+// Funkcje Section (unchanged)
 function FunkcjeSection() {
   const features = [
     {
@@ -541,32 +492,8 @@ function FunkcjeSection() {
   )
 }
 
-// O nas Section
+// O nas Section (modified)
 function ONasSection() {
-  const teamMembers = [
-    {
-      name: "Dr hab. Marek Kowalski",
-      position: "Założyciel i Dyrektor Generalny",
-      specialization: "Prawo cywilne, prawo handlowe",
-      experience: "25 lat praktyki prawniczej",
-      education: "Uniwersytet Gdański, Wydział Prawa i Administracji",
-    },
-    {
-      name: "Mgr Anna Nowak",
-      position: "Dyrektor Techniczny",
-      specialization: "Systemy informatyczne dla prawników",
-      experience: "15 lat w branży IT",
-      education: "Politechnika Gdańska, Informatyka",
-    },
-    {
-      name: "Mgr Piotr Wiśniewski",
-      position: "Główny Prawnik Produktu",
-      specialization: "Prawo procesowe, informatyzacja wymiaru sprawiedliwości",
-      experience: "12 lat w kancelariach prawnych",
-      education: "Uniwersytet Gdański, aplikacja adwokacka",
-    },
-  ]
-
   const values = [
     {
       icon: Scale,
@@ -592,106 +519,9 @@ function ONasSection() {
     },
   ]
 
-  const milestones = [
-    {
-      year: "2018",
-      title: "Założenie Firmy",
-      description: "Rozpoczęcie prac nad pierwszym systemem zarządzania kancelariami prawymi w Gdańsku",
-    },
-    {
-      year: "2019",
-      title: "Pierwsi Klienci",
-      description: "Wdrożenie systemu w 5 kancelariach prawnych w Trójmieście",
-    },
-    {
-      year: "2021",
-      title: "Ekspansja Regionalna",
-      description: "Rozszerzenie działalności na całe województwo pomorskie - 50+ kancelarii",
-    },
-    {
-      year: "2023",
-      title: "Wprowadzenie AI",
-      description: "Uruchomienie LexiCore - pierwszego asystenta AI dla prawników w Polsce",
-    },
-    {
-      year: "2024",
-      title: "Obecność Ogólnopolska",
-      description: "Ponad 200 kancelarii prawnych w całej Polsce korzysta z naszych rozwiązań",
-    },
-  ]
-
   return (
     <div className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
-            <Building className="w-4 h-4 mr-2" />
-            NASZA HISTORIA
-          </Badge>
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">Legal API Nexus - Lider Technologii Prawniczych</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Od 2018 roku tworzymy innowacyjne rozwiązania informatyczne dla kancelarii prawnych, łącząc głęboką wiedzę
-            prawniczą z najnowszymi technologiami.
-          </p>
-        </div>
-
-        {/* Misja i Wizja */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Misja i Wizja Firmy</h2>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold text-blue-600 mb-3">Nasza Misja</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Wspieramy kancelarie prawne w całej Polsce poprzez dostarczanie nowoczesnych, bezpiecznych i
-                  intuicyjnych narzędzi informatycznych, które zwiększają efektywność pracy prawników i poprawiają
-                  jakość obsługi klientów.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-blue-600 mb-3">Nasza Wizja</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Chcemy być wiodącym dostawcą technologii prawniczych w Polsce, tworząc rozwiązania, które
-                  przekształcają tradycyjną praktykę prawną w nowoczesną, efektywną i dostępną usługę dla wszystkich
-                  obywateli.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Users className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-gray-900">200+</div>
-                <div className="text-gray-600">Kancelarii Klientów</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <MapPin className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-gray-900">16</div>
-                <div className="text-gray-600">Województw</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Award className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-gray-900">6</div>
-                <div className="text-gray-600">Lat Doświadczenia</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-gray-900">24/7</div>
-                <div className="text-gray-600">Wsparcie Techniczne</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
         {/* Values */}
         <div className="mb-20">
           <div className="text-center mb-16">
@@ -717,122 +547,12 @@ function ONasSection() {
             ))}
           </div>
         </div>
-
-        {/* Historia Rozwoju */}
-        <div className="mb-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Historia Rozwoju</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Kluczowe momenty w rozwoju naszej firmy i produktów.
-            </p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-blue-200"></div>
-
-            <div className="space-y-12">
-              {milestones.map((milestone, index) => (
-                <div key={index} className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"}`}>
-                  <div className={`w-1/2 ${index % 2 === 0 ? "pr-8 text-right" : "pl-8"}`}>
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="text-2xl font-bold text-blue-600 mb-2">{milestone.year}</div>
-                        <h3 className="text-lg font-semibold mb-2">{milestone.title}</h3>
-                        <p className="text-gray-600">{milestone.description}</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="relative z-10">
-                    <div className="w-4 h-4 bg-blue-600 rounded-full border-4 border-white shadow-lg"></div>
-                  </div>
-
-                  <div className="w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Zespół Kierowniczy */}
-        <div className="mb-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Zespół Kierowniczy</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Doświadczeni profesjonaliści łączący wiedzę prawniczą z ekspertyzą technologiczną.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index}>
-                <CardHeader className="text-center">
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-10 w-10 text-blue-600" />
-                  </div>
-                  <CardTitle className="text-lg">{member.name}</CardTitle>
-                  <p className="text-blue-600 font-medium">{member.position}</p>
-                </CardHeader>
-                <CardContent className="text-center space-y-2">
-                  <p className="text-gray-600 text-sm">{member.specialization}</p>
-                  <p className="text-gray-500 text-sm">{member.experience}</p>
-                  <p className="text-gray-500 text-sm">{member.education}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Nasze Biuro w Gdańsku */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Nasze Biuro w Gdańsku</h2>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <MapPin className="h-6 w-6 text-blue-600 mr-3 mt-1" />
-                <div>
-                  <p className="font-semibold">Legal API Nexus Sp. z o.o.</p>
-                  <p className="text-gray-600">ul. Długa 47/48</p>
-                  <p className="text-gray-600">80-831 Gdańsk</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Building className="h-6 w-6 text-blue-600 mr-3" />
-                <p className="text-gray-600">Centrum Gdańska, blisko Sądu Okręgowego</p>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <Button size="lg">Umów Spotkanie w Biurze</Button>
-            </div>
-          </div>
-
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Dlaczego Gdańsk?</h3>
-              <div className="space-y-3 text-gray-600">
-                <p>
-                  Gdańsk to dynamicznie rozwijające się centrum prawnicze północnej Polski, gdzie tradycja prawnicza
-                  spotyka się z nowoczesnymi technologiami.
-                </p>
-                <p>
-                  Nasze biuro znajduje się w sercu miasta, w pobliżu najważniejszych instytucji prawnych, co pozwala nam
-                  na bliską współpracę z lokalnymi kancelariami i lepsze zrozumienie ich potrzeb.
-                </p>
-                <p>
-                  Gdańsk jest również ważnym ośrodkiem technologicznym, co umożliwia nam dostęp do najlepszych talentów
-                  IT i najnowszych rozwiązań technicznych.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )
 }
 
-// Kontakt Section
+// Kontakt Section (unchanged)
 function KontaktSection() {
   const [formData, setFormData] = useState({
     name: "",
@@ -1018,7 +738,7 @@ function KontaktSection() {
   )
 }
 
-// Service Sections
+// Service Sections (unchanged)
 function AnalizaDokumentowSection() {
   const features = [
     {
@@ -1177,7 +897,7 @@ function ReprezentacjaSection() {
   )
 }
 
-// Legal Sections
+// Legal Sections (unchanged)
 function RegulaminSection() {
   return (
     <div className="py-20 bg-white">
@@ -1409,26 +1129,116 @@ function AsystentAISection() {
   )
 }
 
+// Blog Section (updated with example data)
 function BlogSection() {
+  const blogPosts = [
+    {
+      title: "Nowelizacja Kodeksu Cywilnego 2024: Co musisz wiedzieć?",
+      date: "15 lipca 2024",
+      author: "Anna Kowalska",
+      summary: "Przegląd najważniejszych zmian w Kodeksie Cywilnym, które weszły w życie w 2024 roku.",
+      link: "#",
+    },
+    {
+      title: "RODO w praktyce: Jak chronić dane osobowe w małej firmie?",
+      date: "10 lipca 2024",
+      author: "Piotr Nowak",
+      summary: "Praktyczne wskazówki dotyczące wdrożenia zasad RODO w codziennej działalności gospodarczej.",
+      link: "#",
+    },
+    {
+      title: "Spory sądowe: Mediacja jako alternatywa dla procesu",
+      date: "5 lipca 2024",
+      author: "Marta Wiśniewska",
+      summary: "Zalety i wady mediacji w rozwiązywaniu konfliktów prawnych. Kiedy warto ją wybrać?",
+      link: "#",
+    },
+  ]
+
   return (
     <div className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            BLOG
+          </Badge>
           <h1 className="text-4xl font-bold text-gray-900 mb-6">Blog prawniczy</h1>
-          <p className="text-xl text-gray-600">Aktualności i porady prawne</p>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Aktualności, analizy i porady prawne od ekspertów LegalNexus.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {blogPosts.map((post, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
+                <p className="text-sm text-gray-500 mb-3">
+                  {post.date} by {post.author}
+                </p>
+                <p className="text-gray-600 mb-4">{post.summary}</p>
+                <Button variant="link" className="p-0 h-auto text-blue-600 hover:underline">
+                  Czytaj więcej <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
   )
 }
 
+// Poradniki Section (updated with example data)
 function PoradnikiSection() {
+  const guides = [
+    {
+      title: "Jak napisać skuteczne odwołanie od decyzji administracyjnej?",
+      description: "Krok po kroku przez proces tworzenia i składania odwołania.",
+      link: "#",
+    },
+    {
+      title: "Prawa konsumenta: Co zrobić, gdy produkt jest wadliwy?",
+      description: "Przewodnik po prawach konsumenta i procedurach reklamacyjnych.",
+      link: "#",
+    },
+    {
+      title: "Umowa najmu mieszkania: Na co zwrócić uwagę?",
+      description: "Kluczowe elementy umowy najmu, które zapewnią bezpieczeństwo obu stronom.",
+      link: "#",
+    },
+    {
+      title: "Spadek i dziedziczenie: Podstawowe informacje",
+      description: "Zrozumienie zasad dziedziczenia ustawowego i testamentowego.",
+      link: "#",
+    },
+  ]
+
   return (
     <div className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            PORADNIKI
+          </Badge>
           <h1 className="text-4xl font-bold text-gray-900 mb-6">Poradniki prawne</h1>
-          <p className="text-xl text-gray-600">Praktyczne poradniki krok po kroku</p>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Praktyczne poradniki krok po kroku, które pomogą Ci zrozumieć prawo.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {guides.map((guide, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-2">{guide.title}</h3>
+                <p className="text-gray-600 mb-4">{guide.description}</p>
+                <Button variant="link" className="p-0 h-auto text-blue-600 hover:underline">
+                  Czytaj poradnik <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

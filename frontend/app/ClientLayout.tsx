@@ -1,39 +1,71 @@
 "use client"
 
-import type React from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useState } from "react"
-import { AuthProvider } from "@/lib/auth"
-import { Toaster } from "@/components/ui/toaster"
 
-export default function ClientLayout({
-  children,
-}: {
+import type React from "react"
+
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { useAuth } from "@/frontend/lib/auth"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { toast } from "@/components/ui/use-toast"
+
+interface ClientLayoutProps {
   children: React.ReactNode
-}) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: (failureCount, error: any) => {
-              // Don't retry on 401/403 errors
-              if (error?.message?.includes("401") || error?.message?.includes("403")) {
-                return false
-              }
-              return failureCount < 3
-            },
-          },
-        },
-      }),
-  )
+  allowedRoles?: string[]
+}
+
+export default function ClientLayout({ children, allowedRoles }: ClientLayoutProps) {
+  const { user, isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+  const [activeSection, setActiveSection] = useState("home") // State for active section
+
+  useEffect(() => {
+    if (loading) return
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Brak dostępu",
+        description: "Musisz być zalogowany, aby uzyskać dostęp do tej strony.",
+        variant: "destructive",
+      })
+      router.push("/logowanie")
+      return
+    }
+
+    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+      toast({
+        title: "Brak uprawnień",
+        description: "Nie masz wystarczających uprawnień, aby uzyskać dostęp do tej strony.",
+        variant: "destructive",
+      })
+      // Redirect based on user's actual role or to home
+      if (user.role === "admin") {
+        router.push("/admin")
+      } else if (user.role === "operator") {
+        router.push("/panel-operatora")
+      } else if (user.role === "client") {
+        router.push("/panel-klienta")
+      } else {
+        router.push("/")
+      }
+    }
+  }, [isAuthenticated, loading, user, allowedRoles, router])
+
+  if (loading || (isAuthenticated && allowedRoles && user && !allowedRoles.includes(user.role))) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Ładowanie...</p>
+      </div>
+    )
+  }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {children}
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen flex flex-col">
+      <Header onSectionChange={setActiveSection} activeSection={activeSection} />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
   )
 }

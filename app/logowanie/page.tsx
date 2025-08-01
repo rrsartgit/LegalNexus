@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { useAuth } from "@/lib/auth" // Updated import
+import { useAuth } from "@/frontend/lib/auth" // Corrected import path
 import { ArrowLeft, Mail, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -21,7 +21,7 @@ export default function LogowaniePage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { signInWithEmail } = useAuth() // Use signInWithEmail
+  const { signInWithEmail } = useAuth()
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,9 +38,16 @@ export default function LogowaniePage() {
     } else if (user) {
       toast({
         title: "Zalogowano pomyślnie!",
-        description: `Witaj z powrotem, ${user.name}!`,
+        description: `Witaj z powrotem, ${user.email}!`, // Changed to user.email as name might not be available
       })
-      router.push("/panel-klienta")
+      // Redirect based on role
+      if (user.role === "admin") {
+        router.push("/admin")
+      } else if (user.role === "operator") {
+        router.push("/panel-operatora")
+      } else {
+        router.push("/panel-klienta")
+      }
     }
     setIsLoading(false)
   }
@@ -54,9 +61,8 @@ export default function LogowaniePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-montserrat">
-      <Header />
-
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header onSectionChange={() => {}} activeSection="logowanie" /> {/* Pass dummy props for Header */}
       <main className="flex-1 py-12">
         <div className="max-w-md mx-auto px-4">
           <Button variant="ghost" asChild className="mb-6">
@@ -69,7 +75,7 @@ export default function LogowaniePage() {
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold">Zaloguj się</CardTitle>
-              <p className="text-gray-600">Uzyskaj dostęp do swojego panelu klienta</p>
+              <p className="text-gray-600">Uzyskaj dostęp do swojego panelu</p>
             </CardHeader>
 
             <CardContent className="space-y-6">
@@ -135,15 +141,6 @@ export default function LogowaniePage() {
                   <Mail className="mr-2 h-4 w-4" />
                   Email
                 </Button>
-                {/* Phone login removed for now, focusing on email/password with Supabase */}
-                {/* <Button
-                  variant={loginMethod === "phone" ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setLoginMethod("phone")}
-                >
-                  <Phone className="mr-2 h-4 w-4" />
-                  Telefon
-                </Button> */}
               </div>
 
               {/* Login Form */}
@@ -207,7 +204,6 @@ export default function LogowaniePage() {
           </Card>
         </div>
       </main>
-
       <Footer />
     </div>
   )

@@ -1,73 +1,94 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { apiClient, type User, type LoginRequest, type RegisterRequest } from "./api"
+import type React from "react"
+
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { authApi } from "./api"
+import { useRouter } from "next/navigation"
+
+interface User {
+  id: number
+  email: string
+  role: string
+}
 
 interface AuthContextType {
   user: User | null
-  loading: boolean
-  login: (data: LoginRequest) => Promise<void>
-  register: (data: RegisterRequest) => Promise<void>
-  logout: () => void
   isAuthenticated: boolean
-  isOperator: boolean
-  isAdmin: boolean
+  loading: boolean
+  signInWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>
+  signUpWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  useEffect(() => {
-    // Check if user is logged in on app start
-    const checkAuth = async () => {
+  const loadUserFromToken = useCallback(async () => {
+    const token = localStorage.getItem("token")
+    if (token) {
       try {
-        const token = localStorage.getItem("access_token")
-        if (token) {
-          const currentUser = await apiClient.getCurrentUser()
-          setUser(currentUser)
-        }
+        const response = await authApi.getMe()
+        setUser(response.data)
+        setIsAuthenticated(true)
       } catch (error) {
-        // Token is invalid, clear it
-        localStorage.removeItem("access_token")
-        apiClient.clearToken()
-      } finally {
-        setLoading(false)
+        console.error("Failed to fetch user data:", error)
+        localStorage.removeItem("token")
+        setUser(null)
+        setIsAuthenticated(false)
       }
     }
-
-    checkAuth()
+    setLoading(false)
   }, [])
 
-  const login = async (data: LoginRequest) => {
-    const response = await apiClient.login(data)
-    setUser(response.user)
+  useEffect(() => {
+    loadUserFromToken()
+  }, [loadUserFromToken])
+
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const response = await authApi.login({ email, password })
+      const { access_token, user: userData } = response.data
+      localStorage.setItem("token", access_token)
+      setUser(userData)
+      setIsAuthenticated(true)
+      return { user: userData, error: null }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || "Nieprawidłowy email lub hasło."
+      return { user: null, error: errorMessage }
+    }
   }
 
-  const register = async (data: RegisterRequest) => {
-    const response = await apiClient.register(data)
-    setUser(response.user)
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      const response = await authApi.register({ email, password })
+      const { user: userData } = response.data // Register might not return a token directly
+      // After successful registration, you might want to automatically log them in
+      // or redirect to login page. For now, we'll just return the user.
+      return { user: userData, error: null }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || "Błąd rejestracji."
+      return { user: null, error: errorMessage }
+    }
   }
 
-  const logout = () => {
-    apiClient.clearToken()
+  const signOut = async () => {
+    localStorage.removeItem("token")
     setUser(null)
+    setIsAuthenticated(false)
+    router.push("/") // Redirect to home page
   }
 
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!user,
-    isOperator: user?.role === "OPERATOR" || user?.role === "ADMIN",
-    isAdmin: user?.role === "ADMIN",
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, signInWithEmail, signUpWithEmail, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

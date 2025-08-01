@@ -1,4 +1,47 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+import axios from "axios"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1"
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+})
+
+// Request interceptor to add Authorization header
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  },
+)
+
+// Response interceptor to handle token expiration or invalid tokens
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+    // If the error is 401 Unauthorized and it's not the login/refresh endpoint
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      // Here you might implement token refresh logic if your backend supports it
+      // For now, we'll just clear the token and redirect to login
+      localStorage.removeItem("token")
+      // You might want to use a global event or a more robust state management
+      // to trigger a redirect to the login page. For simplicity, we'll rely
+      // on the AuthProvider to detect the token change.
+      window.location.href = "/logowanie" // Redirect to login page
+    }
+    return Promise.reject(error)
+  },
+)
 
 // Types matching the FastAPI backend
 export interface User {
@@ -77,212 +120,39 @@ export interface AuthResponse {
   user: User
 }
 
-class ApiClient {
-  private baseUrl: string
-  private token: string | null = null
-
-  constructor(baseUrl: string = API_BASE_URL) {
-    this.baseUrl = baseUrl
-    // Load token from localStorage on initialization
-    if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("access_token")
-    }
-  }
-
-  setToken(token: string) {
-    this.token = token
-    if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", token)
-    }
-  }
-
-  clearToken() {
-    this.token = null
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token")
-    }
-  }
-
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...options.headers,
-    }
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
-    }
-
-    return response.json()
-  }
-
-  private async uploadRequest<T>(endpoint: string, formData: FormData): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
-    const headers: HeadersInit = {}
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
-    }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
-    }
-
-    return response.json()
-  }
-
-  // Authentication endpoints
-  async login(data: LoginRequest): Promise<AuthResponse> {
-    const formData = new FormData()
-    formData.append("username", data.email)
-    formData.append("password", data.password)
-
-    const response = await fetch(`${this.baseUrl}/auth/login`, {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || "Login failed")
-    }
-
-    const result = await response.json()
-    this.setToken(result.access_token)
-    return result
-  }
-
-  async register(data: RegisterRequest): Promise<AuthResponse> {
-    const result = await this.request<AuthResponse>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
-    this.setToken(result.access_token)
-    return result
-  }
-
-  async getCurrentUser(): Promise<User> {
-    return this.request<User>("/auth/me")
-  }
-
-  // Orders endpoints
-  async getOrders(): Promise<Order[]> {
-    return this.request<Order[]>("/orders/")
-  }
-
-  async getOrder(id: number): Promise<Order> {
-    return this.request<Order>(`/orders/${id}`)
-  }
-
-  async createOrder(data: CreateOrderRequest): Promise<Order> {
-    return this.request<Order>("/orders/", {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
-  }
-
-  async updateOrderStatus(id: number, status: Order["status"]): Promise<Order> {
-    return this.request<Order>(`/orders/${id}/status`, {
-      method: "PUT",
-      body: JSON.stringify({ status }),
-    })
-  }
-
-  async assignOrder(id: number, operator_id: number): Promise<Order> {
-    return this.request<Order>(`/orders/${id}/assign`, {
-      method: "PUT",
-      body: JSON.stringify({ operator_id }),
-    })
-  }
-
-  // Documents endpoints
-  async uploadDocument(orderId: number, file: File): Promise<Document> {
-    const formData = new FormData()
-    formData.append("file", file)
-    return this.uploadRequest<Document>(`/documents/upload/${orderId}`, formData)
-  }
-
-  async getOrderDocuments(orderId: number): Promise<Document[]> {
-    return this.request<Document[]>(`/documents/order/${orderId}`)
-  }
-
-  async downloadDocument(id: number): Promise<Blob> {
-    const response = await fetch(`${this.baseUrl}/documents/download/${id}`, {
-      headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to download document")
-    }
-
-    return response.blob()
-  }
-
-  // Analysis endpoints
-  async createAnalysis(orderId: number, data: CreateAnalysisRequest): Promise<Analysis> {
-    return this.request<Analysis>(`/analyses/${orderId}`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
-  }
-
-  async getAnalysis(orderId: number): Promise<Analysis> {
-    return this.request<Analysis>(`/analyses/${orderId}`)
-  }
-
-  // Payment endpoints
-  async createPaymentIntent(orderId: number): Promise<{ client_secret: string }> {
-    return this.request<{ client_secret: string }>(`/payments/create-intent/${orderId}`, {
-      method: "POST",
-    })
-  }
-
-  async confirmPayment(orderId: number, paymentIntentId: string): Promise<Payment> {
-    return this.request<Payment>(`/payments/confirm/${orderId}`, {
-      method: "POST",
-      body: JSON.stringify({ payment_intent_id: paymentIntentId }),
-    })
-  }
-
-  // Users endpoints (admin only)
-  async getUsers(): Promise<User[]> {
-    return this.request<User[]>("/users/")
-  }
-
-  async updateUserRole(id: number, role: User["role"]): Promise<User> {
-    return this.request<User>(`/users/${id}/role`, {
-      method: "PUT",
-      body: JSON.stringify({ role }),
-    })
-  }
-
-  // Dashboard stats
-  async getDashboardStats(): Promise<{
-    total_orders: number
-    pending_orders: number
-    completed_orders: number
-    total_revenue: number
-  }> {
-    return this.request("/orders/dashboard/stats")
-  }
+export const authApi = {
+  login: (data: any) => api.post("/auth/login", data),
+  register: (data: any) => api.post("/auth/register", data),
+  getMe: () => api.get("/users/me"),
 }
 
-export const apiClient = new ApiClient()
+export const ordersApi = {
+  createOrder: (data: { title: string; description: string }) => api.post("/orders/", data),
+  uploadDocument: (orderId: number, file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return api.post(`/orders/${orderId}/documents`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+  },
+  getOrders: () => api.get("/orders/"),
+  getOrderById: (orderId: number) => api.get(`/orders/${orderId}`),
+  updateOrderStatus: (orderId: number, status: string) => api.patch(`/orders/${orderId}/status`, { status }),
+  addAnalysis: (orderId: number, data: { preview_content: string; full_content: string }) =>
+    api.post(`/orders/${orderId}/analysis`, data),
+  getAnalysis: (orderId: number) => api.get(`/orders/${orderId}/analysis`),
+  createPaymentIntent: (orderId: number, amount: number) =>
+    api.post(`/payments/create-payment-intent`, { order_id: orderId, amount }),
+  confirmPayment: (paymentId: string) => api.post(`/payments/${paymentId}/confirm`),
+}
+
+export const adminApi = {
+  getUsers: () => api.get("/admin/users"),
+  updateUserRole: (userId: number, role: string) => api.patch(`/admin/users/${userId}/role`, { role }),
+  getDashboardStats: () => api.get("/admin/dashboard/stats"),
+  getRecentActivity: () => api.get("/admin/dashboard/activity"),
+}
+
+export default api
