@@ -311,7 +311,7 @@ function HomeSection() {
 
   return (
     <>
-      <HeroSection />
+      {/* Removed HeroSection */}
       <StatsSection />
       <FeaturesSection />
 
