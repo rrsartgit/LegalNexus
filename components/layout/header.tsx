@@ -46,8 +46,11 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
     { name: "Strona Główna", section: "home", icon: Home },
     { name: "Jak to działa", section: "jak-to-dziala", icon: Lightbulb },
     { name: "Funkcje", section: "funkcje", icon: BarChart },
+    // { name: "Cennik", section: "cennik", icon: DollarSign }, // Commented out as requested
+    // { name: "Kancelarie", section: "kancelarie", icon: Briefcase }, // Commented out as requested
     { name: "Blog", section: "blog", icon: BookOpen },
     { name: "Poradniki", section: "poradniki", icon: BookOpen },
+    // { name: "Dokumentacja API", section: "dokumentacja-api", icon: FileText }, // Commented out as requested
     { name: "O nas", section: "o-nas", icon: Users },
     { name: "Kontakt", section: "kontakt", icon: Phone },
   ]

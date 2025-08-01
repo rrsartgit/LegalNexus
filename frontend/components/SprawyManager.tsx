@@ -1,317 +1,277 @@
 "use client"
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import type React from "react"
+
+import { useEffect, useState } from "react"
+import { casesApi } from "@/frontend/lib/api"
+import type { Case } from "@/frontend/lib/api" // Assuming Case type is exported from api.ts
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2 } from "lucide-react"
-import { sprawaApi, kancelariaApi, klientApi, type Sprawa, type SprawaCreate } from "@/lib/api"
-import { useForm, Controller } from "react-hook-form"
+import { Loader2, PlusCircle, Eye, CheckCircle, XCircle } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/frontend/lib/auth"
 
-export default function SprawyManager() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingSprawa, setEditingSprawa] = useState<Sprawa | null>(null)
-  const queryClient = useQueryClient()
+export function SprawyManager() {
+  const [cases, setCases] = useState<Case[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const { toast } = useToast()
+  const { user } = useAuth()
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    formState: { errors },
-  } = useForm<SprawaCreate>()
-
-  const { data: sprawy, isLoading } = useQuery({
-    queryKey: ["sprawy"],
-    queryFn: () => sprawaApi.getAll().then((res) => res.data),
-  })
-
-  const { data: kancelarie } = useQuery({
-    queryKey: ["kancelarie"],
-    queryFn: () => kancelariaApi.getAll().then((res) => res.data),
-  })
-
-  const { data: klienci } = useQuery({
-    queryKey: ["klienci"],
-    queryFn: () => klientApi.getAll().then((res) => res.data),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: sprawaApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprawy"] })
-      setIsDialogOpen(false)
-      reset()
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<SprawaCreate> }) => sprawaApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprawy"] })
-      setIsDialogOpen(false)
-      setEditingSprawa(null)
-      reset()
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: sprawaApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprawy"] })
-    },
-  })
-
-  const onSubmit = (data: SprawaCreate) => {
-    if (editingSprawa) {
-      updateMutation.mutate({ id: editingSprawa.id, data })
-    } else {
-      createMutation.mutate({ data })
+  const fetchCases = async () => {
+    try {
+      setLoading(true)
+      const response = await casesApi.getCases()
+      setCases(response.data)
+    } catch (err) {
+      setError("Nie udało się załadować listy spraw.")
+      console.error("Failed to fetch cases:", err)
+      toast({
+        title: "Błąd",
+        description: "Nie udało się załadować listy spraw.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleEdit = (sprawa: Sprawa) => {
-    setEditingSprawa(sprawa)
-    reset(sprawa)
-    setIsDialogOpen(true)
-  }
-
-  const handleDelete = (id: number) => {
-    if (confirm("Czy na pewno chcesz usunąć tę sprawę?")) {
-      deleteMutation.mutate(id)
-    }
-  }
+  useEffect(() => {
+    fetchCases()
+  }, [])
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "aktywna":
-        return "default"
-      case "zawieszona":
+      case "open":
         return "secondary"
-      case "zakonczona":
-        return "outline"
-      default:
+      case "in_progress":
         return "default"
+      case "closed":
+        return "success"
+      case "on_hold":
+        return "warning" // Assuming 'warning' variant exists or can be styled
+      default:
+        return "outline"
     }
   }
 
-  if (isLoading) {
-    return <div className="flex justify-center p-8">Ładowanie...</div>
+  const handleCreateCase = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
+    const data = {
+      client_id: user?.id || 0, // Assuming client_id is current user's ID
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+    }
+
+    if (!data.client_id) {
+      toast({
+        title: "Błąd",
+        description: "Brak ID klienta. Upewnij się, że jesteś zalogowany.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      await casesApi.createCase(data)
+      toast({
+        title: "Sukces",
+        description: "Nowa sprawa została utworzona.",
+      })
+      setIsCreateDialogOpen(false)
+      fetchCases() // Refresh list
+    } catch (err) {
+      console.error("Failed to create case:", err)
+      toast({
+        title: "Błąd",
+        description: "Nie udało się utworzyć sprawy.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdateStatus = async (caseId: number, newStatus: string) => {
+    try {
+      await casesApi.updateCaseStatus(caseId, newStatus)
+      toast({
+        title: "Sukces",
+        description: `Status sprawy #${caseId} zmieniono na ${newStatus}.`,
+      })
+      fetchCases() // Refresh list
+    } catch (err) {
+      console.error("Failed to update case status:", err)
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować statusu sprawy.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const openViewDialog = (caseItem: Case) => {
+    setSelectedCase(caseItem)
+    setIsViewDialogOpen(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 p-4">{error}</div>
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Sprawy</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                setEditingSprawa(null)
-                reset()
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Dodaj Sprawę
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Zarządzanie Sprawami</CardTitle>
+        {user?.role === "CLIENT" && ( // Only clients can create new cases
+          <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+            <PlusCircle className="mr-2 h-4 w-4" /> Utwórz Nową Sprawę
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID Sprawy</TableHead>
+              <TableHead>Tytuł</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Data Utworzenia</TableHead>
+              <TableHead className="text-right">Akcje</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {cases.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  Brak spraw.
+                </TableCell>
+              </TableRow>
+            ) : (
+              cases.map((caseItem) => (
+                <TableRow key={caseItem.id}>
+                  <TableCell className="font-medium">{caseItem.id}</TableCell>
+                  <TableCell>{caseItem.title}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(caseItem.status)}>{caseItem.status}</Badge>
+                  </TableCell>
+                  <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => openViewDialog(caseItem)}>
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">Zobacz</span>
+                    </Button>
+                    {(user?.role === "OPERATOR" || user?.role === "ADMIN") && (
+                      <>
+                        {caseItem.status === "open" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUpdateStatus(caseItem.id, "in_progress")}
+                          >
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span className="sr-only">Rozpocznij</span>
+                          </Button>
+                        )}
+                        {caseItem.status === "in_progress" && (
+                          <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(caseItem.id, "closed")}>
+                            <CheckCircle className="h-4 w-4 text-blue-500" />
+                            <span className="sr-only">Zakończ</span>
+                          </Button>
+                        )}
+                        {(caseItem.status === "open" || caseItem.status === "in_progress") && (
+                          <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(caseItem.id, "on_hold")}>
+                            <XCircle className="h-4 w-4 text-orange-500" />
+                            <span className="sr-only">Wstrzymaj</span>
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>{editingSprawa ? "Edytuj Sprawę" : "Dodaj Nową Sprawę"}</DialogTitle>
+              <DialogTitle>Szczegóły Sprawy #{selectedCase?.id}</DialogTitle>
+              <DialogDescription>Informacje o wybranej sprawie.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="numer_sprawy">Numer Sprawy *</Label>
-                  <Input id="numer_sprawy" {...register("numer_sprawy", { required: "Numer sprawy jest wymagany" })} />
-                  {errors.numer_sprawy && <p className="text-sm text-red-600">{errors.numer_sprawy.message}</p>}
+            {selectedCase && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Tytuł:</Label>
+                  <span className="col-span-3">{selectedCase.title}</span>
                 </div>
-                <div>
-                  <Label htmlFor="kategoria">Kategoria</Label>
-                  <Controller
-                    name="kategoria"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Wybierz kategorię" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cywilna">Cywilna</SelectItem>
-                          <SelectItem value="karna">Karna</SelectItem>
-                          <SelectItem value="administracyjna">Administracyjna</SelectItem>
-                          <SelectItem value="gospodarcza">Gospodarcza</SelectItem>
-                          <SelectItem value="rodzinna">Rodzinna</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Status:</Label>
+                  <span className="col-span-3">
+                    <Badge variant={getStatusBadgeVariant(selectedCase.status)}>{selectedCase.status}</Badge>
+                  </span>
                 </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label className="text-right pt-2">Opis:</Label>
+                  <Textarea readOnly value={selectedCase.description} className="col-span-3 min-h-[120px]" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Utworzono:</Label>
+                  <span className="col-span-3">{new Date(selectedCase.created_at).toLocaleString()}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Ostatnia aktualizacja:</Label>
+                  <span className="col-span-3">{new Date(selectedCase.updated_at).toLocaleString()}</span>
+                </div>
+                {/* Add more details like associated documents, client info etc. */}
               </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
-              <div>
-                <Label htmlFor="tytul">Tytuł *</Label>
-                <Input id="tytul" {...register("tytul", { required: "Tytuł jest wymagany" })} />
-                {errors.tytul && <p className="text-sm text-red-600">{errors.tytul.message}</p>}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Utwórz Nową Sprawę</DialogTitle>
+              <DialogDescription>Wypełnij formularz, aby zgłosić nową sprawę prawną.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateCase} className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Tytuł Sprawy</Label>
+                <Input id="title" name="title" placeholder="Krótki tytuł sprawy" required />
               </div>
-
-              <div>
-                <Label htmlFor="opis">Opis</Label>
-                <Textarea id="opis" {...register("opis")} />
+              <div className="grid gap-2">
+                <Label htmlFor="description">Opis Sprawy</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  placeholder="Szczegółowy opis sprawy"
+                  className="min-h-[120px]"
+                  required
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="kancelaria_id">Kancelaria *</Label>
-                  <Controller
-                    name="kancelaria_id"
-                    control={control}
-                    rules={{ required: "Kancelaria jest wymagana" }}
-                    render={({ field }) => (
-                      <Select onValueChange={(value) => field.onChange(Number.parseInt(value))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Wybierz kancelarię" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {kancelarie?.map((kancelaria) => (
-                            <SelectItem key={kancelaria.id} value={kancelaria.id.toString()}>
-                              {kancelaria.nazwa}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.kancelaria_id && <p className="text-sm text-red-600">{errors.kancelaria_id.message}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="klient_id">Klient *</Label>
-                  <Controller
-                    name="klient_id"
-                    control={control}
-                    rules={{ required: "Klient jest wymagany" }}
-                    render={({ field }) => (
-                      <Select onValueChange={(value) => field.onChange(Number.parseInt(value))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Wybierz klienta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {klienci?.map((klient) => (
-                            <SelectItem key={klient.id} value={klient.id.toString()}>
-                              {klient.imie} {klient.nazwisko}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.klient_id && <p className="text-sm text-red-600">{errors.klient_id.message}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Controller
-                    name="status"
-                    control={control}
-                    defaultValue="aktywna"
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Wybierz status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="aktywna">Aktywna</SelectItem>
-                          <SelectItem value="zawieszona">Zawieszona</SelectItem>
-                          <SelectItem value="zakonczona">Zakończona</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="wartosc_sprawy">Wartość Sprawy (PLN)</Label>
-                  <Input id="wartosc_sprawy" type="number" {...register("wartosc_sprawy", { valueAsNumber: true })} />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Anuluj
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingSprawa ? "Zaktualizuj" : "Dodaj"}
-                </Button>
-              </div>
+              <Button type="submit">Utwórz Sprawę</Button>
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista Spraw</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Numer Sprawy</TableHead>
-                <TableHead>Tytuł</TableHead>
-                <TableHead>Kategoria</TableHead>
-                <TableHead>Klient</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Wartość</TableHead>
-                <TableHead>Akcje</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sprawy?.map((sprawa) => (
-                <TableRow key={sprawa.id}>
-                  <TableCell className="font-medium">{sprawa.numer_sprawy}</TableCell>
-                  <TableCell>{sprawa.tytul}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{sprawa.kategoria || "-"}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {klienci?.find((k) => k.id === sprawa.klient_id)?.imie}{" "}
-                    {klienci?.find((k) => k.id === sprawa.klient_id)?.nazwisko}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(sprawa.status)}>{sprawa.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {sprawa.wartosc_sprawy ? `${(sprawa.wartosc_sprawy / 100).toFixed(2)} PLN` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(sprawa)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(sprawa.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

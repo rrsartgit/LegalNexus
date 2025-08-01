@@ -1,8 +1,8 @@
 import axios from "axios"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -10,7 +10,7 @@ const api = axios.create({
 })
 
 // Request interceptor to add Authorization header
-api.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token")
     if (token) {
@@ -23,21 +23,20 @@ api.interceptors.request.use(
   },
 )
 
-// Response interceptor to handle token expiration or invalid tokens
-api.interceptors.response.use(
+// Response interceptor to handle 401 errors
+axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    // If the error is 401 Unauthorized and it's not the login/refresh endpoint
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      // Here you might implement token refresh logic if your backend supports it
-      // For now, we'll just clear the token and redirect to login
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token expired or invalid, clear it and redirect to login
       localStorage.removeItem("token")
-      // You might want to use a global event or a more robust state management
-      // to trigger a redirect to the login page. For simplicity, we'll rely
-      // on the AuthProvider to detect the token change.
-      window.location.href = "/logowanie" // Redirect to login page
+      // You might want to use Next.js router here, but for a simple interceptor,
+      // direct window.location is often used or a global event emitter.
+      // For Next.js client-side, you'd typically handle this in components
+      // or use a custom hook that wraps axios calls.
+      // For now, we'll just log and let the component handle the redirect.
+      console.error("Unauthorized: Token expired or invalid. Redirecting to login.")
+      // window.location.href = "/logowanie"; // This would force a full page reload
     }
     return Promise.reject(error)
   },
@@ -53,18 +52,12 @@ export interface User {
 
 export interface Order {
   id: number
-  client_id: number
-  operator_id?: number
-  title: string
-  description?: string
-  status: "NEW" | "IN_PROGRESS" | "AWAITING_CLIENT" | "AWAITING_PAYMENT" | "COMPLETED"
+  user_id: number
+  status: string
+  document_type: string
+  description: string
   created_at: string
   updated_at: string
-  client?: User
-  operator?: User
-  documents?: Document[]
-  analysis?: Analysis
-  payment?: Payment
 }
 
 export interface Document {
@@ -93,66 +86,153 @@ export interface Payment {
   created_at: string
 }
 
+export interface LawFirm {
+  id: number
+  name: string
+  address: string
+  phone: string
+  email: string
+  specializations: string[]
+  description: string
+}
+
+export interface Client {
+  id: number
+  email: string
+  name?: string
+  phone?: string
+  // Add other client-specific fields
+}
+
+export interface Case {
+  id: number
+  client_id: number
+  title: string
+  description: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DashboardStatsResponse {
+  total_users: number
+  total_orders: number
+  pending_orders: number
+  completed_orders: number
+  total_law_firms: number
+}
+
+export interface AdminUser {
+  id: number
+  email: string
+  role: string
+  is_active: boolean
+  created_at: string
+}
+
 export interface LoginRequest {
   email: string
   password: string
 }
 
+export interface LoginResponse {
+  access_token: string
+  token_type: string
+  user: {
+    id: number
+    email: string
+    role: string
+  }
+}
+
 export interface RegisterRequest {
   email: string
   password: string
-  role?: "CLIENT" | "OPERATOR"
+}
+
+export interface RegisterResponse {
+  message: string
+  user: {
+    id: number
+    email: string
+    role: string
+  }
+}
+
+export interface UserResponse {
+  id: number
+  email: string
+  role: string
 }
 
 export interface CreateOrderRequest {
+  document_type: string
+  description: string
+}
+
+export interface CreateLawFirmRequest {
+  name: string
+  address: string
+  phone: string
+  email: string
+  specializations: string[]
+  description: string
+}
+
+export interface CreateCaseRequest {
+  client_id: number
   title: string
-  description?: string
-}
-
-export interface CreateAnalysisRequest {
-  preview_content?: string
-  full_content: string
-}
-
-export interface AuthResponse {
-  access_token: string
-  token_type: string
-  user: User
+  description: string
 }
 
 export const authApi = {
-  login: (data: any) => api.post("/auth/login", data),
-  register: (data: any) => api.post("/auth/register", data),
-  getMe: () => api.get("/users/me"),
+  login: (data: LoginRequest) => axiosInstance.post<LoginResponse>("/api/v1/auth/login", data),
+  register: (data: RegisterRequest) => axiosInstance.post<RegisterResponse>("/api/v1/auth/register", data),
+  getMe: () => axiosInstance.get<UserResponse>("/api/v1/auth/me"),
 }
 
 export const ordersApi = {
-  createOrder: (data: { title: string; description: string }) => api.post("/orders/", data),
-  uploadDocument: (orderId: number, file: File) => {
-    const formData = new FormData()
-    formData.append("file", file)
-    return api.post(`/orders/${orderId}/documents`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
-  },
-  getOrders: () => api.get("/orders/"),
-  getOrderById: (orderId: number) => api.get(`/orders/${orderId}`),
-  updateOrderStatus: (orderId: number, status: string) => api.patch(`/orders/${orderId}/status`, { status }),
-  addAnalysis: (orderId: number, data: { preview_content: string; full_content: string }) =>
-    api.post(`/orders/${orderId}/analysis`, data),
-  getAnalysis: (orderId: number) => api.get(`/orders/${orderId}/analysis`),
-  createPaymentIntent: (orderId: number, amount: number) =>
-    api.post(`/payments/create-payment-intent`, { order_id: orderId, amount }),
-  confirmPayment: (paymentId: string) => api.post(`/payments/${paymentId}/confirm`),
+  getOrders: () => axiosInstance.get<Order[]>("/api/v1/orders/"),
+  createOrder: (data: CreateOrderRequest) => axiosInstance.post<Order>("/api/v1/orders/", data),
+  getOrderById: (orderId: number) => axiosInstance.get<Order>(`/api/v1/orders/${orderId}`),
+  updateOrderStatus: (orderId: number, status: string) =>
+    axiosInstance.put<Order>(`/api/v1/orders/${orderId}/status`, { status }),
 }
 
-export const adminApi = {
-  getUsers: () => api.get("/admin/users"),
-  updateUserRole: (userId: number, role: string) => api.patch(`/admin/users/${userId}/role`, { role }),
-  getDashboardStats: () => api.get("/admin/dashboard/stats"),
-  getRecentActivity: () => api.get("/admin/dashboard/activity"),
+export const lawFirmsApi = {
+  getLawFirms: () => axiosInstance.get<LawFirm[]>("/api/v1/kancelarie/"),
+  createLawFirm: (data: CreateLawFirmRequest) => axiosInstance.post<LawFirm>("/api/v1/kancelarie/", data),
+  getLawFirmById: (firmId: number) => axiosInstance.get<LawFirm>(`/api/v1/kancelarie/${firmId}`),
+  updateLawFirm: (firmId: number, data: Partial<LawFirm>) =>
+    axiosInstance.put<LawFirm>(`/api/v1/kancelarie/${firmId}`, data),
+  deleteLawFirm: (firmId: number) => axiosInstance.delete(`/api/v1/kancelarie/${firmId}`),
 }
 
-export default api
+export const clientsApi = {
+  getClients: () => axiosInstance.get<Client[]>("/api/v1/klienci/"),
+  getClientById: (clientId: number) => axiosInstance.get<Client>(`/api/v1/klienci/${clientId}`),
+  // Add create, update, delete if needed
+}
+
+export const casesApi = {
+  getCases: () => axiosInstance.get<Case[]>("/api/v1/sprawy/"),
+  createCase: (data: CreateCaseRequest) => axiosInstance.post<Case>("/api/v1/sprawy/", data),
+  getCaseById: (caseId: number) => axiosInstance.get<Case>(`/api/v1/sprawy/${caseId}`),
+  updateCaseStatus: (caseId: number, status: string) =>
+    axiosInstance.put<Case>(`/api/v1/sprawy/${caseId}/status`, { status }),
+}
+
+export const dashboardApi = {
+  getStats: () => axiosInstance.get<DashboardStatsResponse>("/api/v1/admin/dashboard/stats"),
+  getActivity: () => axiosInstance.get<any[]>("/api/v1/admin/dashboard/activity"), // Define a proper type for activity if available
+}
+
+export const adminUsersApi = {
+  getUsers: () => axiosInstance.get<AdminUser[]>("/api/v1/admin/users/"),
+  getUserById: (userId: number) => axiosInstance.get<AdminUser>(`/api/v1/admin/users/${userId}`),
+  updateUserStatus: (userId: number, isActive: boolean) =>
+    axiosInstance.put(`/api/v1/admin/users/${userId}/status`, { is_active: isActive }),
+  // Add other admin user management functions as needed
+}
+
+export default axiosInstance
