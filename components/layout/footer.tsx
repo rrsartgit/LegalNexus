@@ -21,9 +21,7 @@ export function Footer() {
   ]
 
   const companyLinks = [
-    { name: "O nas", href: "/o-nas" },
     { name: "Jak to działa", href: "/jak-to-dziala" },
-    { name: "Cennik", href: "/cennik" },
     { name: "Blog", href: "/blog" },
     { name: "Kontakt", href: "/kontakt" },
   ]
@@ -38,9 +36,9 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 py-12 font-montserrat">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-1">
+          <div className="col-span-1">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-400 mb-4">
               <Scale className="h-7 w-7" />
               LegalNexus
@@ -83,20 +81,6 @@ export function Footer() {
             <h3 className="text-lg font-semibold text-white mb-4">Informacje</h3>
             <ul className="space-y-2">
               {information.map((item, index) => (
-                <li key={index}>
-                  <Link href={item.href} className="text-sm hover:text-blue-400 transition-colors">
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Firma (Company) */}
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Firma</h3>
-            <ul className="space-y-2">
-              {companyLinks.map((item, index) => (
                 <li key={index}>
                   <Link href={item.href} className="text-sm hover:text-blue-400 transition-colors">
                     {item.name}

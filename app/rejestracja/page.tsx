@@ -43,9 +43,17 @@ export default function RejestracjaPage() {
     } else if (user) {
       toast({
         title: "Rejestracja pomyślna!",
-        description: "Twoje konto zostało utworzone. Możesz teraz korzystać z panelu klienta.",
+        description: "Twoje konto zostało utworzone. Przekierowujemy Cię do odpowiedniego panelu.",
       })
-      router.push("/panel-klienta")
+
+      // Redirect based on user role determined from email
+      if (user.role === "admin") {
+        router.push("/admin")
+      } else if (user.role === "operator") {
+        router.push("/panel-operatora")
+      } else {
+        router.push("/panel-klienta")
+      }
     }
   }
 
@@ -94,6 +102,9 @@ export default function RejestracjaPage() {
                     required
                     disabled={loading}
                   />
+                  <p className="text-xs text-gray-500">
+                    Tip: Użyj "admin" w emailu dla panelu administratora, "operator" dla panelu operatora
+                  </p>
                 </div>
 
                 <div className="space-y-2">

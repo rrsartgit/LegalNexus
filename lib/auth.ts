@@ -37,6 +37,18 @@ interface AuthStore {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Helper to determine user role from email                                   */
+/* -------------------------------------------------------------------------- */
+function determineRoleFromEmail(email: string): User["role"] {
+  if (email.toLowerCase().includes("admin")) {
+    return "admin"
+  } else if (email.toLowerCase().includes("operator")) {
+    return "operator"
+  }
+  return "client"
+}
+
+/* -------------------------------------------------------------------------- */
 /* Zustand store                                                              */
 /* -------------------------------------------------------------------------- */
 
@@ -60,12 +72,13 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true })
 
         if (!isSupabaseConfigured()) {
-          // Fallback for development - create mock user
+          // Fallback for development - create mock user with role based on email
+          const role = determineRoleFromEmail(email)
           const mockUser: User = {
             id: "mock-" + Math.random().toString(36).substr(2, 9),
             email,
             name: email.split("@")[0],
-            role: email.includes("admin") ? "admin" : email.includes("operator") ? "operator" : "client",
+            role,
             createdAt: new Date(),
           }
           set({ user: mockUser, isAuthenticated: true, loading: false })
@@ -104,12 +117,13 @@ export const useAuth = create<AuthStore>()(
         set({ loading: true })
 
         if (!isSupabaseConfigured()) {
-          // Fallback for development - create mock user
+          // Fallback for development - create mock user with role based on email
+          const role = determineRoleFromEmail(email)
           const mockUser: User = {
             id: "mock-" + Math.random().toString(36).substr(2, 9),
             email,
             name,
-            role: "client",
+            role,
             createdAt: new Date(),
           }
           set({ user: mockUser, isAuthenticated: true, loading: false })
@@ -123,13 +137,16 @@ export const useAuth = create<AuthStore>()(
             return { user: null, error: "Błąd konfiguracji systemu" }
           }
 
+          // Determine role from email
+          const role = determineRoleFromEmail(email)
+
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
               data: {
                 name,
-                role: "client",
+                role,
               },
             },
           })
@@ -213,11 +230,13 @@ export const useAuth = create<AuthStore>()(
 /* -------------------------------------------------------------------------- */
 
 function supabaseUserToLocal(user: any): User {
+  const role = user.user_metadata?.role || determineRoleFromEmail(user.email || "")
+
   return {
     id: user.id,
     email: user.email ?? "",
     name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Użytkownik",
-    role: (user.user_metadata?.role as User["role"]) || "client",
+    role,
     createdAt: new Date(user.created_at),
     phone: user.phone || undefined,
     avatar: user.user_metadata?.avatar || undefined,

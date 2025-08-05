@@ -1,45 +1,15 @@
 {
-  "name": "legal-api-nexus",
-  "version": "1.0.0",
+  "name": "legal-nexus",
+  "version": "0.1.0",
   "private": true,
-  "description": "Professional Legal Services API Platform",
-  "keywords": [
-    "legal",
-    "law-firm",
-    "api",
-    "nextjs",
-    "typescript",
-    "legal-tech",
-    "professional-services"
-  ],
-  "homepage": "https://legalnexus.pl",
-  "bugs": {
-    "url": "https://github.com/legal-nexus/api-platform/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/legal-nexus/api-platform.git"
-  },
-  "license": "MIT",
-  "author": {
-    "name": "Legal Nexus Team",
-    "email": "contact@legalnexus.pl",
-    "url": "https://legalnexus.pl"
-  },
   "scripts": {
-    "analyze": "cross-env ANALYZE=true next build",
     "build": "next build",
-    "clean": "rimraf .next out dist coverage",
     "dev": "next dev",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "lint": "next lint",
-    "lint:fix": "next lint --fix",
     "start": "next start",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@ai-sdk/google": "latest",
@@ -75,9 +45,6 @@
     "@radix-ui/react-tooltip": "latest",
     "@supabase/supabase-js": "latest",
     "@testing-library/dom": "latest",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
     "ai": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -94,16 +61,16 @@
     "react": "^18",
     "react-day-picker": "latest",
     "react-dom": "^18",
+    "react-dropzone": "latest",
     "react-hook-form": "latest",
     "react-resizable-panels": "latest",
     "recharts": "latest",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5",
     "use-sync-external-store": "latest",
     "vaul": "latest",
-    "zod": "^3.23.8",
+    "zod": "^3.24.1",
     "zustand": "latest"
   },
   "devDependencies": {
@@ -126,11 +93,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.6",
     "rimraf": "^6.0.1",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
   }
 }
