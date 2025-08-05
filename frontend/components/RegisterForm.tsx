@@ -3,22 +3,22 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/lib/auth"
-import { toast } from "@/components/ui/use-toast"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { Loader2 } from "lucide-react"
 
-interface RegisterFormProps {
-  onSuccess?: () => void
-}
-
-export function RegisterForm({ onSuccess }: RegisterFormProps) {
+export default function RegisterForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const { register, loading } = useAuth()
+  const { signUp, loading } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,71 +26,74 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
     if (password !== confirmPassword) {
       setError("Hasła nie są zgodne.")
-      toast({
-        title: "Błąd rejestracji",
-        description: "Hasła nie są zgodne.",
-        variant: "destructive",
-      })
       return
     }
 
-    const result = await register(email, password)
+    const { user, error } = await signUp(email, password)
 
-    if (result.success) {
-      toast({
-        title: "Rejestracja zakończona pomyślnie!",
-        description: "Twoje konto zostało utworzone. Możesz się teraz zalogować.",
-      })
-      onSuccess?.()
-    } else {
-      setError(result.error || "Wystąpił nieznany błąd podczas rejestracji.")
-      toast({
-        title: "Błąd rejestracji",
-        description: result.error || "Spróbuj ponownie później.",
-        variant: "destructive",
-      })
+    if (error) {
+      setError(error.message)
+    } else if (user) {
+      router.push("/panel-klienta") // Redirect new clients to their dashboard
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="jan.kowalski@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="password">Hasło</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="********"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="confirm-password">Potwierdź hasło</Label>
-        <Input
-          id="confirm-password"
-          type="password"
-          placeholder="********"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-      </div>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Rejestracja..." : "Zarejestruj się"}
-      </Button>
-    </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Rejestracja</CardTitle>
+          <CardDescription>Utwórz nowe konto</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m.kowalski@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Hasło</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm-password">Potwierdź Hasło</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="********"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Zarejestruj się
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            Masz już konto?{" "}
+            <Link href="/logowanie" className="text-blue-600 hover:underline dark:text-blue-400">
+              Zaloguj się
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

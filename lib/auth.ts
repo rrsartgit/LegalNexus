@@ -1,17 +1,18 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@/lib/types"
+import { useState, useEffect, createContext, useContext, useCallback } from "react"
 
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  register: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => Promise<void>
+  isAuthenticated: boolean
+  signIn: (email: string, password: string) => Promise<{ user: User | null; error: Error | null }>
+  signUp: (email: string, password: string) => Promise<{ user: User | null; error: Error | null }>
+  signOut: () => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,107 +21,123 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
-  const router = useRouter()
-
-  const fetchUser = useCallback(async () => {
-    setLoading(true)
-    const { data, error } = await supabase.auth.getUser()
-    if (data?.user) {
-      setUser({
-        id: data.user.id,
-        email: data.user.email || "",
-        role: (data.user.user_metadata?.role as "client" | "admin" | "operator") || "client",
-      })
-    } else {
-      setUser(null)
-    }
-    setLoading(false)
-  }, [supabase])
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email || "",
+          role: (user.user_metadata?.role as string) || "client", // Default role
+          avatar_url: user.user_metadata?.avatar_url as string | undefined,
+        })
+      }
+      setLoading(false)
+    }
+
     fetchUser()
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        fetchUser()
+      data: { subscription: authListener },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          role: (session.user.user_metadata?.role as string) || "client",
+          avatar_url: session.user.user_metadata?.avatar_url as string | undefined,
+        })
+      } else {
+        setUser(null)
       }
+      setLoading(false)
     })
 
     return () => {
-      subscription?.unsubscribe()
+      authListener?.unsubscribe()
     }
-  }, [fetchUser, supabase])
+  }, [supabase])
 
-  const login = async (email: string, password: string) => {
-    setLoading(true)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      console.error("Login error:", error.message)
-      return { success: false, error: error.message }
-    }
-    if (data.user) {
-      setUser({
-        id: data.user.id,
-        email: data.user.email || "",
-        role: (data.user.user_metadata?.role as "client" | "admin" | "operator") || "client",
-      })
-      // Redirect based on role after successful login
-      if (data.user.user_metadata?.role === "admin") {
-        router.push("/admin")
-      } else if (data.user.user_metadata?.role === "operator") {
-        router.push("/panel-operatora")
-      } else {
-        router.push("/panel-klienta")
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      setLoading(true)
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setLoading(false)
+        return { user: null, error }
       }
-      return { success: true }
-    }
-    return { success: false, error: "Unknown login error" }
-  }
+      if (data.user) {
+        const fetchedUser: User = {
+          id: data.user.id,
+          email: data.user.email || "",
+          role: (data.user.user_metadata?.role as string) || "client",
+          avatar_url: data.user.user_metadata?.avatar_url as string | undefined,
+        }
+        setUser(fetchedUser)
+        setLoading(false)
+        return { user: fetchedUser, error: null }
+      }
+      setLoading(false)
+      return { user: null, error: new Error("Sign in failed: No user data") }
+    },
+    [supabase],
+  )
 
-  const register = async (email: string, password: string) => {
-    setLoading(true)
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role: "client", // Default role for new registrations
+  const signUp = useCallback(
+    async (email: string, password: string) => {
+      setLoading(true)
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: "client", // Default role for new sign-ups
+          },
         },
-      },
-    })
-    setLoading(false)
-    if (error) {
-      console.error("Registration error:", error.message)
-      return { success: false, error: error.message }
-    }
-    if (data.user) {
-      setUser({
-        id: data.user.id,
-        email: data.user.email || "",
-        role: "client",
       })
-      router.push("/panel-klienta") // Redirect new users to client panel
-      return { success: true }
-    }
-    return { success: false, error: "Unknown registration error" }
-  }
+      if (error) {
+        setLoading(false)
+        return { user: null, error }
+      }
+      if (data.user) {
+        const fetchedUser: User = {
+          id: data.user.id,
+          email: data.user.email || "",
+          role: (data.user.user_metadata?.role as string) || "client",
+          avatar_url: data.user.user_metadata?.avatar_url as string | undefined,
+        }
+        setUser(fetchedUser)
+        setLoading(false)
+        return { user: fetchedUser, error: null }
+      }
+      setLoading(false)
+      return { user: null, error: new Error("Sign up failed: No user data") }
+    },
+    [supabase],
+  )
 
-  const logout = async () => {
+  const signOut = useCallback(async () => {
     setLoading(true)
     const { error } = await supabase.auth.signOut()
-    setLoading(false)
     if (error) {
-      console.error("Logout error:", error.message)
-    } else {
-      setUser(null)
-      router.push("/")
+      setLoading(false)
+      return { error }
     }
-  }
+    setUser(null)
+    setLoading(false)
+    return { error: null }
+  }, [supabase])
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
+  const isAuthenticated = !!user
+
+  return (
+    <AuthContext.Provider value={{ user, loading, isAuthenticated, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

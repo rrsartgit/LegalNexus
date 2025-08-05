@@ -2,59 +2,54 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react"
+import { useApi } from "@/lib/api/hooks"
+import type { Kancelaria } from "@/lib/api"
 import { toast } from "@/components/ui/use-toast"
-import type { LawFirm } from "@/lib/types"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function KancelarieManager() {
-  const [lawFirms, setLawFirms] = useState<LawFirm[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [currentLawFirm, setCurrentLawFirm] = useState<LawFirm | null>(null)
+  const api = useApi()
+  const [kancelarie, setKancelarie] = useState<Kancelaria[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [currentKancelaria, setCurrentKancelaria] = useState<Kancelaria | null>(null)
+  const [formState, setFormState] = useState({
+    nazwa: "",
+    adres: "",
+    telefon: "",
+    email: "",
+    nip: "",
+    status: "aktywna",
+  })
+  const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
-    fetchLawFirms()
+    fetchKancelarie()
   }, [])
 
-  const fetchLawFirms = async () => {
+  const fetchKancelarie = async () => {
     setLoading(true)
     setError(null)
     try {
-      // Mock API call
-      const mockLawFirms: LawFirm[] = [
-        {
-          id: 1,
-          name: "Kancelaria Prawna Lex",
-          address: "ul. Długa 1, Warszawa",
-          phone: "123-456-789",
-          email: "lex@example.com",
-          specializations: ["Prawo cywilne", "Prawo rodzinne"],
-          description: "Doświadczona kancelaria z wieloletnim stażem.",
-          rating: 4.5,
-          reviews: 120,
-        },
-        {
-          id: 2,
-          name: "Adwokaci i Radcowie Prawni Veritas",
-          address: "ul. Krótka 5, Kraków",
-          phone: "987-654-321",
-          email: "veritas@example.com",
-          specializations: ["Prawo karne", "Prawo gospodarcze"],
-          description: "Specjaliści w sprawach karnych i biznesowych.",
-          rating: 4.8,
-          reviews: 90,
-        },
-      ]
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
-      setLawFirms(mockLawFirms)
+      const data = await api.getLawFirms()
+      setKancelarie(data)
     } catch (err: any) {
       setError(err.message || "Nie udało się załadować kancelarii.")
       toast({
@@ -67,155 +62,202 @@ export function KancelarieManager() {
     }
   }
 
-  const handleAddEdit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentLawFirm) return
-
-    setLoading(true)
-    setError(null)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
-
-      if (currentLawFirm.id === 0) {
-        // Add new law firm
-        const newLawFirm = { ...currentLawFirm, id: lawFirms.length + 1 }
-        setLawFirms((prev) => [...prev, newLawFirm])
-        toast({ title: "Kancelaria dodana pomyślnie!" })
-      } else {
-        // Update existing law firm
-        setLawFirms((prev) => prev.map((firm) => (firm.id === currentLawFirm.id ? currentLawFirm : firm)))
-        toast({ title: "Kancelaria zaktualizowana pomyślnie!" })
-      }
-      setIsModalOpen(false)
-      setCurrentLawFirm(null)
-    } catch (err: any) {
-      setError(err.message || "Wystąpił błąd podczas zapisu kancelarii.")
-      toast({
-        title: "Błąd",
-        description: err.message || "Wystąpił błąd podczas zapisu kancelarii.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+  const getStatusBadge = (status: string) => {
+    const statusMap = {
+      aktywna: "bg-green-100 text-green-800",
+      nieaktywna: "bg-red-100 text-red-800",
     }
+    return statusMap[status as keyof typeof statusMap] || "bg-gray-100 text-gray-800"
   }
 
-  const handleDelete = async (id: number) => {
-    setLoading(true)
-    setError(null)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
-      setLawFirms((prev) => prev.filter((firm) => firm.id !== id))
-      toast({ title: "Kancelaria usunięta pomyślnie!" })
-    } catch (err: any) {
-      setError(err.message || "Wystąpił błąd podczas usuwania kancelarii.")
-      toast({
-        title: "Błąd",
-        description: err.message || "Wystąpił błąd podczas usuwania kancelarii.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
+  const filteredKancelarie = kancelarie.filter(
+    (kancelaria) =>
+      kancelaria.nazwa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kancelaria.adres.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kancelaria.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
-  const openAddModal = () => {
-    setCurrentLawFirm({
-      id: 0,
-      name: "",
-      address: "",
-      phone: "",
+  const handleAddKancelaria = () => {
+    setCurrentKancelaria(null)
+    setFormState({
+      nazwa: "",
+      adres: "",
+      telefon: "",
       email: "",
-      specializations: [],
-      description: "",
-      rating: 0,
-      reviews: 0,
+      nip: "",
+      status: "aktywna",
     })
-    setIsModalOpen(true)
+    setIsFormOpen(true)
   }
 
-  const openEditModal = (firm: LawFirm) => {
-    setCurrentLawFirm(firm)
-    setIsModalOpen(true)
+  const handleEditKancelaria = (kancelaria: Kancelaria) => {
+    setCurrentKancelaria(kancelaria)
+    setFormState({
+      nazwa: kancelaria.nazwa,
+      adres: kancelaria.adres,
+      telefon: kancelaria.telefon,
+      email: kancelaria.email,
+      nip: kancelaria.nip,
+      status: kancelaria.status,
+    })
+    setIsFormOpen(true)
   }
 
-  if (loading) return <p>Ładowanie kancelarii...</p>
-  if (error) return <p className="text-red-500">{error}</p>
+  const handleDeleteKancelaria = async (id: number) => {
+    if (!window.confirm("Czy na pewno chcesz usunąć tę kancelarię?")) {
+      return
+    }
+    setLoading(true)
+    try {
+      await api.deleteLawFirm(id)
+      toast({
+        title: "Sukces",
+        description: "Kancelaria została usunięta.",
+      })
+      fetchKancelarie()
+    } catch (err: any) {
+      toast({
+        title: "Błąd",
+        description: err.message || "Nie udało się usunąć kancelarii.",
+        variant: "destructive",
+      })
+      setLoading(false)
+    }
+  }
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormLoading(true)
+    try {
+      if (currentKancelaria) {
+        // Update existing
+        await api.updateLawFirm(currentKancelaria.id, formState)
+        toast({
+          title: "Sukces",
+          description: "Kancelaria została zaktualizowana.",
+        })
+      } else {
+        // Create new
+        await api.createLawFirm(formState)
+        toast({
+          title: "Sukces",
+          description: "Kancelaria została dodana.",
+        })
+      }
+      setIsFormOpen(false)
+      fetchKancelarie()
+    } catch (err: any) {
+      toast({
+        title: "Błąd",
+        description: err.message || "Nie udało się zapisać kancelarii.",
+        variant: "destructive",
+      })
+    } finally {
+      setFormLoading(false)
+    }
+  }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Zarządzanie Kancelariami</CardTitle>
-        <Button onClick={openAddModal}>Dodaj Kancelarię</Button>
+        <div>
+          <CardTitle>Zarządzanie Kancelariami</CardTitle>
+          <CardDescription>Lista zarejestrowanych kancelarii prawnych.</CardDescription>
+        </div>
+        <Button onClick={handleAddKancelaria}>
+          <Plus className="h-4 w-4 mr-2" />
+          Dodaj kancelarię
+        </Button>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nazwa</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Specjalizacje</TableHead>
-              <TableHead>Akcje</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lawFirms.map((firm) => (
-              <TableRow key={firm.id}>
-                <TableCell>{firm.name}</TableCell>
-                <TableCell>{firm.email}</TableCell>
-                <TableCell>{firm.specializations.join(", ")}</TableCell>
-                <TableCell>
-                  <Button variant="outline" size="sm" onClick={() => openEditModal(firm)}>
-                    Edytuj
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Szukaj kancelarii..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-2 text-gray-600">Ładowanie kancelarii...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500 p-4">{error}</div>
+        ) : filteredKancelarie.length === 0 ? (
+          <div className="text-center text-gray-500 p-4">Brak kancelarii do wyświetlenia.</div>
+        ) : (
+          <div className="space-y-4">
+            {filteredKancelarie.map((kancelaria) => (
+              <div key={kancelaria.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">{kancelaria.nazwa}</h4>
+                  <p className="text-sm text-gray-600">{kancelaria.adres}</p>
+                  <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                    <span>Tel: {kancelaria.telefon}</span>
+                    <span>Email: {kancelaria.email}</span>
+                    <span>NIP: {kancelaria.nip}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusBadge(kancelaria.status)}>{kancelaria.status}</Badge>
+                  <Button variant="outline" size="sm" onClick={() => handleEditKancelaria(kancelaria)}>
+                    <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleDelete(firm.id)}>
-                    Usuń
+                  <Button variant="outline" size="sm" onClick={() => handleDeleteKancelaria(kancelaria.id)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                </TableCell>
-              </TableRow>
+                </div>
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        )}
       </CardContent>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{currentLawFirm?.id === 0 ? "Dodaj nową kancelarię" : "Edytuj kancelarię"}</DialogTitle>
+            <DialogTitle>{currentKancelaria ? "Edytuj kancelarię" : "Dodaj nową kancelarię"}</DialogTitle>
+            <DialogDescription>
+              {currentKancelaria ? "Zaktualizuj dane kancelarii." : "Wprowadź dane nowej kancelarii prawnej."}
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddEdit} className="grid gap-4 py-4">
+          <form onSubmit={handleFormSubmit} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+              <Label htmlFor="nazwa" className="text-right">
                 Nazwa
               </Label>
               <Input
-                id="name"
-                value={currentLawFirm?.name || ""}
-                onChange={(e) => setCurrentLawFirm({ ...currentLawFirm!, name: e.target.value })}
+                id="nazwa"
+                value={formState.nazwa}
+                onChange={(e) => setFormState({ ...formState, nazwa: e.target.value })}
                 className="col-span-3"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
+              <Label htmlFor="adres" className="text-right">
                 Adres
               </Label>
               <Input
-                id="address"
-                value={currentLawFirm?.address || ""}
-                onChange={(e) => setCurrentLawFirm({ ...currentLawFirm!, address: e.target.value })}
+                id="adres"
+                value={formState.adres}
+                onChange={(e) => setFormState({ ...formState, adres: e.target.value })}
                 className="col-span-3"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
+              <Label htmlFor="telefon" className="text-right">
                 Telefon
               </Label>
               <Input
-                id="phone"
-                value={currentLawFirm?.phone || ""}
-                onChange={(e) => setCurrentLawFirm({ ...currentLawFirm!, phone: e.target.value })}
+                id="telefon"
+                value={formState.telefon}
+                onChange={(e) => setFormState({ ...formState, telefon: e.target.value })}
                 className="col-span-3"
                 required
               />
@@ -227,43 +269,41 @@ export function KancelarieManager() {
               <Input
                 id="email"
                 type="email"
-                value={currentLawFirm?.email || ""}
-                onChange={(e) => setCurrentLawFirm({ ...currentLawFirm!, email: e.target.value })}
+                value={formState.email}
+                onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                 className="col-span-3"
                 required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="specializations" className="text-right">
-                Specjalizacje
+              <Label htmlFor="nip" className="text-right">
+                NIP
               </Label>
               <Input
-                id="specializations"
-                value={currentLawFirm?.specializations.join(", ") || ""}
-                onChange={(e) =>
-                  setCurrentLawFirm({
-                    ...currentLawFirm!,
-                    specializations: e.target.value.split(",").map((s) => s.trim()),
-                  })
-                }
+                id="nip"
+                value={formState.nip}
+                onChange={(e) => setFormState({ ...formState, nip: e.target.value })}
                 className="col-span-3"
-                placeholder="Np. Prawo cywilne, Prawo rodzinne"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Opis
+              <Label htmlFor="status" className="text-right">
+                Status
               </Label>
-              <Textarea
-                id="description"
-                value={currentLawFirm?.description || ""}
-                onChange={(e) => setCurrentLawFirm({ ...currentLawFirm!, description: e.target.value })}
-                className="col-span-3"
-              />
+              <Select value={formState.status} onValueChange={(value) => setFormState({ ...formState, status: value })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wybierz status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aktywna">Aktywna</SelectItem>
+                  <SelectItem value="nieaktywna">Nieaktywna</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Zapisywanie..." : "Zapisz zmiany"}
+              <Button type="submit" disabled={formLoading}>
+                {formLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Zapisz zmiany"}
               </Button>
             </DialogFooter>
           </form>

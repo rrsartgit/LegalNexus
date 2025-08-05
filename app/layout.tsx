@@ -1,30 +1,27 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Montserrat } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
-import ClientLayout from "./clientLayout"
+import { ThemeProvider } from "@/components/theme-provider"
+import { QueryClientProvider } from "@/frontend/app/ClientLayout"
+import { AuthProvider } from "@/lib/auth"
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-})
+const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Legal API Nexus - Profesjonalna Pomoc Prawna",
-  description:
-    "Analizujemy dokumenty prawne i przygotowujemy odpowiedzi w ciągu 24 godzin. Profesjonalnie, szybko i w przystępnej cenie.",
+export const metadata = {
+  title: "Legal API Nexus",
+  description: "Platforma do zarządzania kancelariami prawnymi",
     generator: 'v0.dev'
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" suppressHydrationWarning className={montserrat.variable}>
-      <body>
-        <ClientLayout>{children}</ClientLayout>
+    <html lang="pl" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryClientProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,309 +1,1316 @@
 "use client"
 
-import { useState } from "react"
-import { HeroSection } from "@/components/hero-section"
-import { FeaturesSection } from "@/components/features-section"
-import { StatsSection } from "@/components/stats-section"
-import { AiAssistant } from "@/components/ai-assistant"
-import { NewCaseForm } from "@/components/new-case-form"
-import { LoginForm } from "@/frontend/components/LoginForm"
-import { RegisterForm } from "@/frontend/components/RegisterForm"
-import { Dashboard } from "@/frontend/components/Dashboard"
-import { CreateOrderForm } from "@/frontend/components/CreateOrderForm"
-import { KancelarieManager } from "@/frontend/components/KancelarieManager"
-import { KlienciManager } from "@/frontend/components/KlienciManager"
-import { OrdersList } from "@/frontend/components/OrdersList"
-import { SprawyManager } from "@/frontend/components/SprawyManager"
+import type React from "react"
+
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { useState } from "react"
+import {
+  FileText,
+  Shield,
+  CheckCircle,
+  Scale,
+  Gavel,
+  Lightbulb,
+  MessageSquare,
+  Heart,
+  Target,
+  ArrowRight,
+  Users,
+  Building,
+  Clock,
+  Star,
+  HelpCircle,
+  Send,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 
-export default function Home() {
-  const [activeSection, setActiveSection] = useState("home")
+type Section =
+  | "home"
+  | "jak-to-dziala"
+  | "funkcje"
+  | "o-nas"
+  | "kontakt"
+  | "analiza-dokumentow"
+  | "pisma-prawne"
+  | "konsultacje"
+  | "reprezentacja"
+  | "regulamin"
+  | "polityka-prywatnosci"
+  | "rodo"
+  | "faq"
+  | "asystent-ai"
+  | "blog"
+  | "poradniki"
+  | "zamow-analize"
+
+// New Hero Section Component
+function HeroSection() {
+  return (
+    <section className="relative min-h-[60vh] flex items-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 text-white overflow-hidden">
+      <div className="absolute inset-0 bg-black/20" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+        <div className="space-y-6">
+          <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gavel className="h-12 w-12 text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">PROFESJONALNA POMOC PRAWNA</h1>
+          <p className="text-xl text-blue-100 leading-relaxed max-w-3xl mx-auto">
+            Otrzymałeś pismo prawne? Pomożemy Ci! Analizujemy dokumenty prawne i przygotowujemy odpowiedzi w ciągu 24
+            godzin. Profesjonalnie, szybko i w przystępnej cenie.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+              Zamów Analizę
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
+            >
+              Zobacz Przykłady
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Features Section Component (unchanged)
+function FeaturesSection() {
+  const features = [
+    {
+      title: "Architektura Domain-Driven",
+      description:
+        "Architektura oparta o domenę biznesową z agregatami, encjami i obiektami wartości dla precyzyjnego modelowania danych prawnych.",
+      icon: Building,
+    },
+    {
+      title: "Wyszukiwanie Pełnotekstowe",
+      description:
+        "Potężna integracja z Elasticsearch z filtrowaniem, paginacją i zaawansowanymi możliwościami zapytań.",
+      icon: FileText,
+    },
+    {
+      title: "Bezpieczeństwo Klasy Enterprise",
+      description: "OAuth 2.0, tokeny JWT, szyfrowanie danych i kompleksowy audyt bezpieczeństwa.",
+      icon: Shield,
+    },
+  ]
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Zaawansowane Funkcje</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            System stworzony z myślą o profesjonalnych kancelariach prawnych, oferujący funkcjonalność i niezawodność
+            klasy enterprise.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-center">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Stats Section Component (unchanged)
+function StatsSection() {
+  const stats = [
+    { value: "200+", label: "Kancelarii korzysta", icon: Building },
+    { value: "1500+", label: "Prawników korzysta", icon: Users },
+    { value: "99.9%", label: "Dostępność API", icon: CheckCircle },
+    { value: "24/7", label: "Wsparcie Techniczne", icon: Clock },
+  ]
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <stat.icon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+              <div className="text-gray-600 font-medium">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// AI Assistant Component (unchanged)
+function AIAssistant() {
+  const [message, setMessage] = useState("")
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Asystent AI LexiCore RAG</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Pierwsze w Polsce wdrożenie technologii RAG (Retrieval-Augmented Generation) dedykowane dla kancelarii
+            prawnych.
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex gap-4">
+                <Input
+                  placeholder="Zadaj pytanie prawne..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="flex-1"
+                />
+                <Button>Wyślij</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Home Section Component
+function HomeSection() {
+  const services = [
+    {
+      title: "Analiza Nakazu Zapłaty",
+      description: "Sprawdzimy czy nakaz zapłaty jest prawidłowy i podpowiemy jak się bronić",
+      price: "49 zł",
+      icon: FileText,
+      popular: true,
+    },
+    {
+      title: "Odpowiedź na Wezwanie Komornika",
+      description: "Przygotujemy profesjonalną odpowiedź na działania komornicze",
+      price: "79 zł",
+      icon: Shield,
+      popular: false,
+    },
+    {
+      title: "Skarga na Czynność Komornika",
+      description: "Zaskarżymy nieprawidłowe działania komornika sądowego",
+      price: "99 zł",
+      icon: FileText,
+      popular: false,
+    },
+    {
+      title: "Sprzeciw od Nakazu Zapłaty",
+      description: "Złożymy sprzeciw w odpowiednim terminie z uzasadnieniem",
+      price: "89 zł",
+      icon: Clock,
+      popular: false,
+    },
+  ]
+
+  const steps = [
+    {
+      number: "1",
+      title: "Prześlij dokument",
+      description: "Wgraj zdjęcie lub skan dokumentu, który otrzymałeś",
+    },
+    {
+      number: "2",
+      title: "Opisz sytuację",
+      description: "Powiedz nam o swojej sytuacji i oczekiwaniach",
+    },
+    {
+      number: "3",
+      title: "Zapłać za analizę",
+      description: "Wybierz metodę płatności i opłać analizę dokumentu",
+    },
+    {
+      number: "4",
+      title: "Otrzymaj analizę",
+      description: "W ciągu 24h otrzymasz profesjonalną analizę prawną",
+    },
+    {
+      number: "5",
+      title: "Zamów pisma",
+      description: "Na podstawie analizy zamów potrzebne pisma prawne",
+    },
+  ]
+
+  return (
+    <>
+      <HeroSection /> {/* Re-added the new HeroSection */}
+      <StatsSection />
+      <FeaturesSection />
+      {/* Services Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Najczęściej Zamawiane Usługi</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Sprawdź nasze najpopularniejsze usługi prawne. Każda analiza zawiera szczegółowe omówienie i konkretne
+              wskazówki działania.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {services.map((service, index) => (
+              <Card
+                key={index}
+                className={`relative hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${
+                  service.popular ? "ring-2 ring-blue-500" : ""
+                }`}
+              >
+                {service.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-blue-600 text-white font-medium">
+                      <Star className="w-3 h-3 mr-1" />
+                      Popularne
+                    </Badge>
+                  </div>
+                )}
+
+                <CardHeader className="text-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <service.icon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold">{service.title}</CardTitle>
+                  <div className="text-2xl font-bold text-blue-600">{service.price}</div>
+                </CardHeader>
+
+                <CardContent>
+                  <p className="text-gray-600 text-center mb-4">{service.description}</p>
+                  <Button className="w-full font-medium" variant={service.popular ? "default" : "outline"}>
+                    Zamów Teraz
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+      {/* How it works */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Jak to działa?</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Prosty proces w 5 krokach - od przesłania dokumentu do otrzymania gotowych pism prawnych.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            {steps.map((step, index) => (
+              <div key={index} className="text-center relative">
+                <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-lg font-bold">
+                  {step.number}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
+                <p className="text-gray-600 text-sm">{step.description}</p>
+                {index < steps.length - 1 && (
+                  <ArrowRight className="hidden md:block absolute top-6 -right-4 h-5 w-5 text-gray-400" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <AIAssistant />
+    </>
+  )
+}
+
+// Jak to działa Section (unchanged)
+function JakToDzialaSection() {
+  const steps = [
+    {
+      number: "01",
+      title: "Prześlij dokumenty",
+      description:
+        "Załaduj swoje dokumenty prawne w bezpiecznym środowisku online. Obsługujemy pliki PDF, DOC, JPG i inne popularne formaty.",
+      icon: FileText,
+    },
+    {
+      number: "02",
+      title: "Analiza AI",
+      description:
+        "Nasz zaawansowany system AI analizuje dokumenty pod kątem prawnym, identyfikując kluczowe elementy i potencjalne problemy.",
+      icon: Lightbulb,
+    },
+    {
+      number: "03",
+      title: "Otrzymaj analizę",
+      description:
+        "W ciągu 24 godzin otrzymasz szczegółową analizę prawną z rekomendacjami i sugestiami dalszych działań.",
+      icon: CheckCircle,
+    },
+    {
+      number: "04",
+      title: "Zamów pisma",
+      description:
+        "Na podstawie analizy możesz zamówić profesjonalne pisma prawne przygotowane przez doświadczonych prawników.",
+      icon: FileText,
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            JAK TO DZIAŁA
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Prosta ścieżka do profesjonalnej pomocy prawnej</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            W zaledwie kilku krokach otrzymasz profesjonalną analizę prawną i niezbędne dokumenty
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {steps.map((step, index) => (
+            <Card key={index} className="relative overflow-hidden hover:shadow-lg transition-shadow">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <step.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="absolute top-4 right-4 text-6xl font-bold text-blue-50">{step.number}</div>
+                <CardTitle className="text-lg font-semibold">{step.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-center">{step.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-16 text-center">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Rozpocznij analizę dokumentów
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Funkcje Section (unchanged)
+function FunkcjeSection() {
+  const features = [
+    {
+      icon: FileText,
+      title: "Analiza dokumentów prawnych",
+      description:
+        "Zaawansowana analiza AI dokumentów prawnych z identyfikacją kluczowych elementów i potencjalnych problemów.",
+      benefits: ["Szybka analiza w 24h", "Identyfikacja ryzyk prawnych", "Rekomendacje działań", "Zgodność z RODO"],
+    },
+    {
+      icon: Scale,
+      title: "Generowanie pism prawnych",
+      description: "Automatyczne tworzenie profesjonalnych pism prawnych na podstawie analizy dokumentów.",
+      benefits: ["Szablony prawne", "Personalizacja treści", "Zgodność z przepisami", "Szybka realizacja"],
+    },
+    {
+      icon: MessageSquare,
+      title: "Konsultacje online",
+      description: "Bezpośredni kontakt z doświadczonymi prawnikami przez platformę online.",
+      benefits: ["Dostępność 24/7", "Specjaliści różnych dziedzin", "Bezpieczna komunikacja", "Konkurencyjne ceny"],
+    },
+    {
+      icon: Shield,
+      title: "Bezpieczeństwo danych",
+      description: "Najwyższe standardy bezpieczeństwa i ochrony danych osobowych zgodnie z RODO.",
+      benefits: ["Szyfrowanie end-to-end", "Zgodność z RODO", "Backup danych", "Kontrola dostępu"],
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            FUNKCJE PLATFORMY
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Kompleksowe rozwiązania prawne online</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Nasza platforma oferuje pełen zakres usług prawnych dostępnych online
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {features.map((feature, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <feature.icon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">{feature.description}</p>
+                <ul className="space-y-2">
+                  {feature.benefits.map((benefit, idx) => (
+                    <li key={idx} className="flex items-center text-sm text-gray-700">
+                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// O nas Section (modified)
+function ONasSection() {
+  const values = [
+    {
+      icon: Scale,
+      title: "Etyka i Profesjonalizm",
+      description:
+        "Przestrzegamy najwyższych standardów etycznych zawodu prawniczego i dbamy o zachowanie tajemnicy zawodowej.",
+    },
+    {
+      icon: Shield,
+      title: "Bezpieczeństwo Danych",
+      description:
+        "Bezpieczeństwo informacji klientów jest naszym priorytetem. Stosujemy najnowsze technologie ochrony danych.",
+    },
+    {
+      icon: Target,
+      title: "Innowacyjność",
+      description: "Łączymy tradycyjną praktykę prawną z nowoczesnymi technologiami, tworząc rozwiązania przyszłości.",
+    },
+    {
+      icon: Heart,
+      title: "Wsparcie Klientów",
+      description: "Każdy klient otrzymuje pełne wsparcie techniczne i merytoryczne od naszego doświadczonego zespołu.",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Values */}
+        <div className="mb-20">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Nasze Wartości</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Fundamenty, na których budujemy nasze rozwiązania i relacje z klientami.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {values.map((value, index) => (
+              <Card key={index}>
+                <CardContent className="p-8">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <value.icon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold">{value.title}</h3>
+                  </div>
+                  <p className="text-gray-600">{value.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Kontakt Section (unchanged)
+function KontaktSection() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Handle form submission
+    console.log("Form submitted:", formData)
+    alert("Dziękujemy za wiadomość! Skontaktujemy się z Państwem w ciągu 24 godzin.")
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+  }
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            KONTAKT
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Skontaktuj się z nami</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Masz pytania? Potrzebujesz pomocy? Nasz zespół jest gotowy, aby Ci pomóc.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Contact Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Wyślij wiadomość</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Imię i nazwisko *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Telefon</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="subject">Temat</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="message">Wiadomość *</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows={5}
+                    className="mt-1"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full">
+                  <Send className="mr-2 h-4 w-4" />
+                  Wyślij wiadomość
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <div className="space-y-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Phone className="h-6 w-6 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-semibold">Telefon</h3>
+                </div>
+                <p className="text-gray-600 mb-2">Zadzwoń do nas w godzinach pracy</p>
+                <p className="text-xl font-semibold text-blue-600">+48 58 123 45 67</p>
+                <p className="text-sm text-gray-500 mt-2">Pon-Pt: 8:00-18:00, Sob: 9:00-14:00</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Mail className="h-6 w-6 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-semibold">Email</h3>
+                </div>
+                <p className="text-gray-600 mb-2">Napisz do nas - odpowiemy w ciągu 24h</p>
+                <p className="text-xl font-semibold text-blue-600">kontakt@legalnexus.pl</p>
+                <p className="text-sm text-gray-500 mt-2">Dla pilnych spraw: pilne@legalnexus.pl</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <MapPin className="h-6 w-6 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-semibold">Adres</h3>
+                </div>
+                <p className="text-gray-600 mb-2">Odwiedź nas w naszym biurze</p>
+                <address className="not-italic">
+                  <p className="font-semibold">Legal Nexus Sp. z o.o.</p>
+                  <p>ul. Długa 46/47</p>
+                  <p>80-831 Gdańsk</p>
+                </address>
+                <p className="text-sm text-gray-500 mt-2">Centrum miasta, 5 min od Dworca Głównego</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Clock className="h-6 w-6 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-semibold">Godziny pracy</h3>
+                </div>
+                <div className="space-y-2 text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Poniedziałek - Piątek:</span>
+                    <span className="font-semibold">8:00 - 18:00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sobota:</span>
+                    <span className="font-semibold">9:00 - 14:00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Niedziela:</span>
+                    <span className="font-semibold">Zamknięte</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Service Sections (unchanged)
+function AnalizaDokumentowSection() {
+  const features = [
+    {
+      icon: FileText,
+      title: "Szybka analiza",
+      description: "Analiza dokumentów w ciągu 24 godzin",
+    },
+    {
+      icon: Shield,
+      title: "Bezpieczeństwo",
+      description: "Pełna ochrona danych zgodnie z RODO",
+    },
+    {
+      icon: CheckCircle,
+      title: "Dokładność",
+      description: "Precyzyjna identyfikacja problemów prawnych",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            ANALIZA DOKUMENTÓW
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Profesjonalna analiza dokumentów prawnych</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Otrzymaj szczegółową analizę swoich dokumentów prawnych od doświadczonych prawników
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {features.map((feature, index) => (
+            <Card key={index} className="text-center">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Rozpocznij analizę dokumentów
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PismaPrawneSection() {
+  const documentTypes = [
+    {
+      icon: FileText,
+      title: "Pozwy i wnioski",
+      description: "Profesjonalne przygotowanie pozwów sądowych i wniosków procesowych",
+    },
+    {
+      icon: Scale,
+      title: "Umowy",
+      description: "Sporządzanie umów cywilnoprawnych i handlowych",
+    },
+    {
+      icon: Gavel,
+      title: "Odwołania",
+      description: "Przygotowanie odwołań i zażaleń w sprawach administracyjnych",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            PISMA PRAWNE
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Profesjonalne pisma prawne</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Zlecaj przygotowanie pism prawnych doświadczonym prawnikom
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {documentTypes.map((type, index) => (
+            <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <type.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{type.title}</h3>
+                <p className="text-gray-600">{type.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Zamów pismo prawne
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function KonsultacjeSection() {
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            KONSULTACJE
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Konsultacje prawne online</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">Skonsultuj swoją sprawę z doświadczonym prawnikiem</p>
+        </div>
+
+        <div className="text-center">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Umów konsultację
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReprezentacjaSection() {
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            REPREZENTACJA
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Reprezentacja prawna</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Profesjonalna reprezentacja w sprawach sądowych i administracyjnych
+          </p>
+        </div>
+
+        <div className="text-center">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            Zapytaj o reprezentację
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Legal Sections (unchanged)
+function RegulaminSection() {
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            REGULAMIN
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Regulamin świadczenia usług</h1>
+        </div>
+
+        <div className="prose prose-lg max-w-none">
+          <h2>§ 1 Postanowienia ogólne</h2>
+          <p>
+            Niniejszy Regulamin określa zasady świadczenia usług prawnych przez Legal Nexus Sp. z o.o. z siedzibą w
+            Gdańsku.
+          </p>
+
+          <h2>§ 2 Definicje</h2>
+          <p>Użyte w Regulaminie pojęcia oznaczają:</p>
+          <ul>
+            <li>
+              <strong>Usługodawca</strong> - Legal Nexus Sp. z o.o.
+            </li>
+            <li>
+              <strong>Klient</strong> - osoba fizyczna lub prawna korzystająca z usług
+            </li>
+            <li>
+              <strong>Platforma</strong> - system informatyczny dostępny pod adresem legalnexus.pl
+            </li>
+          </ul>
+
+          <h2>§ 3 Zakres usług</h2>
+          <p>Usługodawca świadczy następujące usługi:</p>
+          <ul>
+            <li>Analiza dokumentów prawnych</li>
+            <li>Przygotowanie pism prawnych</li>
+            <li>Konsultacje prawne online</li>
+            <li>Reprezentacja prawna</li>
+          </ul>
+
+          <h2>§ 4 Warunki świadczenia usług</h2>
+          <p>Usługi świadczone są po uprzednim zawarciu umowy i uiszczeniu należnej opłaty.</p>
+
+          <h2>§ 5 Odpowiedzialność</h2>
+          <p>Usługodawca ponosi odpowiedzialność za świadczone usługi zgodnie z obowiązującymi przepisami prawa.</p>
+
+          <h2>§ 6 Postanowienia końcowe</h2>
+          <p>Regulamin wchodzi w życie z dniem publikacji na stronie internetowej.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PolitykaPrywatnosciSection() {
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            POLITYKA PRYWATNOŚCI
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Polityka prywatności</h1>
+        </div>
+
+        <div className="prose prose-lg max-w-none">
+          <h2>1. Informacje ogólne</h2>
+          <p>
+            Niniejsza Polityka Prywatności określa zasady przetwarzania danych osobowych przez Legal Nexus Sp. z o.o.
+          </p>
+
+          <h2>2. Administrator danych</h2>
+          <p>
+            Administratorem danych osobowych jest Legal Nexus Sp. z o.o. z siedzibą w Gdańsku, ul. Długa 46/47, 80-831
+            Gdańsk.
+          </p>
+
+          <h2>3. Zakres przetwarzanych danych</h2>
+          <p>Przetwarzamy następujące kategorie danych osobowych:</p>
+          <ul>
+            <li>Dane identyfikacyjne (imię, nazwisko)</li>
+            <li>Dane kontaktowe (email, telefon, adres)</li>
+            <li>Dane dotyczące świadczonych usług</li>
+          </ul>
+
+          <h2>4. Cele przetwarzania</h2>
+          <p>Dane osobowe przetwarzane są w celu:</p>
+          <ul>
+            <li>Świadczenia usług prawnych</li>
+            <li>Kontaktu z klientem</li>
+            <li>Wystawiania faktur</li>
+            <li>Wypełniania obowiązków prawnych</li>
+          </ul>
+
+          <h2>5. Podstawy prawne</h2>
+          <p>Przetwarzanie danych odbywa się na podstawie:</p>
+          <ul>
+            <li>Zgody osoby, której dane dotyczą (art. 6 ust. 1 lit. a RODO)</li>
+            <li>Wykonania umowy (art. 6 ust. 1 lit. b RODO)</li>
+            <li>Wypełnienia obowiązków prawnych (art. 6 ust. 1 lit. c RODO)</li>
+          </ul>
+
+          <h2>6. Prawa osób, których dane dotyczą</h2>
+          <p>Przysługują Państwu następujące prawa:</p>
+          <ul>
+            <li>Prawo dostępu do danych</li>
+            <li>Prawo do sprostowania danych</li>
+            <li>Prawo do usunięcia danych</li>
+            <li>Prawo do ograniczenia przetwarzania</li>
+            <li>Prawo do przenoszenia danych</li>
+            <li>Prawo sprzeciwu</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RODOSection() {
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            RODO
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Informacje RODO</h1>
+        </div>
+
+        <div className="prose prose-lg max-w-none">
+          <h2>Ochrona danych osobowych</h2>
+          <p>
+            Legal Nexus Sp. z o.o. przestrzega przepisów Rozporządzenia Parlamentu Europejskiego i Rady (UE) 2016/679 z
+            dnia 27 kwietnia 2016 r. w sprawie ochrony osób fizycznych w związku z przetwarzaniem danych osobowych i w
+            sprawie swobodnego przepływu takich danych (RODO).
+          </p>
+
+          <h2>Bezpieczeństwo danych</h2>
+          <p>
+            Stosujemy odpowiednie środki techniczne i organizacyjne w celu zapewnienia bezpieczeństwa przetwarzanych
+            danych osobowych.
+          </p>
+
+          <h2>Kontakt w sprawach RODO</h2>
+          <p>W sprawach dotyczących ochrony danych osobowych można kontaktować się pod adresem: rodo@legalnexus.pl</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FAQSection() {
+  const faqs = [
+    {
+      question: "Jak długo trwa analiza dokumentów?",
+      answer:
+        "Standardowa analiza dokumentów trwa do 24 godzin roboczych od momentu przesłania wszystkich wymaganych materiałów.",
+    },
+    {
+      question: "Czy moje dane są bezpieczne?",
+      answer:
+        "Tak, stosujemy najwyższe standardy bezpieczeństwa i szyfrowania danych. Wszystkie informacje są chronione zgodnie z RODO.",
+    },
+    {
+      question: "Jakie dokumenty mogę przesłać do analizy?",
+      answer:
+        "Przyjmujemy dokumenty w formatach PDF, DOC, DOCX, JPG, PNG. Maksymalny rozmiar pojedynczego pliku to 10MB.",
+    },
+    {
+      question: "Czy mogę anulować zamówienie?",
+      answer:
+        "Tak, możesz anulować zamówienie do momentu rozpoczęcia prac przez prawnika. Po rozpoczęciu prac anulowanie nie jest możliwe.",
+    },
+    {
+      question: "Jak mogę skontaktować się z prawnikiem?",
+      answer: "Kontakt z prawnikiem odbywa się przez bezpieczną platformę wiadomości dostępną w panelu klienta.",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            FAQ
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Często zadawane pytania</h1>
+          <p className="text-xl text-gray-600">
+            Znajdź odpowiedzi na najczęściej zadawane pytania dotyczące naszych usług
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {faqs.map((faq, index) => (
+            <Card key={index}>
+              <CardContent className="p-6">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-4 mt-1">
+                    <HelpCircle className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
+                    <p className="text-gray-600">{faq.answer}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <p className="text-gray-600 mb-4">Nie znalazłeś odpowiedzi na swoje pytanie?</p>
+          <Button size="lg">Skontaktuj się z nami</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Additional sections (simplified for brevity)
+function AsystentAISection() {
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AIAssistant />
+      </div>
+    </div>
+  )
+}
+
+// Blog Section (updated with example data)
+function BlogSection() {
+  const blogPosts = [
+    {
+      title: "Nowelizacja Kodeksu Cywilnego 2024: Co musisz wiedzieć?",
+      date: "15 lipca 2024",
+      author: "Anna Kowalska",
+      summary: "Przegląd najważniejszych zmian w Kodeksie Cywilnym, które weszły w życie w 2024 roku.",
+      link: "#",
+    },
+    {
+      title: "RODO w praktyce: Jak chronić dane osobowe w małej firmie?",
+      date: "10 lipca 2024",
+      author: "Piotr Nowak",
+      summary: "Praktyczne wskazówki dotyczące wdrożenia zasad RODO w codziennej działalności gospodarczej.",
+      link: "#",
+    },
+    {
+      title: "Spory sądowe: Mediacja jako alternatywa dla procesu",
+      date: "5 lipca 2024",
+      author: "Marta Wiśniewska",
+      summary: "Zalety i wady mediacji w rozwiązywaniu konfliktów prawnych. Kiedy warto ją wybrać?",
+      link: "#",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            BLOG
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Blog prawniczy</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Aktualności, analizy i porady prawne od ekspertów LegalNexus.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {blogPosts.map((post, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
+                <p className="text-sm text-gray-500 mb-3">
+                  {post.date} by {post.author}
+                </p>
+                <p className="text-gray-600 mb-4">{post.summary}</p>
+                <Button variant="link" className="p-0 h-auto text-blue-600 hover:underline">
+                  Czytaj więcej <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Poradniki Section (updated with example data)
+function PoradnikiSection() {
+  const guides = [
+    {
+      title: "Jak napisać skuteczne odwołanie od decyzji administracyjnej?",
+      description: "Krok po kroku przez proces tworzenia i składania odwołania.",
+      link: "#",
+    },
+    {
+      title: "Prawa konsumenta: Co zrobić, gdy produkt jest wadliwy?",
+      description: "Przewodnik po prawach konsumenta i procedurach reklamacyjnych.",
+      link: "#",
+    },
+    {
+      title: "Umowa najmu mieszkania: Na co zwrócić uwagę?",
+      description: "Kluczowe elementy umowy najmu, które zapewnią bezpieczeństwo obu stronom.",
+      link: "#",
+    },
+    {
+      title: "Spadek i dziedziczenie: Podstawowe informacje",
+      description: "Zrozumienie zasad dziedziczenia ustawowego i testamentowego.",
+      link: "#",
+    },
+  ]
+
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
+            PORADNIKI
+          </Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Poradniki prawne</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Praktyczne poradniki krok po kroku, które pomogą Ci zrozumieć prawo.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {guides.map((guide, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-2">{guide.title}</h3>
+                <p className="text-gray-600 mb-4">{guide.description}</p>
+                <Button variant="link" className="p-0 h-auto text-blue-600 hover:underline">
+                  Czytaj poradnik <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ZamowAnalizeSection() {
+  return (
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Zamów analizę dokumentów</h1>
+          <p className="text-xl text-gray-600">Rozpocznij proces analizy swoich dokumentów</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function HomePage() {
+  const [activeSection, setActiveSection] = useState<Section>("home")
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section as Section)
+  }
 
   const renderSection = () => {
     switch (activeSection) {
       case "home":
-        return (
-          <>
-            <HeroSection onSectionChange={setActiveSection} />
-            <FeaturesSection />
-            <StatsSection />
-          </>
-        )
+        return <HomeSection />
       case "jak-to-dziala":
-        return (
-          <section id="jak-to-dziala" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Jak to działa?
-              </h2>
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <div className="flex flex-col items-center text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
-                    1
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">Zarejestruj się</h3>
-                  <p className="text-muted-foreground">Szybka i prosta rejestracja w naszym systemie.</p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
-                    2
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">Wybierz usługę</h3>
-                  <p className="text-muted-foreground">
-                    Wybierz spośród analizy dokumentów, pism prawnych, konsultacji lub reprezentacji.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
-                    3
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">Otrzymaj pomoc</h3>
-                  <p className="text-muted-foreground">Nasi eksperci dostarczą Ci profesjonalną pomoc prawną.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )
+        return <JakToDzialaSection />
       case "funkcje":
-        return (
-          <section id="funkcje" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Funkcje</h2>
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="mt-4 text-xl font-bold">Analiza dokumentów</h3>
-                  <p className="text-muted-foreground">Szybka i precyzyjna analiza dokumentów prawnych.</p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="mt-4 text-xl font-bold">Pisma prawne</h3>
-                  <p className="text-muted-foreground">Profesjonalne przygotowanie pism prawnych.</p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="mt-4 text-xl font-bold">Konsultacje</h3>
-                  <p className="text-muted-foreground">Indywidualne konsultacje z doświadczonymi prawnikami.</p>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="mt-4 text-xl font-bold">Reprezentacja</h3>
-                  <p className="text-muted-foreground">Reprezentacja w sądzie i przed organami administracji.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )
-      case "blog":
-        return (
-          <section id="blog" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Blog</h2>
-              <p className="text-muted-foreground text-center">Wkrótce pojawią się nowe wpisy na blogu!</p>
-            </div>
-          </section>
-        )
-      case "poradniki":
-        return (
-          <section id="poradniki" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Poradniki
-              </h2>
-              <p className="text-muted-foreground text-center">Wkrótce pojawią się nowe poradniki!</p>
-            </div>
-          </section>
-        )
+        return <FunkcjeSection />
       case "o-nas":
-        return (
-          <section id="o-nas" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">O nas</h2>
-              <p className="text-muted-foreground text-center">
-                Jesteśmy zespołem doświadczonych prawników, którzy oferują kompleksową pomoc prawną.
-              </p>
-            </div>
-          </section>
-        )
+        return <ONasSection />
       case "kontakt":
-        return (
-          <section id="kontakt" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Kontakt</h2>
-              <p className="text-muted-foreground text-center">Skontaktuj się z nami, aby uzyskać więcej informacji.</p>
-            </div>
-          </section>
-        )
+        return <KontaktSection />
       case "analiza-dokumentow":
-        return (
-          <section id="analiza-dokumentow" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Analiza dokumentów
-              </h2>
-              <p className="text-muted-foreground text-center">
-                Oferujemy szybką i precyzyjną analizę dokumentów prawnych.
-              </p>
-              <AiAssistant />
-            </div>
-          </section>
-        )
+        return <AnalizaDokumentowSection />
       case "pisma-prawne":
-        return (
-          <section id="pisma-prawne" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Pisma prawne
-              </h2>
-              <p className="text-muted-foreground text-center">Profesjonalne przygotowanie pism prawnych.</p>
-              <NewCaseForm />
-            </div>
-          </section>
-        )
+        return <PismaPrawneSection />
       case "konsultacje":
-        return (
-          <section id="konsultacje" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Konsultacje
-              </h2>
-              <p className="text-muted-foreground text-center">Indywidualne konsultacje z doświadczonymi prawnikami.</p>
-            </div>
-          </section>
-        )
+        return <KonsultacjeSection />
       case "reprezentacja":
-        return (
-          <section id="reprezentacja" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Reprezentacja
-              </h2>
-              <p className="text-muted-foreground text-center">
-                Reprezentacja w sądzie i przed organami administracji.
-              </p>
-            </div>
-          </section>
-        )
+        return <ReprezentacjaSection />
       case "regulamin":
-        return (
-          <section id="regulamin" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Regulamin
-              </h2>
-              <p className="text-muted-foreground text-center">Zapoznaj się z naszym regulaminem.</p>
-            </div>
-          </section>
-        )
+        return <RegulaminSection />
       case "polityka-prywatnosci":
-        return (
-          <section id="polityka-prywatnosci" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Polityka prywatności
-              </h2>
-              <p className="text-muted-foreground text-center">Przeczytaj naszą politykę prywatności.</p>
-            </div>
-          </section>
-        )
+        return <PolitykaPrywatnosciSection />
       case "rodo":
-        return (
-          <section id="rodo" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">RODO</h2>
-              <p className="text-muted-foreground text-center">Informacje dotyczące RODO.</p>
-            </div>
-          </section>
-        )
+        return <RODOSection />
       case "faq":
-        return (
-          <section id="faq" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">FAQ</h2>
-              <p className="text-muted-foreground text-center">Najczęściej zadawane pytania.</p>
-            </div>
-          </section>
-        )
-      case "logowanie":
-        return (
-          <section id="logowanie" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6 flex justify-center">
-              <LoginForm />
-            </div>
-          </section>
-        )
-      case "rejestracja":
-        return (
-          <section id="rejestracja" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6 flex justify-center">
-              <RegisterForm />
-            </div>
-          </section>
-        )
-      case "cennik":
-        return (
-          <section id="cennik" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Cennik</h2>
-              <p className="text-muted-foreground text-center">Szczegółowy cennik naszych usług.</p>
-            </div>
-          </section>
-        )
-      case "kancelarie":
-        return (
-          <section id="kancelarie" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Kancelarie
-              </h2>
-              <p className="text-muted-foreground text-center">Lista współpracujących kancelarii prawnych.</p>
-              <KancelarieManager />
-            </div>
-          </section>
-        )
-      case "panel-klienta":
-        return (
-          <section id="panel-klienta" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Panel Klienta
-              </h2>
-              <Dashboard />
-              <CreateOrderForm />
-              <OrdersList />
-            </div>
-          </section>
-        )
-      case "admin":
-        return (
-          <section id="admin" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Panel Administratora
-              </h2>
-              <KlienciManager />
-              <SprawyManager />
-            </div>
-          </section>
-        )
-      case "panel-operatora":
-        return (
-          <section id="panel-operatora" className="py-12 md:py-24 lg:py-32">
-            <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
-                Panel Operatora
-              </h2>
-              <OrdersList />
-            </div>
-          </section>
-        )
+        return <FAQSection />
+      case "asystent-ai":
+        return <AsystentAISection />
+      case "blog":
+        return <BlogSection />
+      case "poradniki":
+        return <PoradnikiSection />
+      case "zamow-analize":
+        return <ZamowAnalizeSection />
       default:
-        return null
+        return <HomeSection />
     }
   }
 
   return (
-    <>
-      <Header onSectionChange={setActiveSection} activeSection={activeSection} />
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header onSectionChange={handleSectionChange} activeSection={activeSection} />
       <main className="flex-1">{renderSection()}</main>
       <Footer />
-    </>
+    </div>
   )
 }

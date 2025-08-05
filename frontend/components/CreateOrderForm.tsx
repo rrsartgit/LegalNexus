@@ -6,41 +6,84 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
+import { useApi } from "@/lib/api/hooks"
 import { toast } from "@/components/ui/use-toast"
 
-export function CreateOrderForm() {
-  const [serviceType, setServiceType] = useState("")
+export default function CreateOrderForm() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const api = useApi()
+
+  const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [document, setDocument] = useState<File | null>(null)
+  const [documentType, setDocumentType] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setDocument(e.target.files[0])
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) {
+      toast({
+        title: "Błąd",
+        description: "Musisz być zalogowany, aby złożyć zamówienie.",
+        variant: "destructive",
+      })
+      router.push("/logowanie")
+      return
+    }
+
+    if (!document) {
+      toast({
+        title: "Błąd",
+        description: "Proszę załączyć dokument.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
-    setError(null)
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // In a real application, you would upload the document to a storage service
+      // and get a URL, then send that URL with the order details.
+      // For this example, we'll simulate the document upload.
+      console.log("Simulating document upload:", document.name)
 
-      if (!serviceType || !description) {
-        throw new Error("Wszystkie pola są wymagane.")
+      const newOrder = {
+        title,
+        description,
+        client_id: user.id, // Assuming client_id is the user's ID
+        document_url: "https://example.com/path/to/uploaded-document.pdf", // Placeholder
+        document_type: documentType,
+        status: "pending", // Initial status
       }
 
-      // Simulate success
-      toast({
-        title: "Zamówienie złożone pomyślnie!",
-        description: "Twoje zamówienie zostało przyjęte do realizacji.",
-      })
-      setServiceType("")
-      setDescription("")
+      const response = await api.createOrder(newOrder)
+
+      if (response) {
+        toast({
+          title: "Sukces",
+          description: "Twoje zamówienie zostało złożone pomyślnie!",
+        })
+        router.push("/panel-klienta") // Redirect to client dashboard
+      } else {
+        throw new Error("Nie udało się złożyć zamówienia.")
+      }
     } catch (err: any) {
-      setError(err.message || "Wystąpił błąd podczas składania zamówienia.")
       toast({
-        title: "Błąd składania zamówienia",
-        description: err.message || "Spróbuj ponownie.",
+        title: "Błąd",
+        description: err.message || "Wystąpił nieoczekiwany błąd.",
         variant: "destructive",
       })
     } finally {
@@ -49,40 +92,55 @@ export function CreateOrderForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-8">
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>Złóż nowe zamówienie</CardTitle>
+        <CardDescription>Wypełnij formularz, aby zamówić analizę dokumentów lub pismo prawne.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="service-type">Rodzaj usługi</Label>
-            <Select value={serviceType} onValueChange={setServiceType} required>
-              <SelectTrigger id="service-type">
-                <SelectValue placeholder="Wybierz rodzaj usługi" />
+            <Label htmlFor="title">Tytuł zamówienia *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Np. Analiza nakazu zapłaty"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="description">Opis sprawy *</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Opisz krótko swoją sprawę i czego oczekujesz."
+              rows={5}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="document-type">Typ dokumentu *</Label>
+            <Select value={documentType} onValueChange={setDocumentType} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Wybierz typ dokumentu" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="analiza-dokumentow">Analiza dokumentów</SelectItem>
-                <SelectItem value="pisma-prawne">Pisma prawne</SelectItem>
-                <SelectItem value="konsultacje">Konsultacje</SelectItem>
-                <SelectItem value="reprezentacja">Reprezentacja</SelectItem>
+                <SelectItem value="nakaz_zaplaty">Nakaz zapłaty</SelectItem>
+                <SelectItem value="wezwanie_komornika">Wezwanie komornika</SelectItem>
+                <SelectItem value="umowa">Umowa</SelectItem>
+                <SelectItem value="inne">Inne</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label htmlFor="description">Opis zamówienia</Label>
-            <Input
-              id="description"
-              type="text"
-              placeholder="Krótki opis czego dotyczy zamówienie"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-            />
+            <Label htmlFor="document">Załącz dokument *</Label>
+            <Input id="document" type="file" onChange={handleFileChange} required />
+            <p className="text-sm text-muted-foreground mt-1">Obsługiwane formaty: PDF, DOC, JPG. Max 10MB.</p>
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Składanie zamówienia..." : "Złóż zamówienie"}
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Złóż zamówienie"}
           </Button>
         </form>
       </CardContent>

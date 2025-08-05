@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import ClientLayout from "../ClientLayout"
-import { useAuth } from "@/frontend/lib/auth"
+import { useAuth } from "@/lib/auth" // Corrected import path
 import { DashboardStats } from "@/frontend/components/DashboardStats"
 import { OrdersList } from "@/frontend/components/OrdersList"
 import { KancelarieManager } from "@/frontend/components/KancelarieManager"
