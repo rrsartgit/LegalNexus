@@ -32,8 +32,7 @@ import {
   ArrowRight,
 } from "lucide-react"
 import Image from "next/image"
-import { useAuth } from "@/hooks/useAuth"
-import { useRouter } from "next/router"
+import { useAuth } from "@/lib/auth"
 
 type Section =
   | "home"
@@ -825,7 +824,6 @@ function LogowanieSection() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { signInWithEmail } = useAuth()
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -837,11 +835,11 @@ function LogowanieSection() {
     } else if (user) {
       // Redirect based on role
       if (user.role === "admin") {
-        router.push("/dashboard")
+        window.location.href = "/admin"
       } else if (user.role === "operator") {
-        router.push("/dashboard")
+        window.location.href = "/panel-operatora"
       } else {
-        router.push("/dashboard")
+        window.location.href = "/panel-klienta"
       }
     }
     setIsLoading(false)
@@ -1185,7 +1183,6 @@ function FAQSection() {
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState<Section>("home")
   const { user } = useAuth()
-  const router = useRouter()
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section as Section)
