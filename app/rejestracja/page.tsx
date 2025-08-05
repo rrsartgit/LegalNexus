@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -19,13 +19,18 @@ export default function RejestracjaPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { signUpWithEmail } = useAuth()
+  const { signUpWithEmail, loading, isAuthenticated } = useAuth()
   const router = useRouter()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/panel-klienta")
+    }
+  }, [isAuthenticated, router])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
     const { user, error } = await signUpWithEmail(email, password, name)
 
@@ -38,11 +43,10 @@ export default function RejestracjaPage() {
     } else if (user) {
       toast({
         title: "Rejestracja pomyślna!",
-        description: "Twoje konto zostało utworzone. Sprawdź swoją skrzynkę pocztową, aby potwierdzić adres email.",
+        description: "Twoje konto zostało utworzone. Możesz teraz korzystać z panelu klienta.",
       })
-      router.push("/panel-klienta") // Redirect to client panel after successful registration
+      router.push("/panel-klienta")
     }
-    setIsLoading(false)
   }
 
   return (
@@ -75,9 +79,10 @@ export default function RejestracjaPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    disabled={isLoading}
+                    disabled={loading}
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Adres email</Label>
                   <Input
@@ -87,7 +92,7 @@ export default function RejestracjaPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    disabled={isLoading}
+                    disabled={loading}
                   />
                 </div>
 
@@ -97,11 +102,12 @@ export default function RejestracjaPage() {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Wprowadź hasło"
+                      placeholder="Wprowadź hasło (min. 6 znaków)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      disabled={isLoading}
+                      minLength={6}
+                      disabled={loading}
                     />
                     <Button
                       type="button"
@@ -109,15 +115,15 @@ export default function RejestracjaPage() {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
+                      disabled={loading}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Rejestracja..." : "Zarejestruj się"}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Rejestracja..." : "Zarejestruj się"}
                 </Button>
               </form>
 

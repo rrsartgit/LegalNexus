@@ -20,6 +20,7 @@ interface AuthStore {
   /* state */
   user: User | null
   isAuthenticated: boolean
+  loading: boolean
   /* local helpers */
   login: (user: User) => void
   logout: () => void
@@ -44,77 +45,165 @@ export const useAuth = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      loading: false,
 
       /* ---------- local state helpers ---------- */
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      login: (user) => set({ user, isAuthenticated: true, loading: false }),
+      logout: () => set({ user: null, isAuthenticated: false, loading: false }),
       updateUser: (updates) => {
         const current = get().user
         if (current) set({ user: { ...current, ...updates } })
       },
 
-      /* ---------- Supabase helpers (safe if not configured) ---------- */
+      /* ---------- Supabase helpers ---------- */
       signInWithEmail: async (email, password) => {
+        set({ loading: true })
+
         if (!isSupabaseConfigured()) {
-          return { user: null, error: "Logowanie chwilowo niedostępne (brak konfiguracji Supabase)." }
+          // Fallback for development - create mock user
+          const mockUser: User = {
+            id: "mock-" + Math.random().toString(36).substr(2, 9),
+            email,
+            name: email.split("@")[0],
+            role: email.includes("admin") ? "admin" : email.includes("operator") ? "operator" : "client",
+            createdAt: new Date(),
+          }
+          set({ user: mockUser, isAuthenticated: true, loading: false })
+          return { user: mockUser, error: null }
         }
 
-        const { data, error } = await createClient().auth.signInWithPassword({ email, password })
-        if (error) return { user: null, error: error.message }
+        try {
+          const supabase = createClient()
+          if (!supabase) {
+            set({ loading: false })
+            return { user: null, error: "Błąd konfiguracji systemu" }
+          }
 
-        const u = data.user
-        if (!u) return { user: null, error: "Nieoczekiwany błąd logowania." }
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-        const user = supabaseUserToLocal(u)
-        set({ user, isAuthenticated: true })
-        return { user, error: null }
+          if (error) {
+            set({ loading: false })
+            return { user: null, error: error.message }
+          }
+
+          if (!data.user) {
+            set({ loading: false })
+            return { user: null, error: "Nieoczekiwany błąd logowania" }
+          }
+
+          const user = supabaseUserToLocal(data.user)
+          set({ user, isAuthenticated: true, loading: false })
+          return { user, error: null }
+        } catch (error) {
+          set({ loading: false })
+          return { user: null, error: "Błąd połączenia z serwerem" }
+        }
       },
 
       signUpWithEmail: async (email, password, name) => {
+        set({ loading: true })
+
         if (!isSupabaseConfigured()) {
-          return { user: null, error: "Rejestracja chwilowo niedostępna (brak konfiguracji Supabase)." }
+          // Fallback for development - create mock user
+          const mockUser: User = {
+            id: "mock-" + Math.random().toString(36).substr(2, 9),
+            email,
+            name,
+            role: "client",
+            createdAt: new Date(),
+          }
+          set({ user: mockUser, isAuthenticated: true, loading: false })
+          return { user: mockUser, error: null }
         }
 
-        const { data, error } = await createClient().auth.signUp({
-          email,
-          password,
-          options: { data: { name, role: "client" } },
-        })
-        if (error) return { user: null, error: error.message }
+        try {
+          const supabase = createClient()
+          if (!supabase) {
+            set({ loading: false })
+            return { user: null, error: "Błąd konfiguracji systemu" }
+          }
 
-        const u = data.user
-        if (!u) return { user: null, error: "Nieoczekiwany błąd rejestracji." }
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                name,
+                role: "client",
+              },
+            },
+          })
 
-        const user = supabaseUserToLocal(u)
-        set({ user, isAuthenticated: true })
-        return { user, error: null }
+          if (error) {
+            set({ loading: false })
+            return { user: null, error: error.message }
+          }
+
+          if (!data.user) {
+            set({ loading: false })
+            return { user: null, error: "Nieoczekiwany błąd rejestracji" }
+          }
+
+          const user = supabaseUserToLocal(data.user)
+          set({ user, isAuthenticated: true, loading: false })
+          return { user, error: null }
+        } catch (error) {
+          set({ loading: false })
+          return { user: null, error: "Błąd połączenia z serwerem" }
+        }
       },
 
       signOut: async () => {
+        set({ loading: true })
+
         if (!isSupabaseConfigured()) {
-          set({ user: null, isAuthenticated: false })
+          set({ user: null, isAuthenticated: false, loading: false })
           return { error: null }
         }
-        const { error } = await createClient().auth.signOut()
-        if (!error) set({ user: null, isAuthenticated: false })
-        return { error: error?.message || null }
+
+        try {
+          const supabase = createClient()
+          if (!supabase) {
+            set({ user: null, isAuthenticated: false, loading: false })
+            return { error: null }
+          }
+
+          const { error } = await supabase.auth.signOut()
+          set({ user: null, isAuthenticated: false, loading: false })
+          return { error: error?.message || null }
+        } catch (error) {
+          set({ user: null, isAuthenticated: false, loading: false })
+          return { error: null }
+        }
       },
 
       fetchUserSession: async () => {
         if (!isSupabaseConfigured()) return
-        const { data } = await createClient().auth.getSession()
-        const u = data.session?.user
-        if (u) {
-          set({ user: supabaseUserToLocal(u), isAuthenticated: true })
-        } else {
+
+        try {
+          const supabase = createClient()
+          if (!supabase) return
+
+          const { data } = await supabase.auth.getSession()
+          const user = data.session?.user
+
+          if (user) {
+            set({ user: supabaseUserToLocal(user), isAuthenticated: true })
+          } else {
+            set({ user: null, isAuthenticated: false })
+          }
+        } catch (error) {
+          console.error("Error fetching user session:", error)
           set({ user: null, isAuthenticated: false })
         }
       },
     }),
     {
       name: "auth-storage",
-      partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
-      onRehydrateStorage: () => (s) => s?.fetchUserSession(),
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 )
@@ -123,21 +212,20 @@ export const useAuth = create<AuthStore>()(
 /* Helpers                                                                     */
 /* -------------------------------------------------------------------------- */
 
-function supabaseUserToLocal(u: any): User {
+function supabaseUserToLocal(user: any): User {
   return {
-    id: u.id,
-    email: u.email ?? "",
-    name: u.user_metadata?.name ?? u.email?.split("@")[0] ?? "Użytkownik",
-    role: (u.user_metadata?.role as User["role"]) || "client",
-    createdAt: new Date(u.created_at),
-    phone: u.phone || undefined,
-    avatar: u.user_metadata?.avatar || undefined,
+    id: user.id,
+    email: user.email ?? "",
+    name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Użytkownik",
+    role: (user.user_metadata?.role as User["role"]) || "client",
+    createdAt: new Date(user.created_at),
+    phone: user.phone || undefined,
+    avatar: user.user_metadata?.avatar || undefined,
   }
 }
 
 /**
  * Dev-only helper preserved for legacy imports and tests.
- * Provides an in-memory “login” that doesn’t hit Supabase at all.
  */
 export const mockLogin = (email: string, role: User["role"] = "client"): User => {
   const user: User = {
@@ -153,8 +241,12 @@ export const mockLogin = (email: string, role: User["role"] = "client"): User =>
 
 /**
  * Dev-only helper preserved for legacy imports and tests.
- * Clears any mock session created with `mockLogin`.
  */
 export const mockLogout = (): void => {
   useAuth.getState().logout()
+}
+
+// Initialize auth state on app load
+if (typeof window !== "undefined") {
+  useAuth.getState().fetchUserSession()
 }

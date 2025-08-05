@@ -1,42 +1,40 @@
-import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 
-/**
- * Returns `true` only when both public Supabase env-vars are available.
- */
-export const isSupabaseConfigured = (): boolean =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-/**
- * Lazy singleton creator.
- * When env-vars are missing we return a **mock client** so the app can still run
- * in preview / local builds without crashing. Auth methods then surface a
- * predictable `"Supabase not configured"` error.
- */
-let cached: SupabaseClient | null = null
+// Check if Supabase is configured
+export const isSupabaseConfigured = () => {
+  return !!(
+    supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl !== "your-supabase-url" &&
+    supabaseAnonKey !== "your-supabase-anon-key"
+  )
+}
 
-export function createClient(): SupabaseClient {
-  if (!isSupabaseConfigured()) return mockClient as unknown as SupabaseClient
+// Create Supabase client with singleton pattern for browser
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
-  if (!cached) {
-    cached = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+export const createSupabaseClient = () => {
+  if (!isSupabaseConfigured()) {
+    console.warn(
+      "Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.",
     )
+    return null
   }
-  return cached
+
+  if (typeof window !== "undefined") {
+    // Browser environment - use singleton
+    if (!supabaseInstance) {
+      supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+    }
+    return supabaseInstance
+  } else {
+    // Server environment - create new instance
+    return createClient(supabaseUrl, supabaseAnonKey)
+  }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Fallback – minimal mock Supabase client                                    */
-/* -------------------------------------------------------------------------- */
-
-const supabaseError = { message: "Supabase not configured" }
-
-const mockClient = {
-  auth: {
-    signInWithPassword: async () => ({ data: { user: null }, error: supabaseError }),
-    signUp: async () => ({ data: { user: null }, error: supabaseError }),
-    signOut: async () => ({ error: supabaseError }),
-    getSession: async () => ({ data: { session: null }, error: supabaseError }),
-  },
-}
+// Export default client
+export { createSupabaseClient as createClient }
