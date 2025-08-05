@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Montserrat } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -10,8 +11,8 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
+  title: "LegalNexus - Profesjonalna Pomoc Prawna Online",
+  description: "Nowoczesna platforma prawnicza z AI. Analiza dokumentów, konsultacje prawne i reprezentacja w Gdańsku.",
   generator: "v0.dev",
 }
 
@@ -21,8 +22,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pl" className={montserrat.className}>
-      <body>{children}</body>
+    <html lang="pl" className={montserrat.className} suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }
