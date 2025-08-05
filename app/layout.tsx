@@ -1,5 +1,13 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { Montserrat } from "next/font/google" // Import Montserrat from next/font/google
+import "./globals.css" // Import globals.css at the top of the file
+import ClientLayout from "./clientLayout"
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat", // Define as a CSS variable
+})
 
 export const metadata: Metadata = {
   title: "Legal API Nexus - Profesjonalna Pomoc Prawna",
@@ -8,15 +16,16 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
-import ClientLayout from "./clientLayout"
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <ClientLayout>{children}</ClientLayout>
+  return (
+    <html lang="pl" suppressHydrationWarning className={montserrat.variable}>
+      <body>
+        <ClientLayout>{children}</ClientLayout>
+      </body>
+    </html>
+  )
 }
-
-
-import './globals.css'

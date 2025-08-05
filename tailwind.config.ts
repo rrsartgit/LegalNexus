@@ -19,8 +19,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-montserrat)", "Montserrat", "system-ui", "sans-serif"],
-        montserrat: ["Montserrat", "sans-serif"],
+        montserrat: ["var(--font-montserrat)", "sans-serif"], // Use the CSS variable
       },
       colors: {
         border: "hsl(var(--border))",

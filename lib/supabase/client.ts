@@ -1,4 +1,5 @@
-import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr"
 
 /**
  * Returns `true` only when both public Supabase env-vars are available.
@@ -18,10 +19,7 @@ export function createClient(): SupabaseClient {
   if (!isSupabaseConfigured()) return mockClient as unknown as SupabaseClient
 
   if (!cached) {
-    cached = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-    )
+    cached = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
   }
   return cached
 }

@@ -1,96 +1,116 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
-
-interface User {
-  id: number
-  email: string
-  role: "admin" | "client" | "operator"
-}
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@/lib/types"
 
 interface AuthContextType {
   user: User | null
-  isAuthenticated: boolean
   loading: boolean
-  signInWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>
-  signUpWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>
-  signOut: () => Promise<void>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  register: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+  const router = useRouter()
 
-  const loadUserFromStorage = useCallback(() => {
-    try {
-      const storedUser = localStorage.getItem("user")
-      if (storedUser) {
-        const userData = JSON.parse(storedUser)
-        setUser(userData)
-        setIsAuthenticated(true)
-      }
-    } catch (error) {
-      console.error("Failed to load user from storage:", error)
-      localStorage.removeItem("user")
+  const fetchUser = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase.auth.getUser()
+    if (data?.user) {
+      // Assuming user_metadata contains the role
+      setUser({
+        id: data.user.id,
+        email: data.user.email || "",
+        role: (data.user.user_metadata?.role as "client" | "admin" | "operator") || "client",
+      })
+    } else {
+      setUser(null)
     }
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
-    loadUserFromStorage()
-  }, [loadUserFromStorage])
+    fetchUser()
 
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      // Mock authentication - in real app, this would call your API
-      const mockUser: User = {
-        id: 1,
-        email: email,
-        role: email.includes("admin") ? "admin" : email.includes("operator") ? "operator" : "client",
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        fetchUser()
       }
+    })
 
-      localStorage.setItem("user", JSON.stringify(mockUser))
-      setUser(mockUser)
-      setIsAuthenticated(true)
-      return { user: mockUser, error: null }
-    } catch (error: any) {
-      const errorMessage = "Nieprawidłowy email lub hasło."
-      return { user: null, error: errorMessage }
+    return () => {
+      authListener?.unsubscribe()
     }
+  }, [fetchUser, supabase])
+
+  const login = async (email: string, password: string) => {
+    setLoading(true)
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) {
+      console.error("Login error:", error.message)
+      return { success: false, error: error.message }
+    }
+    if (data.user) {
+      setUser({
+        id: data.user.id,
+        email: data.user.email || "",
+        role: (data.user.user_metadata?.role as "client" | "admin" | "operator") || "client",
+      })
+      return { success: true }
+    }
+    return { success: false, error: "Unknown login error" }
   }
 
-  const signUpWithEmail = async (email: string, password: string) => {
-    try {
-      // Mock registration - in real app, this would call your API
-      const mockUser: User = {
-        id: Date.now(),
-        email: email,
+  const register = async (email: string, password: string) => {
+    setLoading(true)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role: "client", // Default role for new registrations
+        },
+      },
+    })
+    setLoading(false)
+    if (error) {
+      console.error("Registration error:", error.message)
+      return { success: false, error: error.message }
+    }
+    if (data.user) {
+      setUser({
+        id: data.user.id,
+        email: data.user.email || "",
         role: "client",
-      }
+      })
+      return { success: true }
+    }
+    return { success: false, error: "Unknown registration error" }
+  }
 
-      return { user: mockUser, error: null }
-    } catch (error: any) {
-      const errorMessage = "Błąd rejestracji."
-      return { user: null, error: errorMessage }
+  const logout = async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.signOut()
+    setLoading(false)
+    if (error) {
+      console.error("Logout error:", error.message)
+    } else {
+      setUser(null)
+      router.push("/")
     }
   }
 
-  const signOut = async () => {
-    localStorage.removeItem("user")
-    setUser(null)
-    setIsAuthenticated(false)
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loading, signInWithEmail, signUpWithEmail, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
