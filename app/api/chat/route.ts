@@ -1,25 +1,22 @@
 import { streamLegalResponse } from "@/lib/gemini"
+import type { NextRequest } from "next/server"
 
-export const maxDuration = 30
-
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { messages, locale = "pl" } = await req.json()
+    const { question, language = "pl" } = await request.json()
 
-    const lastMessage = messages[messages.length - 1]
-
-    if (!lastMessage?.content) {
-      return new Response("No message content provided", { status: 400 })
+    if (!question) {
+      return new Response("Question is required", { status: 400 })
     }
 
     const result = streamLegalResponse({
-      question: lastMessage.content,
-      language: locale,
+      question,
+      language,
     })
 
     return result.toDataStreamResponse()
   } catch (error) {
-    console.error("Chat API error:", error)
+    console.error("Error in chat API:", error)
     return new Response("Internal server error", { status: 500 })
   }
 }

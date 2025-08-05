@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogIn, LogOut, FileText, Scale, Phone, Info, Home, BookOpen, Shield, Gavel } from "lucide-react"
+import { Menu, User, LogIn, LogOut, FileText, Scale, Info, Home, BookOpen, Shield, Gavel } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -48,13 +48,12 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
     { name: "Asystent AI", key: "asystent-ai", icon: FileText },
     { name: "Blog", key: "blog", icon: BookOpen },
     { name: "Poradniki", key: "poradniki", icon: BookOpen },
-    { name: "Kontakt", key: "kontakt", href: "/kontakt", icon: Phone },
   ]
 
   const servicesDropdown = [
     { name: "Analiza dokumentów", href: "/analiza-dokumentow", icon: FileText },
     { name: "Pisma prawne", href: "/pisma-prawne", icon: Scale },
-    { name: "Konsultacje", href: "/konsultacje", icon: Phone },
+    { name: "Konsultacje", href: "/konsultacje", icon: Gavel },
     { name: "Reprezentacja", href: "/reprezentacja", icon: Gavel },
   ]
 

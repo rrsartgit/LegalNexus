@@ -1,170 +1,207 @@
 "use client"
 
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { BackButton } from "@/components/back-button"
 import { Input } from "@/components/ui/input"
-import { BookOpen, Search, Download, Eye, Star, Clock, FileText, Scale, Users, Building, Home, Car } from "lucide-react"
+import { BackButton } from "@/components/back-button"
+import { Search, Download, Eye, Star, Clock, FileText, Scale, Users } from "lucide-react"
+import Image from "next/image"
 
 interface PoradnikiSectionProps {
   onBack: () => void
 }
 
 export function PoradnikiSection({ onBack }: PoradnikiSectionProps) {
-  const guides = [
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("wszystkie")
+  const [selectedDifficulty, setSelectedDifficulty] = useState("wszystkie")
+
+  const categories = [
+    "wszystkie",
+    "prawo-cywilne",
+    "prawo-pracy",
+    "prawo-administracyjne",
+    "prawo-karne",
+    "prawo-gospodarcze",
+  ]
+
+  const difficulties = ["wszystkie", "łatwy", "średni", "trudny"]
+
+  const featuredGuides = [
     {
       id: 1,
-      title: "Jak napisać pozew do sądu - kompletny przewodnik",
-      description: "Szczegółowy przewodnik po pisaniu pozwu, wymaganych dokumentach i procedurach sądowych.",
-      category: "Prawo procesowe",
-      difficulty: "Średni",
-      readTime: "25 min",
-      downloads: 1250,
-      views: 5420,
+      title: "Kompletny przewodnik po zakładaniu spółki z o.o.",
+      description:
+        "Szczegółowy przewodnik krok po kroku przez proces rejestracji spółki z ograniczoną odpowiedzialnością",
+      category: "prawo-gospodarcze",
+      difficulty: "średni",
+      downloads: 5420,
+      views: 12340,
       rating: 4.8,
-      icon: Scale,
-      tags: ["Pozew", "Sąd", "Procedura"],
+      estimatedTime: "45 min",
+      image: "/images/legal-tech-symbol.png",
       featured: true,
     },
     {
       id: 2,
-      title: "Rozwiązanie umowy o pracę - wzory i procedury",
-      description: "Wszystko o wypowiadaniu umów o pracę, okresach wypowiedzenia i prawach pracownika.",
-      category: "Prawo pracy",
-      difficulty: "Łatwy",
-      readTime: "15 min",
-      downloads: 2100,
-      views: 8750,
-      rating: 4.9,
-      icon: Users,
-      tags: ["Umowa o pracę", "Wypowiedzenie", "Prawa pracownika"],
+      title: "Jak napisać pozew do sądu - wzór i instrukcja",
+      description: "Praktyczny poradnik z wzorami pism procesowych i instrukcjami wypełniania",
+      category: "prawo-cywilne",
+      difficulty: "średni",
+      downloads: 3890,
+      views: 8760,
+      rating: 4.6,
+      estimatedTime: "30 min",
+      image: "/images/digital-justice.png",
       featured: true,
     },
+  ]
+
+  const guides = [
     {
       id: 3,
-      title: "Zakładanie działalności gospodarczej krok po kroku",
-      description: "Przewodnik po rejestracji działalności, wyborze formy opodatkowania i obowiązkach.",
-      category: "Prawo gospodarcze",
-      difficulty: "Średni",
-      readTime: "30 min",
-      downloads: 1800,
-      views: 6200,
-      rating: 4.7,
-      icon: Building,
-      tags: ["Działalność", "Rejestracja", "Podatki"],
-      featured: false,
+      title: "Rozwiązanie umowy o pracę - procedury i wzory",
+      description: "Wszystko co musisz wiedzieć o wypowiadaniu umów o pracę",
+      category: "prawo-pracy",
+      difficulty: "łatwy",
+      downloads: 2340,
+      views: 5670,
+      rating: 4.5,
+      estimatedTime: "20 min",
+      image: "/images/ai-justice.png",
     },
     {
       id: 4,
-      title: "Kupno mieszkania - prawne aspekty transakcji",
-      description: "Kompletny przewodnik po kupnie nieruchomości, umowach i zabezpieczeniach prawnych.",
-      category: "Prawo nieruchomości",
-      difficulty: "Średni",
-      readTime: "20 min",
-      downloads: 950,
-      views: 3100,
-      rating: 4.6,
-      icon: Home,
-      tags: ["Nieruchomości", "Kupno", "Umowa"],
-      featured: false,
+      title: "Odwołanie od decyzji administracyjnej - wzór",
+      description: "Jak skutecznie odwołać się od decyzji organu administracyjnego",
+      category: "prawo-administracyjne",
+      difficulty: "średni",
+      downloads: 1890,
+      views: 4320,
+      rating: 4.3,
+      estimatedTime: "25 min",
+      image: "/images/brain-ai.png",
     },
     {
       id: 5,
-      title: "Odszkodowanie za wypadek komunikacyjny",
-      description: "Jak dochodzić odszkodowania po wypadku, jakie dokumenty zbierać i jak negocjować.",
-      category: "Prawo cywilne",
-      difficulty: "Łatwy",
-      readTime: "18 min",
-      downloads: 1400,
-      views: 4800,
-      rating: 4.5,
-      icon: Car,
-      tags: ["Wypadek", "Odszkodowanie", "Ubezpieczenie"],
-      featured: false,
+      title: "Umowa najmu mieszkania - co sprawdzić przed podpisaniem",
+      description: "Lista kontrolna i najważniejsze klauzule w umowie najmu",
+      category: "prawo-cywilne",
+      difficulty: "łatwy",
+      downloads: 4560,
+      views: 9870,
+      rating: 4.7,
+      estimatedTime: "15 min",
+      image: "/images/ai-knowledge.png",
     },
     {
       id: 6,
-      title: "Ochrona danych osobowych w firmie - RODO",
-      description: "Praktyczny przewodnik po wdrażaniu RODO w małej i średniej firmie.",
-      category: "Prawo IT",
-      difficulty: "Trudny",
-      readTime: "35 min",
-      downloads: 720,
-      views: 2400,
+      title: "Procedura karna - prawa podejrzanego",
+      description: "Kompendium praw osoby podejrzanej w postępowaniu karnym",
+      category: "prawo-karne",
+      difficulty: "trudny",
+      downloads: 1230,
+      views: 2890,
       rating: 4.4,
-      icon: FileText,
-      tags: ["RODO", "Ochrona danych", "Compliance"],
-      featured: false,
+      estimatedTime: "60 min",
+      image: "/images/digital-gavel.png",
     },
   ]
 
-  const categories = [
-    { name: "Wszystkie", count: guides.length, active: true },
-    { name: "Prawo procesowe", count: 1, active: false },
-    { name: "Prawo pracy", count: 1, active: false },
-    { name: "Prawo gospodarcze", count: 1, active: false },
-    { name: "Prawo nieruchomości", count: 1, active: false },
-    { name: "Prawo cywilne", count: 1, active: false },
-    { name: "Prawo IT", count: 1, active: false },
-  ]
+  const filteredGuides = guides.filter((guide) => {
+    const matchesSearch =
+      guide.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guide.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "wszystkie" || guide.category === selectedCategory
+    const matchesDifficulty = selectedDifficulty === "wszystkie" || guide.difficulty === selectedDifficulty
+    return matchesSearch && matchesCategory && matchesDifficulty
+  })
+
+  const getCategoryName = (category: string) => {
+    const categoryNames: { [key: string]: string } = {
+      wszystkie: "Wszystkie",
+      "prawo-cywilne": "Prawo Cywilne",
+      "prawo-pracy": "Prawo Pracy",
+      "prawo-administracyjne": "Prawo Administracyjne",
+      "prawo-karne": "Prawo Karne",
+      "prawo-gospodarcze": "Prawo Gospodarcze",
+    }
+    return categoryNames[category] || category
+  }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Łatwy":
+      case "łatwy":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      case "Średni":
+      case "średni":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-      case "Trudny":
+      case "trudny":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
     }
   }
 
-  const featuredGuides = guides.filter((guide) => guide.featured)
-  const regularGuides = guides.filter((guide) => !guide.featured)
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <BackButton onClick={onBack} />
 
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
           <div className="text-center mb-12">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-                <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400" />
+            <div className="flex justify-center items-center gap-4 mb-6">
+              <div className="relative w-16 h-16">
+                <Image src="/images/ai-knowledge.png" alt="Knowledge Base" fill className="object-contain" />
               </div>
+              <FileText className="h-12 w-12 text-blue-600 dark:text-blue-400" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Poradniki Prawne</h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Praktyczne przewodniki i wzory dokumentów prawnych do pobrania
             </p>
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Szukaj poradników..." className="pl-10" />
-              </div>
-              <Button variant="outline">
-                <Search className="mr-2 h-4 w-4" />
-                Szukaj
-              </Button>
+          <div className="mb-8 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Szukaj poradników..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
 
-            <div className="flex flex-wrap gap-2 justify-center">
-              {categories.map((category) => (
+            <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {getCategoryName(category)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 py-2">Poziom trudności:</span>
+              {difficulties.map((difficulty) => (
                 <Button
-                  key={category.name}
-                  variant={category.active ? "default" : "outline"}
+                  key={difficulty}
+                  variant={selectedDifficulty === difficulty ? "default" : "outline"}
                   size="sm"
-                  className="rounded-full"
+                  onClick={() => setSelectedDifficulty(difficulty)}
+                  className="capitalize"
                 >
-                  {category.name} ({category.count})
+                  {difficulty}
                 </Button>
               ))}
             </div>
@@ -172,61 +209,49 @@ export function PoradnikiSection({ onBack }: PoradnikiSectionProps) {
 
           {/* Featured Guides */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Polecane poradniki</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Wyróżnione poradniki</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {featuredGuides.map((guide) => (
-                <Card key={guide.id} className="overflow-hidden border-2 border-green-200 dark:border-green-800">
+                <Card key={guide.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative h-48">
+                    <Image src={guide.image || "/placeholder.svg"} alt={guide.title} fill className="object-cover" />
+                    <Badge className="absolute top-3 left-3 bg-orange-500">Wyróżniony</Badge>
+                    <Badge className={`absolute top-3 right-3 ${getDifficultyColor(guide.difficulty)}`}>
+                      {guide.difficulty}
+                    </Badge>
+                  </div>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                          <guide.icon className="h-6 w-6 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <Badge className="mb-2">{guide.category}</Badge>
-                          <Badge className={`ml-2 ${getDifficultyColor(guide.difficulty)}`}>{guide.difficulty}</Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="h-4 w-4 fill-current" />
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary">{getCategoryName(guide.category)}</Badge>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium">{guide.rating}</span>
                       </div>
                     </div>
-                    <CardTitle className="text-xl">{guide.title}</CardTitle>
-                    <CardDescription>{guide.description}</CardDescription>
+                    <CardTitle className="text-lg line-clamp-2">{guide.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">{guide.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {guide.readTime}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="h-4 w-4" />
-                        {guide.downloads.toLocaleString()}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        {guide.views.toLocaleString()}
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {guide.estimatedTime}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {guide.views.toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Download className="h-3 w-3" />
+                          {guide.downloads.toLocaleString()}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {guide.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button className="flex-1">
-                        <Eye className="mr-2 h-4 w-4" />
-                        Czytaj
-                      </Button>
-                      <Button variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Pobierz PDF
-                      </Button>
-                    </div>
+                    <Button className="w-full">
+                      <Download className="mr-2 h-4 w-4" />
+                      Pobierz poradnik
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -234,66 +259,90 @@ export function PoradnikiSection({ onBack }: PoradnikiSectionProps) {
           </div>
 
           {/* All Guides */}
-          <div>
+          <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Wszystkie poradniki</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {regularGuides.map((guide) => (
-                <Card key={guide.id} className="hover:shadow-lg transition-shadow">
+              {filteredGuides.map((guide) => (
+                <Card key={guide.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative h-40">
+                    <Image src={guide.image || "/placeholder.svg"} alt={guide.title} fill className="object-cover" />
+                    <Badge className={`absolute top-3 right-3 ${getDifficultyColor(guide.difficulty)}`}>
+                      {guide.difficulty}
+                    </Badge>
+                  </div>
                   <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                        <guide.icon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="text-sm font-medium">{guide.rating}</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {getCategoryName(guide.category)}
+                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs font-medium">{guide.rating}</span>
                       </div>
                     </div>
-                    <div className="flex gap-2 mb-2">
-                      <Badge variant="secondary">{guide.category}</Badge>
-                      <Badge className={getDifficultyColor(guide.difficulty)}>{guide.difficulty}</Badge>
-                    </div>
-                    <CardTitle className="text-lg line-clamp-2">{guide.title}</CardTitle>
-                    <CardDescription className="line-clamp-3">{guide.description}</CardDescription>
+                    <CardTitle className="text-base line-clamp-2">{guide.title}</CardTitle>
+                    <CardDescription className="text-sm line-clamp-2">{guide.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                      <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {guide.readTime}
+                        {guide.estimatedTime}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {guide.views.toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Download className="h-3 w-3" />
+                          {guide.downloads.toLocaleString()}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="h-3 w-3" />
-                        {guide.downloads}
-                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {guide.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1">
-                        <Eye className="mr-1 h-3 w-3" />
-                        Czytaj
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <Button size="sm" className="w-full">
+                      <Download className="mr-2 h-3 w-3" />
+                      Pobierz
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
 
-          {/* Load More */}
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Załaduj więcej poradników
-            </Button>
+          {filteredGuides.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Brak poradników</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Nie znaleziono poradników spełniających kryteria wyszukiwania.
+              </p>
+            </div>
+          )}
+
+          {/* Statistics */}
+          <div className="grid md:grid-cols-3 gap-6 mt-12">
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">15,000+</div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Aktywnych użytkowników</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <Download className="h-8 w-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">50,000+</div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Pobranych poradników</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <Scale className="h-8 w-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">200+</div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Dostępnych wzorów</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

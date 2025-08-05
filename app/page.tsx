@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { HeroSection } from "@/components/hero-section"
 import { FeaturesSection } from "@/components/features-section"
 import { StatsSection } from "@/components/stats-section"
@@ -17,19 +16,18 @@ export default function HomePage() {
     setCurrentSection(section)
   }
 
-  const handleBackToHome = () => {
+  const handleBack = () => {
     setCurrentSection("home")
   }
 
   const renderCurrentSection = () => {
     switch (currentSection) {
       case "asystent-ai":
-        return <AsystentAISection onBack={handleBackToHome} />
+        return <AsystentAISection onBack={handleBack} />
       case "blog":
-        return <BlogSection onBack={handleBackToHome} />
+        return <BlogSection onBack={handleBack} />
       case "poradniki":
-        return <PoradnikiSection onBack={handleBackToHome} />
-      case "home":
+        return <PoradnikiSection onBack={handleBack} />
       default:
         return (
           <>
@@ -42,10 +40,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header onNavigate={handleNavigate} currentSection={currentSection} showMenuButton={true} />
-      <main>{renderCurrentSection()}</main>
-      {currentSection === "home" && <Footer />}
+      {renderCurrentSection()}
     </div>
   )
 }
