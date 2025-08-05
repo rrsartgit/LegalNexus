@@ -1,12 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/client"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
     const {
       data: { session },
-    } = await supabase.auth.getSession()
+    } = await supabaseAdmin.auth.getSession()
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll("files") as File[]
 
     // Create case in database
-    const { data: newCase, error: caseError } = await supabase
+    const { data: newCase, error: caseError } = await supabaseAdmin
       .from("cases")
       .insert([
         {
@@ -43,7 +42,9 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       if (file.size > 0) {
         const fileName = `${newCase.id}/${Date.now()}-${file.name}`
-        const { data: uploadData, error: uploadError } = await supabase.storage.from("documents").upload(fileName, file)
+        const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+          .from("documents")
+          .upload(fileName, file)
 
         if (uploadError) {
           console.error("Error uploading file:", uploadError)
@@ -53,10 +54,10 @@ export async function POST(request: NextRequest) {
         // Get public URL
         const {
           data: { publicUrl },
-        } = supabase.storage.from("documents").getPublicUrl(fileName)
+        } = supabaseAdmin.storage.from("documents").getPublicUrl(fileName)
 
         // Save document info to database
-        const { data: document, error: docError } = await supabase
+        const { data: document, error: docError } = await supabaseAdmin
           .from("documents")
           .insert([
             {
@@ -77,48 +78,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Update case with document count
-    await supabase.from("cases").update({ document_count: uploadedDocuments.length }).eq("id", newCase.id)
+    await supabaseAdmin.from("cases").update({ document_count: uploadedDocuments.length }).eq("id", newCase.id)
 
-    return NextResponse.json({
-      success: true,
-      case: newCase,
-      documents: uploadedDocuments,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        case: newCase,
+        documents: uploadedDocuments,
+      },
+      { status: 201 },
+    )
   } catch (error) {
     console.error("Error in POST /api/cases:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { data: cases, error } = await supabase
-      .from("cases")
-      .select(
-        `
-        *,
-        documents(*),
-        analysis(*)
-      `,
-      )
-      .eq("client_id", session.user.id)
-      .order("created_at", { ascending: false })
+    const { data: cases, error } = await supabaseAdmin.from("cases").select("*")
 
     if (error) {
-      console.error("Error fetching cases:", error)
-      return NextResponse.json({ error: "Failed to fetch cases" }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ cases })
+    return NextResponse.json(cases)
   } catch (error) {
     console.error("Error in GET /api/cases:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

@@ -1,41 +1,85 @@
-import { render, screen } from "@testing-library/react"
-import { AIAssistant } from "@/components/ai-assistant"
-import { getTranslation } from "@/lib/i18n"
-import jest from "jest"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { AiAssistant } from "../../components/ai-assistant"
+import "@testing-library/jest-dom"
+import jest from "jest" // Import jest to declare the variable
 
-// Mock the useChat hook
-jest.mock("ai/react", () => ({
-  useChat: () => ({
-    messages: [],
-    input: "",
-    handleInputChange: jest.fn(),
-    handleSubmit: jest.fn(),
-    isLoading: false,
-  }),
-}))
+// Mock the API call
+global.fetch = jest.fn((url) => {
+  if (url === "/api/legal-query") {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ advice: "This is a mocked legal advice." }),
+    })
+  }
+  return Promise.reject(new Error("unknown url"))
+})
 
-describe("AIAssistant", () => {
-  const mockTranslations = getTranslation("pl")
-
-  it("renders AI assistant section", () => {
-    render(<AIAssistant t={mockTranslations} locale="pl" />)
-
-    expect(screen.getByText("PRZEDSTAWIAMY")).toBeInTheDocument()
-    expect(screen.getByText("Asystent AI LexiCore RAG")).toBeInTheDocument()
-    expect(screen.getByText("AI + Twoja Wiedza")).toBeInTheDocument()
+describe("AiAssistant", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
-  it("displays chat interface", () => {
-    render(<AIAssistant t={mockTranslations} locale="pl" />)
-
-    expect(screen.getByText("Wypróbuj Demo LexiCore")).toBeInTheDocument()
-    expect(screen.getByPlaceholderText("Zadaj pytanie prawne...")).toBeInTheDocument()
+  it("renders the AI Assistant component", () => {
+    render(<AiAssistant />)
+    expect(screen.getByText("AI Assistant Prawny")).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("Wpisz swoje pytanie prawne...")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Zadaj pytanie/i })).toBeInTheDocument()
   })
 
-  it("shows features cards", () => {
-    render(<AIAssistant t={mockTranslations} locale="pl" />)
+  it("updates input value on change", () => {
+    render(<AiAssistant />)
+    const input = screen.getByPlaceholderText("Wpisz swoje pytanie prawne...")
+    fireEvent.change(input, { target: { value: "Test query" } })
+    expect(input).toHaveValue("Test query")
+  })
 
-    expect(screen.getByText("Oszczędność 80% Czasu")).toBeInTheDocument()
-    expect(screen.getByText("Pełna Poufność")).toBeInTheDocument()
+  it("displays loading state when submitting", async () => {
+    render(<AiAssistant />)
+    const input = screen.getByPlaceholderText("Wpisz swoje pytanie prawne...")
+    const button = screen.getByRole("button", { name: /Zadaj pytanie/i })
+
+    fireEvent.change(input, { target: { value: "Test query" } })
+    fireEvent.click(button)
+
+    expect(button).toHaveTextContent("Ładowanie...")
+    expect(button).toBeDisabled()
+  })
+
+  it("displays legal advice after successful submission", async () => {
+    render(<AiAssistant />)
+    const input = screen.getByPlaceholderText("Wpisz swoje pytanie prawne...")
+    const button = screen.getByRole("button", { name: /Zadaj pytanie/i })
+
+    fireEvent.change(input, { target: { value: "Test query" } })
+    fireEvent.click(button)
+
+    await waitFor(() => {
+      expect(screen.getByText("Odpowiedź AI:")).toBeInTheDocument()
+      expect(screen.getByText("This is a mocked legal advice.")).toBeInTheDocument()
+    })
+
+    expect(button).toHaveTextContent("Zadaj pytanie")
+    expect(button).not.toBeDisabled()
+  })
+
+  it("displays error message on API failure", async () => {
+    // Mock fetch to return an error
+    global.fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({ error: "Failed to fetch advice" }),
+      }),
+    )
+
+    render(<AiAssistant />)
+    const input = screen.getByPlaceholderText("Wpisz swoje pytanie prawne...")
+    const button = screen.getByRole("button", { name: /Zadaj pytanie/i })
+
+    fireEvent.change(input, { target: { value: "Test query" } })
+    fireEvent.click(button)
+
+    await waitFor(() => {
+      expect(screen.getByText("Wystąpił błąd podczas pobierania porady prawnej.")).toBeInTheDocument()
+    })
   })
 })

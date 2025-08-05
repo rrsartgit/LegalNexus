@@ -93,13 +93,13 @@ export default function CennikPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
+      <section id="cennik" className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <Badge variant="secondary" className="mb-4 bg-blue-800 text-blue-100">
               CENNIK I PAKIETY
             </Badge>
-            <h1 className="text-4xl font-bold mb-6">Przejrzyste Ceny dla Kancelarii Prawnych</h1>
+            <h2 className="text-4xl font-bold mb-6">Przejrzyste Ceny dla Kancelarii Prawnych</h2>
             <p className="text-xl text-blue-100 max-w-3xl mx-auto">
               Wybierz pakiet dostosowany do wielkości i potrzeb Twojej kancelarii. Wszystkie ceny zawierają pełne
               wsparcie techniczne i regularne aktualizacje.

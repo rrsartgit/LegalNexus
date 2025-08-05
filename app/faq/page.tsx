@@ -1,12 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { HelpCircle, FileText, DollarSign, User, Mail, Phone, Info } from "lucide-react"
 import Link from "next/link"
 
@@ -91,7 +90,7 @@ export default function FaqPage() {
         {
           question: "Czy moje dane są bezpieczne?",
           answer:
-            "Tak, dbamy o najwyższe standardy bezpieczeństwa. Wszystkie dane są szyfrowane (SSL/TLS), a nasza platforma jest zgodna z RODO. Twoje informacje są objęte tajemnicą zawodową.",
+            "Tak, przykładamy najwyższą wagę do bezpieczeństwa i poufności danych naszych klientów. Stosujemy zaawansowane środki ochrony danych zgodnie z RODO i naszą Polityką Prywatności.",
         },
         {
           question: "Co to jest RODO?",
@@ -173,6 +172,45 @@ export default function FaqPage() {
                     </Accordion>
                   </div>
                 ))}
+                <div className="max-w-3xl mx-auto">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>Co to jest Legal API Nexus?</AccordionTrigger>
+                      <AccordionContent>
+                        Legal API Nexus to platforma oferująca kompleksowe usługi prawne online, w tym analizę
+                        dokumentów, przygotowywanie pism prawnych, konsultacje z prawnikami oraz reprezentację.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                      <AccordionTrigger>Jak szybko otrzymam odpowiedź na moje zapytanie?</AccordionTrigger>
+                      <AccordionContent>
+                        Staramy się analizować dokumenty prawne i przygotowywać odpowiedzi w ciągu 24 godzin od momentu
+                        złożenia zamówienia.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-3">
+                      <AccordionTrigger>Czy mogę skonsultować się z prawnikiem online?</AccordionTrigger>
+                      <AccordionContent>
+                        Tak, oferujemy indywidualne konsultacje online z doświadczonymi prawnikami, aby omówić Twoją
+                        sprawę.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-4">
+                      <AccordionTrigger>Jakie są koszty usług?</AccordionTrigger>
+                      <AccordionContent>
+                        Nasz cennik jest dostępny na stronie "Cennik", gdzie znajdziesz szczegółowe informacje o
+                        kosztach poszczególnych usług.
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-5">
+                      <AccordionTrigger>Czy moje dane są bezpieczne?</AccordionTrigger>
+                      <AccordionContent>
+                        Tak, przykładamy najwyższą wagę do bezpieczeństwa i poufności danych naszych klientów. Stosujemy
+                        zaawansowane środki ochrony danych zgodnie z RODO i naszą Polityką Prywatności.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
               </div>
             </div>
           </div>

@@ -59,7 +59,7 @@ export default function ONasPage() {
     {
       year: "2018",
       title: "Założenie Firmy",
-      description: "Rozpoczęcie prac nad pierwszym systemem zarządzania kancelariami prawymi w Gdańsku",
+      description: "Rozpoczęcie prac nad pierwszym systemem zarządzania kancelariami prawnych w Gdańsku",
     },
     {
       year: "2019",
@@ -305,6 +305,16 @@ export default function ONasPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* About Us Section */}
+      <section id="o-nas" className="py-12 md:py-24 lg:py-32">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">O nas</h2>
+          <p className="text-muted-foreground text-center">
+            Jesteśmy zespołem doświadczonych prawników, którzy oferują kompleksową pomoc prawną.
+          </p>
         </div>
       </section>
     </div>

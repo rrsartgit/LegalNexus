@@ -1,748 +1,495 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { PlusCircle, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "@/components/ui/use-toast"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { toast } from "sonner"
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  UserCheck,
-  UserX,
-  Phone,
-  Calendar,
-  Building,
-  Shield,
-  Activity,
-} from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { User } from "@/lib/types"
+import { fetchUsers, createUser, updateUser, deleteUser, updateUserStatus } from "@/frontend/lib/api"
 
-interface User {
-  id: string
-  email: string
-  full_name: string | null
-  phone: string | null
-  role: "client" | "lawyer" | "admin" | "operator"
-  avatar_url: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
-  last_login?: string
-  law_firm?: {
-    id: string
-    name: string
-  }
-  stats?: {
-    api_calls: number
-    searches: number
-    documents_analyzed: number
-  }
-}
-
-interface UserFormData {
-  email: string
-  full_name: string
-  phone: string
-  role: "client" | "lawyer" | "admin" | "operator"
-  is_active: boolean
-  law_firm_id?: string
-}
-
-const roleLabels = {
-  client: "Klient",
-  lawyer: "Prawnik",
-  admin: "Administrator",
-  operator: "Operator",
-}
-
-const roleColors = {
-  client: "bg-blue-100 text-blue-800",
-  lawyer: "bg-green-100 text-green-800",
-  admin: "bg-red-100 text-red-800",
-  operator: "bg-yellow-100 text-yellow-800",
-}
-
-export default function UsersManagementPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [roleFilter, setRoleFilter] = useState<string>("all")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+export default function UsersPage() {
+  const queryClient = useQueryClient()
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [formData, setFormData] = useState<UserFormData>({
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [newUser, setNewUser] = useState<Partial<User>>({
     email: "",
-    full_name: "",
-    phone: "",
+    password: "",
     role: "client",
     is_active: true,
   })
+  const [newStatus, setNewStatus] = useState<boolean>(true)
 
-  // Stats
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    clients: 0,
-    lawyers: 0,
-    admins: 0,
-    operators: 0,
-    newThisMonth: 0,
+  const {
+    data: users,
+    isLoading,
+    isError,
+  } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
   })
 
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch("/api/admin/users")
-      if (!response.ok) throw new Error("Failed to fetch users")
-
-      const data = await response.json()
-      setUsers(data.users)
-      setStats(data.stats)
-    } catch (error) {
-      console.error("Error fetching users:", error)
-      toast.error("Błąd podczas pobierania użytkowników")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCreateUser = async () => {
-    try {
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+  const addMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      toast({ title: "Sukces", description: "Użytkownik dodany pomyślnie." })
+      setIsAddModalOpen(false)
+      setNewUser({ email: "", password: "", role: "client", is_active: true })
+    },
+    onError: (error) => {
+      toast({
+        title: "Błąd",
+        description: `Nie udało się dodać użytkownika: ${error.message}`,
+        variant: "destructive",
       })
+    },
+  })
 
-      if (!response.ok) throw new Error("Failed to create user")
-
-      toast.success("Użytkownik został utworzony")
-      setIsCreateModalOpen(false)
-      resetForm()
-      fetchUsers()
-    } catch (error) {
-      console.error("Error creating user:", error)
-      toast.error("Błąd podczas tworzenia użytkownika")
-    }
-  }
-
-  const handleUpdateUser = async () => {
-    if (!selectedUser) return
-
-    try {
-      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) throw new Error("Failed to update user")
-
-      toast.success("Użytkownik został zaktualizowany")
+  const updateMutation = useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      toast({ title: "Sukces", description: "Użytkownik zaktualizowany pomyślnie." })
       setIsEditModalOpen(false)
-      setSelectedUser(null)
-      resetForm()
-      fetchUsers()
-    } catch (error) {
-      console.error("Error updating user:", error)
-      toast.error("Błąd podczas aktualizacji użytkownika")
-    }
-  }
-
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "DELETE",
+      setCurrentUser(null)
+    },
+    onError: (error) => {
+      toast({
+        title: "Błąd",
+        description: `Nie udało się zaktualizować użytkownika: ${error.message}`,
+        variant: "destructive",
       })
+    },
+  })
 
-      if (!response.ok) throw new Error("Failed to delete user")
-
-      toast.success("Użytkownik został usunięty")
-      fetchUsers()
-    } catch (error) {
-      console.error("Error deleting user:", error)
-      toast.error("Błąd podczas usuwania użytkownika")
-    }
-  }
-
-  const handleToggleUserStatus = async (userId: string, isActive: boolean) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: !isActive }),
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      toast({ title: "Sukces", description: "Użytkownik usunięty pomyślnie." })
+      setIsDeleteModalOpen(false)
+      setCurrentUser(null)
+    },
+    onError: (error) => {
+      toast({
+        title: "Błąd",
+        description: `Nie udało się usunąć użytkownika: ${error.message}`,
+        variant: "destructive",
       })
+    },
+  })
 
-      if (!response.ok) throw new Error("Failed to toggle user status")
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => updateUserStatus(id, is_active),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      toast({ title: "Sukces", description: "Status użytkownika zaktualizowany pomyślnie." })
+      setIsStatusModalOpen(false)
+      setCurrentUser(null)
+    },
+    onError: (error) => {
+      toast({
+        title: "Błąd",
+        description: `Nie udało się zaktualizować statusu: ${error.message}`,
+        variant: "destructive",
+      })
+    },
+  })
 
-      toast.success(`Użytkownik został ${!isActive ? "aktywowany" : "dezaktywowany"}`)
-      fetchUsers()
-    } catch (error) {
-      console.error("Error toggling user status:", error)
-      toast.error("Błąd podczas zmiany statusu użytkownika")
+  const handleAddUser = () => {
+    addMutation.mutate(newUser as User)
+  }
+
+  const handleEditUser = () => {
+    if (currentUser) {
+      updateMutation.mutate(currentUser)
     }
   }
 
-  const resetForm = () => {
-    setFormData({
-      email: "",
-      full_name: "",
-      phone: "",
-      role: "client",
-      is_active: true,
-    })
+  const handleDeleteUser = () => {
+    if (currentUser?.id) {
+      deleteMutation.mutate(currentUser.id)
+    }
+  }
+
+  const handleUpdateStatus = () => {
+    if (currentUser?.id) {
+      updateStatusMutation.mutate({ id: currentUser.id, is_active: newStatus })
+    }
   }
 
   const openEditModal = (user: User) => {
-    setSelectedUser(user)
-    setFormData({
-      email: user.email,
-      full_name: user.full_name || "",
-      phone: user.phone || "",
-      role: user.role,
-      is_active: user.is_active,
-    })
+    setCurrentUser(user)
     setIsEditModalOpen(true)
   }
 
-  const openDetailModal = (user: User) => {
-    setSelectedUser(user)
-    setIsDetailModalOpen(true)
+  const openDeleteModal = (user: User) => {
+    setCurrentUser(user)
+    setIsDeleteModalOpen(true)
   }
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-    const matchesRole = roleFilter === "all" || user.role === roleFilter
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && user.is_active) ||
-      (statusFilter === "inactive" && !user.is_active)
-
-    return matchesSearch && matchesRole && matchesStatus
-  })
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Zarządzanie użytkownikami</h1>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
+  const openStatusModal = (user: User) => {
+    setCurrentUser(user)
+    setNewStatus(user.is_active)
+    setIsStatusModalOpen(true)
   }
+
+  if (isLoading) return <p>Ładowanie użytkowników...</p>
+  if (isError) return <p>Błąd podczas ładowania użytkowników.</p>
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Zarządzanie użytkownikami</h1>
-          <p className="text-muted-foreground">Zarządzaj wszystkimi użytkownikami systemu</p>
+    <div className="grid gap-6 p-6 md:p-8 lg:p-10">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Zarządzanie Użytkownikami</h1>
+        <Button onClick={() => setIsAddModalOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Dodaj Użytkownika
+        </Button>
+      </div>
+
+      <Tabs defaultValue="all">
+        <div className="flex items-center">
+          <TabsList>
+            <TabsTrigger value="all">Wszyscy</TabsTrigger>
+            <TabsTrigger value="active">Aktywni</TabsTrigger>
+            <TabsTrigger value="inactive">Nieaktywni</TabsTrigger>
+          </TabsList>
         </div>
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Dodaj użytkownika
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Dodaj nowego użytkownika</DialogTitle>
-              <DialogDescription>Utwórz nowe konto użytkownika w systemie</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="user@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="full_name">Imię i nazwisko</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  placeholder="Jan Kowalski"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Telefon</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+48 123 456 789"
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">Rola</Label>
-                <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client">Klient</SelectItem>
-                    <SelectItem value="lawyer">Prawnik</SelectItem>
-                    <SelectItem value="operator">Operator</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Aktywne konto</Label>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                Anuluj
-              </Button>
-              <Button onClick={handleCreateUser}>Utwórz użytkownika</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+        <TabsContent value="all">
+          <Card>
+            <CardHeader>
+              <CardTitle>Użytkownicy Systemu</CardTitle>
+              <CardDescription>Zarządzaj użytkownikami systemu.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Rola</TableHead>
+                    <TableHead>Aktywny</TableHead>
+                    <TableHead className="text-right">Akcje</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users?.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>{user.role}</TableCell>
+                      <TableCell>{user.is_active ? "Tak" : "Nie"}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => openEditModal(user)}>Edytuj</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openStatusModal(user)}>Zmień status</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openDeleteModal(user)}>Usuń</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="active">
+          <Card>
+            <CardHeader>
+              <CardTitle>Aktywni Użytkownicy</CardTitle>
+              <CardDescription>Lista aktywnych użytkowników systemu.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Rola</TableHead>
+                    <TableHead>Aktywny</TableHead>
+                    <TableHead className="text-right">Akcje</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users
+                    ?.filter((u) => u.is_active)
+                    .map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>{user.is_active ? "Tak" : "Nie"}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditModal(user)}>Edytuj</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openStatusModal(user)}>Zmień status</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openDeleteModal(user)}>Usuń</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="inactive">
+          <Card>
+            <CardHeader>
+              <CardTitle>Nieaktywni Użytkownicy</CardTitle>
+              <CardDescription>Lista nieaktywnych użytkowników systemu.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Rola</TableHead>
+                    <TableHead>Aktywny</TableHead>
+                    <TableHead className="text-right">Akcje</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users
+                    ?.filter((u) => !u.is_active)
+                    .map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>{user.is_active ? "Tak" : "Nie"}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditModal(user)}>Edytuj</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openStatusModal(user)}>Zmień status</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openDeleteModal(user)}>Usuń</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Wszyscy użytkownicy</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Aktywni użytkownicy</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                <UserCheck className="h-4 w-4 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Prawnicy</p>
-                <p className="text-2xl font-bold">{stats.lawyers}</p>
-              </div>
-              <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <Building className="h-4 w-4 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Nowi w tym miesiącu</p>
-                <p className="text-2xl font-bold">{stats.newThisMonth}</p>
-              </div>
-              <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <Activity className="h-4 w-4 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Szukaj użytkowników..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtruj po roli" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Wszystkie role</SelectItem>
-                <SelectItem value="client">Klienci</SelectItem>
-                <SelectItem value="lawyer">Prawnicy</SelectItem>
-                <SelectItem value="operator">Operatorzy</SelectItem>
-                <SelectItem value="admin">Administratorzy</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtruj po statusie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Wszystkie statusy</SelectItem>
-                <SelectItem value="active">Aktywni</SelectItem>
-                <SelectItem value="inactive">Nieaktywni</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista użytkowników ({filteredUsers.length})</CardTitle>
-          <CardDescription>Zarządzaj wszystkimi użytkownikami systemu</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Użytkownik</TableHead>
-                <TableHead>Rola</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Kancelaria</TableHead>
-                <TableHead>Data rejestracji</TableHead>
-                <TableHead>Ostatnie logowanie</TableHead>
-                <TableHead className="text-right">Akcje</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {user.full_name
-                            ?.split(" ")
-                            .map((n) => n[0])
-                            .join("") || user.email[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{user.full_name || "Brak imienia"}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                        {user.phone && (
-                          <div className="text-sm text-muted-foreground flex items-center">
-                            <Phone className="h-3 w-3 mr-1" />
-                            {user.phone}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={roleColors[user.role]}>{roleLabels[user.role]}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.is_active ? "default" : "secondary"}>
-                      {user.is_active ? "Aktywny" : "Nieaktywny"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.law_firm ? (
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-1 text-muted-foreground" />
-                        {user.law_firm.name}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {new Date(user.created_at).toLocaleDateString("pl-PL")}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.last_login ? (
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(user.last_login).toLocaleDateString("pl-PL")}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">Nigdy</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => openDetailModal(user)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEditModal(user)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleToggleUserStatus(user.id, user.is_active)}>
-                        {user.is_active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Czy na pewno chcesz usunąć użytkownika?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Ta akcja nie może być cofnięta. Użytkownik {user.email} zostanie trwale usunięty z
-                              systemu.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>
-                              Usuń użytkownika
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Edit User Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md">
+      {/* Add User Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edytuj użytkownika</DialogTitle>
-            <DialogDescription>Zmień dane użytkownika {selectedUser?.email}</DialogDescription>
+            <DialogTitle>Dodaj nowego użytkownika</DialogTitle>
+            <DialogDescription>Wypełnij formularz, aby dodać nowego użytkownika.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit_email">Email</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
               <Input
-                id="edit_email"
+                id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="edit_full_name">Imię i nazwisko</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="password" className="text-right">
+                Hasło
+              </Label>
               <Input
-                id="edit_full_name"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                id="password"
+                type="password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="edit_phone">Telefon</Label>
-              <Input
-                id="edit_phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit_role">Rola</Label>
-              <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
-                <SelectTrigger>
-                  <SelectValue />
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                Rola
+              </Label>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) => setNewUser({ ...newUser, role: value as "admin" | "operator" | "client" })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wybierz rolę" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="client">Klient</SelectItem>
-                  <SelectItem value="lawyer">Prawnik</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="operator">Operator</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
+                  <SelectItem value="client">Klient</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit_is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-              <Label htmlFor="edit_is_active">Aktywne konto</Label>
-            </div>
           </div>
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
               Anuluj
             </Button>
-            <Button onClick={handleUpdateUser}>Zapisz zmiany</Button>
-          </div>
+            <Button onClick={handleAddUser} disabled={addMutation.isPending}>
+              {addMutation.isPending ? "Dodawanie..." : "Dodaj"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* User Detail Modal */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Edit User Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Szczegóły użytkownika</DialogTitle>
-            <DialogDescription>Pełne informacje o użytkowniku {selectedUser?.email}</DialogDescription>
+            <DialogTitle>Edytuj użytkownika</DialogTitle>
+            <DialogDescription>Zaktualizuj dane użytkownika.</DialogDescription>
           </DialogHeader>
-          {selectedUser && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">Szczegóły</TabsTrigger>
-                <TabsTrigger value="activity">Aktywność</TabsTrigger>
-                <TabsTrigger value="stats">Statystyki</TabsTrigger>
-              </TabsList>
-              <TabsContent value="details" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Email</Label>
-                    <p className="text-sm font-medium">{selectedUser.email}</p>
-                  </div>
-                  <div>
-                    <Label>Imię i nazwisko</Label>
-                    <p className="text-sm font-medium">{selectedUser.full_name || "Brak"}</p>
-                  </div>
-                  <div>
-                    <Label>Telefon</Label>
-                    <p className="text-sm font-medium">{selectedUser.phone || "Brak"}</p>
-                  </div>
-                  <div>
-                    <Label>Rola</Label>
-                    <Badge className={roleColors[selectedUser.role]}>{roleLabels[selectedUser.role]}</Badge>
-                  </div>
-                  <div>
-                    <Label>Status</Label>
-                    <Badge variant={selectedUser.is_active ? "default" : "secondary"}>
-                      {selectedUser.is_active ? "Aktywny" : "Nieaktywny"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label>Data rejestracji</Label>
-                    <p className="text-sm font-medium">{new Date(selectedUser.created_at).toLocaleString("pl-PL")}</p>
-                  </div>
-                  <div>
-                    <Label>Ostatnia aktualizacja</Label>
-                    <p className="text-sm font-medium">{new Date(selectedUser.updated_at).toLocaleString("pl-PL")}</p>
-                  </div>
-                  <div>
-                    <Label>Ostatnie logowanie</Label>
-                    <p className="text-sm font-medium">
-                      {selectedUser.last_login ? new Date(selectedUser.last_login).toLocaleString("pl-PL") : "Nigdy"}
-                    </p>
-                  </div>
-                </div>
-                {selectedUser.law_firm && (
-                  <div>
-                    <Label>Kancelaria</Label>
-                    <div className="flex items-center mt-1">
-                      <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm font-medium">{selectedUser.law_firm.name}</span>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="activity" className="space-y-4">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Historia aktywności będzie dostępna wkrótce</p>
-                </div>
-              </TabsContent>
-              <TabsContent value="stats" className="space-y-4">
-                {selectedUser.stats ? (
-                  <div className="grid grid-cols-3 gap-4">
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold">{selectedUser.stats.api_calls}</p>
-                        <p className="text-sm text-muted-foreground">Wywołania API</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold">{selectedUser.stats.searches}</p>
-                        <p className="text-sm text-muted-foreground">Wyszukiwania</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold">{selectedUser.stats.documents_analyzed}</p>
-                        <p className="text-sm text-muted-foreground">Analizy dokumentów</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Brak dostępnych statystyk</p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+          {currentUser && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={currentUser.email}
+                  onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">
+                  Rola
+                </Label>
+                <Select
+                  value={currentUser.role}
+                  onValueChange={(value) =>
+                    setCurrentUser({ ...currentUser, role: value as "admin" | "operator" | "client" })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wybierz rolę" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="operator">Operator</SelectItem>
+                    <SelectItem value="client">Klient</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              Anuluj
+            </Button>
+            <Button onClick={handleEditUser} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Aktualizowanie..." : "Zapisz zmiany"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Potwierdź usunięcie</DialogTitle>
+            <DialogDescription>
+              Czy na pewno chcesz usunąć użytkownika "{currentUser?.email}"? Tej operacji nie można cofnąć.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Anuluj
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Status Modal */}
+      <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Zmień status użytkownika</DialogTitle>
+            <DialogDescription>Zmień status aktywności użytkownika.</DialogDescription>
+          </DialogHeader>
+          {currentUser && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Aktywny
+                </Label>
+                <Select value={newStatus ? "true" : "false"} onValueChange={(value) => setNewStatus(value === "true")}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wybierz status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Tak</SelectItem>
+                    <SelectItem value="false">Nie</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatusModalOpen(false)}>
+              Anuluj
+            </Button>
+            <Button onClick={handleUpdateStatus} disabled={updateStatusMutation.isPending}>
+              {updateStatusMutation.isPending ? "Aktualizowanie..." : "Zapisz zmiany"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

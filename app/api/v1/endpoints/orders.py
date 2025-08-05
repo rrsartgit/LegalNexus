@@ -5,12 +5,12 @@ from sqlalchemy import or_
 
 from app.db.session import get_db
 from app.models.base import Order, User, UserRole, OrderStatus
-from app.api.v1.schemas.orders import OrderCreate, OrderUpdate, Order as OrderSchema, OrderList
+from app.api.v1.schemas.orders import OrderCreate, OrderUpdate, Order as OrderSchema, OrderList, OrderResponse
 from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
 
-@router.post("/", response_model=OrderSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_order(
     order: OrderCreate,
     current_user: User = Depends(get_current_user),
@@ -34,7 +34,7 @@ def create_order(
     db.refresh(db_order)
     return db_order
 
-@router.get("/", response_model=List[OrderList])
+@router.get("/", response_model=List[OrderResponse])
 def get_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -54,7 +54,7 @@ def get_orders(
     orders = query.offset(skip).limit(limit).all()
     return orders
 
-@router.get("/{order_id}", response_model=OrderSchema)
+@router.get("/{order_id}", response_model=OrderResponse)
 def get_order(
     order_id: int,
     current_user: User = Depends(get_current_user),
@@ -77,7 +77,7 @@ def get_order(
     
     return order
 
-@router.put("/{order_id}", response_model=OrderSchema)
+@router.put("/{order_id}", response_model=OrderResponse)
 def update_order(
     order_id: int,
     order_update: OrderUpdate,

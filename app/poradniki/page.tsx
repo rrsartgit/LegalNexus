@@ -115,6 +115,21 @@ export default function PoradnikiPage() {
         </div>
       </section>
 
+      {/* Newsletter */}
+      <section className="py-16 bg-blue-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-6">Bądź na Bieżąco z Nowościami</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Zapisz się do naszego newslettera i otrzymuj najnowsze poradniki oraz informacje o zmianach w prawie
+            bezpośrednio na swoją skrzynkę e-mail.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+            <Input placeholder="Twój adres e-mail" className="bg-white text-gray-900" />
+            <Button className="bg-white text-blue-600 hover:bg-gray-100">Zapisz się</Button>
+          </div>
+        </div>
+      </section>
+
       {/* Search and Filters */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -193,18 +208,11 @@ export default function PoradnikiPage() {
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="py-16 bg-blue-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6">Bądź na Bieżąco z Nowościami</h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Zapisz się do naszego newslettera i otrzymuj najnowsze poradniki oraz informacje o zmianach w prawie
-            bezpośrednio na swoją skrzynkę e-mail.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <Input placeholder="Twój adres e-mail" className="bg-white text-gray-900" />
-            <Button className="bg-white text-blue-600 hover:bg-gray-100">Zapisz się</Button>
-          </div>
+      {/* Placeholder for New Section */}
+      <section id="poradniki" className="py-12 md:py-24 lg:py-32">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Poradniki</h2>
+          <p className="text-muted-foreground text-center">Wkrótce pojawią się nowe poradniki!</p>
         </div>
       </section>
     </div>

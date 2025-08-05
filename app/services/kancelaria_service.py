@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.models.kancelaria import Kancelaria, Klient, Sprawa
+from app.models.kancelaria import Kancelaria, Klient, Sprawa, LawFirm, Specialization
 from app.api.v1.schemas.kancelaria import (
     KancelariaCreate, KancelariaUpdate,
     KlientCreate, KlientUpdate,
-    SprawaCreate, SprawaUpdate
+    SprawaCreate, SprawaUpdate,
+    LawFirmCreate, LawFirmUpdate
 )
+import uuid
 
 class KancelariaService:
     def __init__(self, db: Session):
@@ -122,6 +124,62 @@ class KancelariaService:
             return True
         return False
     
+    # Law Firm methods
+    def get_law_firm_by_id(self, law_firm_id: str) -> Optional[LawFirm]:
+        return self.db.query(LawFirm).filter(LawFirm.id == law_firm_id).first()
+
+    def get_law_firms(self, skip: int = 0, limit: int = 100) -> List[LawFirm]:
+        return self.db.query(LawFirm).offset(skip).limit(limit).all()
+
+    def create_law_firm(self, law_firm: LawFirmCreate) -> LawFirm:
+        db_law_firm = LawFirm(
+            id=str(uuid.uuid4()), # Generate UUID for the ID
+            name=law_firm.name,
+            address=law_firm.address,
+            phone=law_firm.phone,
+            email=law_firm.email,
+            website=law_firm.website,
+            description=law_firm.description,
+            is_active=law_firm.is_active
+        )
+        self.db.add(db_law_firm)
+        self.db.commit()
+        self.db.refresh(db_law_firm)
+
+        # Add specializations
+        for spec_id in law_firm.specialization_ids:
+            specialization = self.db.query(Specialization).filter(Specialization.id == spec_id).first()
+            if specialization:
+                db_law_firm.specializations.append(specialization)
+        self.db.commit()
+        self.db.refresh(db_law_firm)
+        return db_law_firm
+
+    def update_law_firm(self, law_firm_id: str, law_firm: LawFirmUpdate) -> Optional[LawFirm]:
+        db_law_firm = self.db.query(LawFirm).filter(LawFirm.id == law_firm_id).first()
+        if db_law_firm:
+            for key, value in law_firm.dict(exclude_unset=True).items():
+                if key == "specialization_ids":
+                    # Clear existing specializations and add new ones
+                    db_law_firm.specializations.clear()
+                    for spec_id in value:
+                        specialization = self.db.query(Specialization).filter(Specialization.id == spec_id).first()
+                        if specialization:
+                            db_law_firm.specializations.append(specialization)
+                else:
+                    setattr(db_law_firm, key, value)
+            self.db.commit()
+            self.db.refresh(db_law_firm)
+        return db_law_firm
+
+    def delete_law_firm(self, law_firm_id: str) -> bool:
+        db_law_firm = self.db.query(LawFirm).filter(LawFirm.id == law_firm_id).first()
+        if db_law_firm:
+            self.db.delete(db_law_firm)
+            self.db.commit()
+            return True
+        return False
+    
     # Statistics methods
     def get_stats(self) -> dict:
         total_kancelarie = self.db.query(Kancelaria).count()
@@ -130,6 +188,8 @@ class KancelariaService:
         active_klienci = self.db.query(Klient).filter(Klient.aktywny == True).count()
         total_sprawy = self.db.query(Sprawa).count()
         active_sprawy = self.db.query(Sprawa).filter(Sprawa.status == "aktywna").count()
+        total_law_firms = self.db.query(LawFirm).count()
+        active_law_firms = self.db.query(LawFirm).filter(LawFirm.is_active == True).count()
         
         return {
             "kancelarie": {
@@ -143,5 +203,9 @@ class KancelariaService:
             "sprawy": {
                 "total": total_sprawy,
                 "active": active_sprawy
+            },
+            "law_firms": {
+                "total": total_law_firms,
+                "active": active_law_firms
             }
         }

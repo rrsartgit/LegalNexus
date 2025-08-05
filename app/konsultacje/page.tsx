@@ -211,6 +211,16 @@ export default function KonsultacjePage() {
           </div>
         </section>
 
+        {/* Konsultacje Section */}
+        <section id="konsultacje" className="py-12 md:py-24 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+              Konsultacje
+            </h2>
+            <p className="text-muted-foreground text-center">Indywidualne konsultacje z doświadczonymi prawnikami.</p>
+          </div>
+        </section>
+
         {/* Consultation Types */}
         <section id="rodzaje-konsultacji" className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -259,7 +269,7 @@ export default function KonsultacjePage() {
 
                   <CardContent>
                     <div className="space-y-3 mb-6">
-                      <h4 className="font-semibold text-gray-900">Co obejmuje konsultacja:</h4>
+                      <h4 className="font-semibold text-gray-900">Co obejmuje konsultację:</h4>
                       {consultation.features.map((feature, idx) => (
                         <div key={idx} className="flex items-start">
                           <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />

@@ -1,125 +1,39 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from typing import List
 from app.db.session import get_db
-from app.models.base import User, UserRole
-from app.api.v1.schemas.auth import User as UserSchema, UserUpdate
-from app.api.v1.endpoints.auth import get_current_user
+from app.api.v1.schemas.users import UserCreate, UserResponse, UserUpdate
+from app.models.user import User
+from app.services.user_service import get_user_by_id, get_users, create_user, update_user, delete_user
 
 router = APIRouter()
 
-@router.get("/", response_model=List[UserSchema])
-def get_users(
-    skip: int = 0,
-    limit: int = 100,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Pobiera listę użytkowników (tylko dla adminów)."""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
-    users = db.query(User).offset(skip).limit(limit).all()
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
+    return create_user(db=db, user=user)
+
+@router.get("/", response_model=List[UserResponse])
+def read_users_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = get_users(db, skip=skip, limit=limit)
     return users
 
-@router.get("/{user_id}", response_model=UserSchema)
-def get_user(
-    user_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Pobiera szczegóły użytkownika."""
-    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    return user
+@router.get("/{user_id}", response_model=UserResponse)
+def read_user_endpoint(user_id: int, db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, user_id)
+    if db_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
 
-@router.put("/{user_id}", response_model=UserSchema)
-def update_user(
-    user_id: int,
-    user_update: UserUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Aktualizuje dane użytkownika."""
-    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Aktualizuj pola
-    update_data = user_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(user, field, value)
-    
-    db.commit()
-    db.refresh(user)
-    return user
+@router.put("/{user_id}", response_model=UserResponse)
+def update_user_endpoint(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    db_user = update_user(db, user_id, user)
+    if db_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
-    user_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Usuwa użytkownika (tylko admin)."""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    if user.id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete yourself"
-        )
-    
-    db.delete(user)
-    db.commit()
-
-@router.get("/operators/list", response_model=List[UserSchema])
-def get_operators(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Pobiera listę operatorów."""
-    if current_user.role not in [UserRole.OPERATOR, UserRole.ADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
-    operators = db.query(User).filter(
-        User.role.in_([UserRole.OPERATOR, UserRole.ADMIN])
-    ).all()
-    return operators
+def delete_user_endpoint(user_id: int, db: Session = Depends(get_db)):
+    success = delete_user(db, user_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return

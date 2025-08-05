@@ -6,10 +6,11 @@ from decimal import Decimal
 from app.db.session import get_db
 from app.models.base import Payment, Order, User, UserRole, OrderStatus, PaymentStatus
 from app.api.v1.endpoints.auth import get_current_user
+from app.api.v1.schemas.payments import PaymentCreate, PaymentResponse, PaymentUpdate
 
 router = APIRouter()
 
-@router.post("/{order_id}/create-payment-intent")
+@router.post("/{order_id}/create-payment-intent", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
 def create_payment_intent(
     order_id: int,
     current_user: User = Depends(get_current_user),
@@ -50,11 +51,7 @@ def create_payment_intent(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Order already paid"
             )
-        return {
-            "payment_id": existing_payment.id,
-            "amount": float(existing_payment.amount),
-            "status": existing_payment.status
-        }
+        return existing_payment
     
     # Utwórz nową płatność
     payment = Payment(
@@ -76,12 +73,7 @@ def create_payment_intent(
     # payment.payment_gateway_charge_id = stripe_intent.id
     # db.commit()
     
-    return {
-        "payment_id": payment.id,
-        "amount": float(payment.amount),
-        "status": payment.status,
-        "client_secret": f"mock_client_secret_{payment.id}"  # Mock dla demonstracji
-    }
+    return payment
 
 @router.post("/{payment_id}/confirm")
 def confirm_payment(
@@ -128,7 +120,7 @@ def confirm_payment(
         "status": payment.status
     }
 
-@router.get("/{order_id}/payments")
+@router.get("/{order_id}/payments", response_model=List[PaymentResponse])
 def get_order_payments(
     order_id: int,
     current_user: User = Depends(get_current_user),
@@ -187,3 +179,43 @@ def get_revenue_stats(
         "paid_orders": paid_orders,
         "pending_payments": pending_payments
     }
+
+@router.post("/", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
+def create_payment(payment: PaymentCreate, db: Session = Depends(get_db)):
+    db_payment = Payment(**payment.dict())
+    db.add(db_payment)
+    db.commit()
+    db.refresh(db_payment)
+    return db_payment
+
+@router.get("/", response_model=List[PaymentResponse])
+def get_payments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    payments = db.query(Payment).offset(skip).limit(limit).all()
+    return payments
+
+@router.get("/{payment_id}", response_model=PaymentResponse)
+def get_payment(payment_id: int, db: Session = Depends(get_db)):
+    payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if payment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+    return payment
+
+@router.put("/{payment_id}", response_model=PaymentResponse)
+def update_payment(payment_id: int, payment: PaymentUpdate, db: Session = Depends(get_db)):
+    db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if db_payment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+    for key, value in payment.dict(exclude_unset=True).items():
+        setattr(db_payment, key, value)
+    db.commit()
+    db.refresh(db_payment)
+    return db_payment
+
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment(payment_id: int, db: Session = Depends(get_db)):
+    db_payment = db.query(Payment).filter(Payment.id == payment_id).first()
+    if db_payment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+    db.delete(db_payment)
+    db.commit()
+    return

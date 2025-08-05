@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useQuery } from "@tanstack/react-query"
+import { fetchLawFirms } from "@/frontend/lib/api"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,10 +39,30 @@ export default function KancelariePage() {
     has_prev: false,
   })
 
+  const {
+    data: fetchedLawFirms,
+    isLoading: queryLoading,
+    isError,
+  } = useQuery<LawFirm[]>({
+    queryKey: ["lawFirms"],
+    queryFn: fetchLawFirms,
+  })
+
   // Load initial data
   useEffect(() => {
-    loadInitialData()
-  }, [])
+    if (fetchedLawFirms) {
+      setLawFirms(fetchedLawFirms)
+      setPagination({
+        page: 1,
+        per_page: 9,
+        total: fetchedLawFirms.length,
+        pages: Math.ceil(fetchedLawFirms.length / 9),
+        has_next: false,
+        has_prev: false,
+      })
+    }
+    setLoading(false)
+  }, [fetchedLawFirms])
 
   // Search when filters change
   useEffect(() => {
@@ -114,8 +136,12 @@ export default function KancelariePage() {
       .slice(0, 2)
   }
 
-  if (loading) {
+  if (loading || queryLoading) {
     return <div>Loading...</div> // This will be replaced by loading.tsx
+  }
+
+  if (isError) {
+    return <p>Błąd podczas ładowania kancelarii.</p>
   }
 
   return (
@@ -222,7 +248,11 @@ export default function KancelariePage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg mb-2">{firm.name}</CardTitle>
-                        {firm.description && <p className="text-sm text-gray-600 line-clamp-2">{firm.description}</p>}
+                        {firm.description && (
+                          <CardDescription className="text-sm text-gray-600 line-clamp-2">
+                            {firm.description}
+                          </CardDescription>
+                        )}
                       </div>
                       <Avatar className="ml-4">
                         <AvatarFallback className="bg-blue-100 text-blue-600">{getInitials(firm.name)}</AvatarFallback>

@@ -222,6 +222,16 @@ export default function ReprezentacjaPage() {
           </div>
         </section>
 
+        {/* Reprezentacja Section */}
+        <section id="reprezentacja" className="py-12 md:py-24 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+              Reprezentacja
+            </h2>
+            <p className="text-muted-foreground text-center">Reprezentacja w sądzie i przed organami administracji.</p>
+          </div>
+        </section>
+
         {/* Representation Types */}
         <section id="rodzaje-reprezentacji" className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

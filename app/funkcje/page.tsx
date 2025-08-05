@@ -124,6 +124,31 @@ export default function FunkcjePage() {
         </div>
       </section>
 
+      {/* New Features Section */}
+      <section id="funkcje" className="py-12 md:py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Funkcje</h2>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col items-center text-center">
+              <h3 className="mt-4 text-xl font-bold">Analiza dokumentów</h3>
+              <p className="text-gray-600">Szybka i precyzyjna analiza dokumentów prawnych.</p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <h3 className="mt-4 text-xl font-bold">Pisma prawne</h3>
+              <p className="text-gray-600">Profesjonalne przygotowanie pism prawnych.</p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <h3 className="mt-4 text-xl font-bold">Konsultacje</h3>
+              <p className="text-gray-600">Indywidualne konsultacje z doświadczonymi prawnikami.</p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <h3 className="mt-4 text-xl font-bold">Reprezentacja</h3>
+              <p className="text-gray-600">Reprezentacja w sądzie i przed organami administracji.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Security Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

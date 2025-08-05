@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { LawFirmCreateSchema } from "@/lib/api/types"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 // Mock data for development - replace with real database
 const mockLawFirms = [
@@ -113,8 +114,21 @@ export async function GET(request: NextRequest) {
       order: searchParams.get("order") || "asc",
     })
 
+    // Fetch law firms from Supabase
+    const { data: lawFirms, error } = await supabaseAdmin.from("law_firms").select("*, specializations(id, name)") // Fetch related specializations
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Map specialization data to a simpler array of IDs for each law firm
+    const lawFirmsResponse = lawFirms.map((lawFirm) => ({
+      ...lawFirm,
+      specialization_ids: lawFirm.specializations.map((spec: { id: string }) => spec.id),
+    }))
+
     // Filter law firms based on search parameters
-    let filteredFirms = [...mockLawFirms]
+    let filteredFirms = [...lawFirmsResponse]
 
     // Text search
     if (params.q) {
@@ -219,41 +233,63 @@ export async function POST(request: NextRequest) {
     const validatedData = LawFirmCreateSchema.parse(body)
 
     // Check if law firm with this tax number already exists
-    const existingFirm = mockLawFirms.find((firm) => firm.tax_number === validatedData.tax_number)
-    if (existingFirm) {
+    const { data: existingFirm, error: existingFirmError } = await supabaseAdmin
+      .from("law_firms")
+      .select()
+      .eq("tax_number", validatedData.tax_number)
+      .single()
+
+    if (existingFirmError || existingFirm) {
       return NextResponse.json(
         { error: `Law firm with tax number ${validatedData.tax_number} already exists` },
         { status: 409 },
       )
     }
 
-    // Create new law firm
-    const newFirm = {
-      id: crypto.randomUUID(),
-      ...validatedData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_active: true,
-      lawyers: [],
-      specializations: [], // In real implementation, fetch by specialization_ids
+    // Insert new law firm
+    const { data: lawFirm, error: lawFirmError } = await supabaseAdmin
+      .from("law_firms")
+      .insert(validatedData)
+      .select()
+      .single()
+
+    if (lawFirmError) {
+      return NextResponse.json({ error: lawFirmError.message }, { status: 500 })
     }
 
-    // Add to mock data (in real implementation, save to database)
-    mockLawFirms.push(newFirm)
+    // Insert into law_firm_specializations join table
+    if (validatedData.specialization_ids && validatedData.specialization_ids.length > 0) {
+      const newAssociations = validatedData.specialization_ids.map((spec_id: string) => ({
+        law_firm_id: lawFirm.id,
+        specialization_id: spec_id,
+      }))
 
-    // Return JSON:API response
-    const response = {
-      data: {
-        type: "law-firms",
-        id: newFirm.id,
-        attributes: newFirm,
-      },
-      meta: {
-        created_at: newFirm.created_at,
-      },
+      const { error: associationsError } = await supabaseAdmin.from("law_firm_specializations").insert(newAssociations)
+
+      if (associationsError) {
+        // If associations fail, consider rolling back the law firm creation or logging
+        console.error("Error inserting law firm specializations:", associationsError)
+        // For simplicity, we'll still return the law firm, but in a real app, you might want to handle this more robustly
+      }
     }
 
-    return NextResponse.json(response, { status: 201 })
+    // Re-fetch the newly created law firm with its specializations to return a consistent response
+    const { data: createdLawFirm, error: fetchError } = await supabaseAdmin
+      .from("law_firms")
+      .select("*, specializations(id, name)")
+      .eq("id", lawFirm.id)
+      .single()
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 })
+    }
+
+    const createdLawFirmResponse = {
+      ...createdLawFirm,
+      specialization_ids: createdLawFirm.specializations.map((spec: { id: string }) => spec.id),
+    }
+
+    return NextResponse.json(createdLawFirmResponse, { status: 201 })
   } catch (error) {
     console.error("Create law firm error:", error)
 

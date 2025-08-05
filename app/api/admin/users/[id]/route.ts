@@ -1,104 +1,44 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/database/supabase"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const { data: user, error } = await db.client
-      .from("users")
-      .select(`
-        *,
-        law_firm:law_firms(id, name),
-        lawyer:lawyers(*)
-      `)
-      .eq("id", params.id)
-      .single()
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
 
-    if (error) {
-      console.error("Error fetching user:", error)
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
+  const { data: user, error } = await supabaseAdmin.from("users").select("*").eq("id", id).single()
 
-    // Get user stats
-    const [apiUsage, searches] = await Promise.all([
-      db.client
-        .from("api_usage")
-        .select("id")
-        .eq("law_firm_id", user.law_firm?.id)
-        .then(({ data }) => data?.length || 0),
-      db.client
-        .from("search_analytics")
-        .select("id")
-        .eq("user_id", user.id)
-        .then(({ data }) => data?.length || 0),
-    ])
-
-    const userWithStats = {
-      ...user,
-      stats: {
-        api_calls: apiUsage,
-        searches,
-        documents_analyzed: 0, // Placeholder
-      },
-    }
-
-    return NextResponse.json({ user: userWithStats })
-  } catch (error) {
-    console.error("Error in get user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 })
+  }
+
+  return NextResponse.json(user)
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const body = await request.json()
-    const { email, full_name, phone, role, is_active } = body
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
+  const { email, role } = await req.json()
 
-    // Update user
-    const { data: user, error } = await db.client
-      .from("users")
-      .update({
-        email,
-        full_name,
-        phone,
-        role,
-        is_active,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", params.id)
-      .select()
-      .single()
+  const { data, error } = await supabaseAdmin.from("users").update({ email, role }).eq("id", id).select().single()
 
-    if (error) {
-      console.error("Error updating user:", error)
-      return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
-    }
-
-    return NextResponse.json({ user })
-  } catch (error) {
-    console.error("Error in update user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  return NextResponse.json(data)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Soft delete - set is_active to false
-    const { error } = await db.client
-      .from("users")
-      .update({
-        is_active: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", params.id)
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
 
-    if (error) {
-      console.error("Error deleting user:", error)
-      return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
-    }
+  // In a real application, you might want to soft delete or handle related data
+  const { error } = await supabaseAdmin.from("users").delete().eq("id", id)
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("Error in delete user API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  return NextResponse.json({ message: "User deleted successfully" })
 }

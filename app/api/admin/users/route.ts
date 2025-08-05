@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/database/supabase"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +14,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     // Build query
-    let query = db.client
-      .from("users")
-      .select(`
-        *,
-        law_firm:law_firms(id, name)
-      `)
-      .order("created_at", { ascending: false })
+    let query = supabaseAdmin.from("users").select("*").order("created_at", { ascending: false })
 
     // Apply filters
     if (role && role !== "all") {
@@ -46,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get stats
-    const { data: statsData } = await db.client.from("users").select("role, is_active, created_at")
+    const { data: statsData } = await supabaseAdmin.from("users").select("role, is_active, created_at")
 
     const stats = {
       total: statsData?.length || 0,
@@ -82,56 +76,38 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, full_name, phone, role, is_active, law_firm_id } = body
+    const { email, password, role } = body
 
     // Validate required fields
-    if (!email || !role) {
-      return NextResponse.json({ error: "Email and role are required" }, { status: 400 })
+    if (!email || !password || !role) {
+      return NextResponse.json({ error: "Email, password, and role are required" }, { status: 400 })
     }
 
-    // Check if user already exists
-    const { data: existingUser } = await db.client.from("users").select("id").eq("email", email).single()
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true, // Automatically confirm email for admin-created users
+    })
 
-    if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 })
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: 500 })
     }
 
-    // Create user
-    const { data: user, error } = await db.client
+    // Insert user into public.users table
+    const { data: userData, error: dbError } = await supabaseAdmin
       .from("users")
-      .insert([
-        {
-          id: crypto.randomUUID(),
-          email,
-          full_name,
-          phone,
-          role,
-          is_active: is_active ?? true,
-        },
-      ])
+      .insert({ id: authData.user?.id, email, role, is_active: true })
       .select()
       .single()
 
-    if (error) {
-      console.error("Error creating user:", error)
-      return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
+    if (dbError) {
+      // If database insert fails, consider deleting the auth user to prevent inconsistencies
+      await supabaseAdmin.auth.admin.deleteUser(authData.user?.id!)
+      return NextResponse.json({ error: dbError.message }, { status: 500 })
     }
 
-    // If user is a lawyer and law_firm_id is provided, create lawyer record
-    if (role === "lawyer" && law_firm_id) {
-      await db.client.from("lawyers").insert([
-        {
-          user_id: user.id,
-          law_firm_id,
-          first_name: full_name?.split(" ")[0] || "",
-          last_name: full_name?.split(" ").slice(1).join(" ") || "",
-          email,
-          phone,
-        },
-      ])
-    }
-
-    return NextResponse.json({ user }, { status: 201 })
+    return NextResponse.json(userData, { status: 201 })
   } catch (error) {
     console.error("Error in create user API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

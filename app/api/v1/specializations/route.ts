@@ -1,69 +1,24 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/database/supabase"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 export async function GET() {
-  try {
-    const specializations = await db.getSpecializations()
+  const { data: specializations, error } = await supabaseAdmin.from("specializations").select("*")
 
-    const response = {
-      data: specializations.map((spec) => ({
-        type: "specializations",
-        id: spec.id,
-        attributes: {
-          name: spec.name,
-          code: spec.code,
-          description: spec.description,
-          is_active: spec.is_active,
-          created_at: spec.created_at,
-        },
-      })),
-      meta: {
-        total: specializations.length,
-      },
-    }
-
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error("Get specializations error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  return NextResponse.json(specializations)
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
+export async function POST(req: NextRequest) {
+  const newSpecialization = await req.json()
 
-    // Validate required fields
-    if (!body.name || !body.code) {
-      return NextResponse.json({ error: "Name and code are required" }, { status: 400 })
-    }
+  const { data, error } = await supabaseAdmin.from("specializations").insert(newSpecialization).select().single()
 
-    const specialization = await db.createSpecialization({
-      name: body.name,
-      code: body.code.toUpperCase(),
-      description: body.description,
-    })
-
-    const response = {
-      data: {
-        type: "specializations",
-        id: specialization.id,
-        attributes: specialization,
-      },
-      meta: {
-        created_at: specialization.created_at,
-      },
-    }
-
-    return NextResponse.json(response, { status: 201 })
-  } catch (error) {
-    console.error("Create specialization error:", error)
-
-    if (error.code === "23505") {
-      // Unique constraint violation
-      return NextResponse.json({ error: "Specialization with this code already exists" }, { status: 409 })
-    }
-
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  return NextResponse.json(data, { status: 201 })
 }

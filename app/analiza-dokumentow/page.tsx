@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, Shield, Star, Upload, Award, Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { AiAssistant } from "@/components/ai-assistant"
 
 export default function AnalizaDokumentowPage() {
   const documentTypes = [
@@ -333,6 +334,19 @@ export default function AnalizaDokumentowPage() {
                 Zamów Analizę Teraz
               </Link>
             </Button>
+          </div>
+        </section>
+
+        {/* AI Assistant Section */}
+        <section id="analiza-dokumentow" className="py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+              Analiza dokumentów
+            </h2>
+            <p className="text-muted-foreground text-center">
+              Oferujemy szybką i precyzyjną analizę dokumentów prawnych.
+            </p>
+            <AiAssistant />
           </div>
         </section>
       </main>

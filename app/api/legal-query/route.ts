@@ -1,23 +1,23 @@
-import { generateLegalResponse } from "@/lib/gemini"
+import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
 import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json()
-    const { question, language = "pl" } = body
+    const { query } = await req.json()
 
-    if (!question) {
-      return NextResponse.json({ error: "Question is required" }, { status: 400 })
+    if (!query) {
+      return NextResponse.json({ error: "Query is required" }, { status: 400 })
     }
 
-    const response = await generateLegalResponse({
-      question,
-      language,
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      prompt: `Provide legal advice or information based on the following query: ${query}`,
     })
 
-    return NextResponse.json(response)
+    return NextResponse.json({ advice: text })
   } catch (error) {
-    console.error("Legal query error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error in legal query API:", error)
+    return NextResponse.json({ error: "Failed to get legal advice" }, { status: 500 })
   }
 }

@@ -34,7 +34,8 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
+    email: str | None = None
+    role: str | None = None
 
 class LoginRequest(BaseModel):
     email: EmailStr

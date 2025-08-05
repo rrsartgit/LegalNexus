@@ -1,78 +1,39 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from app.db.session import get_db
-from app.services.kancelaria_service import KancelariaService
-from app.api.v1.schemas.kancelaria import Kancelaria, KancelariaCreate, KancelariaUpdate
+from app.api.v1.schemas.kancelaria import LawFirmCreate, LawFirmResponse, LawFirmUpdate
+from app.models.kancelaria import LawFirm
+from app.services.kancelaria_service import get_law_firm_by_id, get_law_firms, create_law_firm, update_law_firm, delete_law_firm
 
 router = APIRouter()
 
-@router.post("/", response_model=Kancelaria, status_code=status.HTTP_201_CREATED)
-def create_kancelaria(
-    kancelaria: KancelariaCreate,
-    db: Session = Depends(get_db)
-):
-    """Tworzy nową kancelarię prawną."""
-    service = KancelariaService(db)
-    try:
-        return service.create_kancelaria(kancelaria)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Błąd podczas tworzenia kancelarii: {str(e)}"
-        )
+@router.post("/", response_model=LawFirmResponse, status_code=status.HTTP_201_CREATED)
+def create_law_firm_endpoint(law_firm: LawFirmCreate, db: Session = Depends(get_db)):
+    return create_law_firm(db=db, law_firm=law_firm)
 
-@router.get("/", response_model=List[Kancelaria])
-def get_kancelarie(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    aktywna: Optional[bool] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """Zwraca listę wszystkich kancelarii prawnych."""
-    service = KancelariaService(db)
-    return service.get_kancelarie(skip=skip, limit=limit, aktywna=aktywna)
+@router.get("/", response_model=List[LawFirmResponse])
+def read_law_firms_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    law_firms = get_law_firms(db, skip=skip, limit=limit)
+    return law_firms
 
-@router.get("/{kancelaria_id}", response_model=Kancelaria)
-def get_kancelaria(
-    kancelaria_id: int,
-    db: Session = Depends(get_db)
-):
-    """Pobiera szczegóły konkretnej kancelarii."""
-    service = KancelariaService(db)
-    kancelaria = service.get_kancelaria(kancelaria_id)
-    if not kancelaria:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kancelaria nie została znaleziona"
-        )
-    return kancelaria
+@router.get("/{law_firm_id}", response_model=LawFirmResponse)
+def read_law_firm_endpoint(law_firm_id: int, db: Session = Depends(get_db)):
+    db_law_firm = get_law_firm_by_id(db, law_firm_id)
+    if db_law_firm is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LawFirm not found")
+    return db_law_firm
 
-@router.put("/{kancelaria_id}", response_model=Kancelaria)
-def update_kancelaria(
-    kancelaria_id: int,
-    kancelaria_update: KancelariaUpdate,
-    db: Session = Depends(get_db)
-):
-    """Aktualizuje dane kancelarii."""
-    service = KancelariaService(db)
-    kancelaria = service.update_kancelaria(kancelaria_id, kancelaria_update)
-    if not kancelaria:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kancelaria nie została znaleziona"
-        )
-    return kancelaria
+@router.put("/{law_firm_id}", response_model=LawFirmResponse)
+def update_law_firm_endpoint(law_firm_id: int, law_firm: LawFirmUpdate, db: Session = Depends(get_db)):
+    db_law_firm = update_law_firm(db, law_firm_id, law_firm)
+    if db_law_firm is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LawFirm not found")
+    return db_law_firm
 
-@router.delete("/{kancelaria_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_kancelaria(
-    kancelaria_id: int,
-    db: Session = Depends(get_db)
-):
-    """Usuwa kancelarię."""
-    service = KancelariaService(db)
-    if not service.delete_kancelaria(kancelaria_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kancelaria nie została znaleziona"
-        )
+@router.delete("/{law_firm_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_law_firm_endpoint(law_firm_id: int, db: Session = Depends(get_db)):
+    success = delete_law_firm(db, law_firm_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LawFirm not found")
+    return

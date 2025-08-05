@@ -1,76 +1,43 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/client"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+  const { data: caseItem, error } = await supabaseAdmin.from("cases").select("*").eq("id", id).single()
 
-    const { data: case_, error } = await supabase
-      .from("cases")
-      .select(
-        `
-        *,
-        documents(*),
-        analysis(*),
-        generated_documents(*)
-      `,
-      )
-      .eq("id", params.id)
-      .eq("client_id", session.user.id)
-      .single()
-
-    if (error) {
-      console.error("Error fetching case:", error)
-      return NextResponse.json({ error: "Case not found" }, { status: 404 })
-    }
-
-    return NextResponse.json({ case: case_ })
-  } catch (error) {
-    console.error("Error in GET /api/cases/[id]:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  if (!caseItem) {
+    return NextResponse.json({ error: "Case not found" }, { status: 404 })
+  }
+
+  return NextResponse.json(caseItem)
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
+  const updates = await req.json()
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+  const { data, error } = await supabaseAdmin.from("cases").update(updates).eq("id", id).select().single()
 
-    const body = await request.json()
-    const { client_notes } = body
-
-    const { data: updatedCase, error } = await supabase
-      .from("cases")
-      .update({
-        client_notes,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", params.id)
-      .eq("client_id", session.user.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error updating case:", error)
-      return NextResponse.json({ error: "Failed to update case" }, { status: 500 })
-    }
-
-    return NextResponse.json({ case: updatedCase })
-  } catch (error) {
-    console.error("Error in PUT /api/cases/[id]:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  return NextResponse.json(data)
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
+
+  const { error } = await supabaseAdmin.from("cases").delete().eq("id", id)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ message: "Case deleted successfully" })
 }

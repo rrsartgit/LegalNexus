@@ -3,32 +3,25 @@ from typing import Optional
 from datetime import datetime
 
 class AnalysisBase(BaseModel):
-    preview_content: Optional[str] = None
-    full_content: str
+    document_id: int
+    analysis_type: str
+    status: str
+    result: Optional[str] = None
+    assigned_to_user_id: Optional[int] = None
+    assigned_to_law_firm_id: Optional[int] = None
 
 class AnalysisCreate(AnalysisBase):
-    order_id: int
+    pass
 
-class AnalysisUpdate(BaseModel):
-    preview_content: Optional[str] = None
-    full_content: Optional[str] = None
+class AnalysisUpdate(AnalysisBase):
+    document_id: Optional[int] = None
+    analysis_type: Optional[str] = None
+    status: Optional[str] = None
 
-class Analysis(AnalysisBase):
+class AnalysisResponse(AnalysisBase):
     id: int
-    order_id: int
-    created_by: int
     created_at: datetime
-    updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
+    updated_at: datetime
 
-class AnalysisPreview(BaseModel):
-    id: int
-    order_id: int
-    preview_content: Optional[str] = None
-    has_full_content: bool
-    created_at: datetime
-    
     class Config:
-        from_attributes = True
+        orm_mode = True

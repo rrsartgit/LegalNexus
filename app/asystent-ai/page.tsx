@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageSquare, FileSearch, Scale, Shield, CheckCircle, ArrowRight, Sparkles } from "lucide-react"
 import { useState } from "react"
+import { AiAssistant } from "@/components/ai-assistant"
 
 export default function AsystentAIPage() {
   const [demoQuery, setDemoQuery] = useState("")
@@ -230,6 +231,17 @@ export default function AsystentAIPage() {
             Umów Prezentację
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
+        </div>
+      </section>
+
+      {/* AI Assistant Section */}
+      <section id="asystent-ai" className="py-12 md:py-24 lg:py-32">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Asystent AI</h2>
+          <p className="text-muted-foreground text-center">
+            Uzyskaj szybkie porady prawne dzięki naszemu asystentowi AI.
+          </p>
+          <AiAssistant />
         </div>
       </section>
     </div>

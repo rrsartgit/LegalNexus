@@ -1,79 +1,39 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from app.db.session import get_db
-from app.services.kancelaria_service import KancelariaService
-from app.api.v1.schemas.kancelaria import Klient, KlientCreate, KlientUpdate
+from app.api.v1.schemas.users import UserCreate, UserResponse, UserUpdate
+from app.models.user import User
+from app.services.user_service import get_user_by_id, get_users, create_user, update_user, delete_user
 
 router = APIRouter()
 
-@router.post("/", response_model=Klient, status_code=status.HTTP_201_CREATED)
-def create_klient(
-    klient: KlientCreate,
-    db: Session = Depends(get_db)
-):
-    """Dodaje nowego klienta."""
-    service = KancelariaService(db)
-    try:
-        return service.create_klient(klient)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Błąd podczas tworzenia klienta: {str(e)}"
-        )
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
+    return create_user(db=db, user=user)
 
-@router.get("/", response_model=List[Klient])
-def get_klienci(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    kancelaria_id: Optional[int] = Query(None),
-    aktywny: Optional[bool] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """Zwraca listę wszystkich klientów."""
-    service = KancelariaService(db)
-    return service.get_klienci(skip=skip, limit=limit, kancelaria_id=kancelaria_id, aktywny=aktywny)
+@router.get("/", response_model=List[UserResponse])
+def read_users_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = get_users(db, skip=skip, limit=limit)
+    return users
 
-@router.get("/{klient_id}", response_model=Klient)
-def get_klient(
-    klient_id: int,
-    db: Session = Depends(get_db)
-):
-    """Pobiera szczegóły konkretnego klienta."""
-    service = KancelariaService(db)
-    klient = service.get_klient(klient_id)
-    if not klient:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Klient nie został znaleziony"
-        )
-    return klient
+@router.get("/{user_id}", response_model=UserResponse)
+def read_user_endpoint(user_id: int, db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, user_id)
+    if db_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
 
-@router.put("/{klient_id}", response_model=Klient)
-def update_klient(
-    klient_id: int,
-    klient_update: KlientUpdate,
-    db: Session = Depends(get_db)
-):
-    """Aktualizuje dane klienta."""
-    service = KancelariaService(db)
-    klient = service.update_klient(klient_id, klient_update)
-    if not klient:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Klient nie został znaleziony"
-        )
-    return klient
+@router.put("/{user_id}", response_model=UserResponse)
+def update_user_endpoint(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    db_user = update_user(db, user_id, user)
+    if db_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
 
-@router.delete("/{klient_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_klient(
-    klient_id: int,
-    db: Session = Depends(get_db)
-):
-    """Usuwa klienta."""
-    service = KancelariaService(db)
-    if not service.delete_klient(klient_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Klient nie został znaleziony"
-        )
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_endpoint(user_id: int, db: Session = Depends(get_db)):
+    success = delete_user(db, user_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return

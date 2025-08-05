@@ -1,92 +1,48 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from app.db.session import get_db
-from app.services.kancelaria_service import KancelariaService
-from app.api.v1.schemas.kancelaria import Sprawa, SprawaCreate, SprawaUpdate
+from app.api.v1.schemas.cases import CaseCreate, CaseResponse, CaseUpdate
+from app.models.case import Case
 
 router = APIRouter()
 
-@router.post("/", response_model=Sprawa, status_code=status.HTTP_201_CREATED)
-def create_sprawa(
-    sprawa: SprawaCreate,
-    db: Session = Depends(get_db)
-):
-    """Rejestruje nową sprawę."""
-    service = KancelariaService(db)
-    try:
-        return service.create_sprawa(sprawa)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Błąd podczas tworzenia sprawy: {str(e)}"
-        )
+@router.post("/", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
+def create_case(case: CaseCreate, db: Session = Depends(get_db)):
+    db_case = Case(**case.dict())
+    db.add(db_case)
+    db.commit()
+    db.refresh(db_case)
+    return db_case
 
-@router.get("/", response_model=List[Sprawa])
-def get_sprawy(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    kancelaria_id: Optional[int] = Query(None),
-    klient_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """Zwraca listę spraw z możliwością filtrowania."""
-    service = KancelariaService(db)
-    return service.get_sprawy(
-        skip=skip, 
-        limit=limit, 
-        kancelaria_id=kancelaria_id, 
-        klient_id=klient_id, 
-        status=status
-    )
+@router.get("/", response_model=List[CaseResponse])
+def get_cases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    cases = db.query(Case).offset(skip).limit(limit).all()
+    return cases
 
-@router.get("/{sprawa_id}", response_model=Sprawa)
-def get_sprawa(
-    sprawa_id: int,
-    db: Session = Depends(get_db)
-):
-    """Pobiera szczegóły konkretnej sprawy."""
-    service = KancelariaService(db)
-    sprawa = service.get_sprawa(sprawa_id)
-    if not sprawa:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sprawa nie została znaleziona"
-        )
-    return sprawa
+@router.get("/{case_id}", response_model=CaseResponse)
+def get_case(case_id: int, db: Session = Depends(get_db)):
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if case is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+    return case
 
-@router.put("/{sprawa_id}", response_model=Sprawa)
-def update_sprawa(
-    sprawa_id: int,
-    sprawa_update: SprawaUpdate,
-    db: Session = Depends(get_db)
-):
-    """Aktualizuje status lub dane sprawy."""
-    service = KancelariaService(db)
-    sprawa = service.update_sprawa(sprawa_id, sprawa_update)
-    if not sprawa:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sprawa nie została znaleziona"
-        )
-    return sprawa
+@router.put("/{case_id}", response_model=CaseResponse)
+def update_case(case_id: int, case: CaseUpdate, db: Session = Depends(get_db)):
+    db_case = db.query(Case).filter(Case.id == case_id).first()
+    if db_case is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+    for key, value in case.dict(exclude_unset=True).items():
+        setattr(db_case, key, value)
+    db.commit()
+    db.refresh(db_case)
+    return db_case
 
-@router.delete("/{sprawa_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_sprawa(
-    sprawa_id: int,
-    db: Session = Depends(get_db)
-):
-    """Usuwa sprawę (archiwizuje)."""
-    service = KancelariaService(db)
-    if not service.delete_sprawa(sprawa_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sprawa nie została znaleziona"
-        )
-
-@router.get("/stats/summary")
-def get_stats_summary(db: Session = Depends(get_db)):
-    """Zwraca statystyki systemu."""
-    service = KancelariaService(db)
-    return service.get_stats()
+@router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_case(case_id: int, db: Session = Depends(get_db)):
+    db_case = db.query(Case).filter(Case.id == case_id).first()
+    if db_case is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+    db.delete(db_case)
+    db.commit()
+    return

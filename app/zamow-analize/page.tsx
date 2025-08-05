@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { NewCaseForm } from "@/components/new-case-form"
 import { useState } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -321,6 +321,19 @@ export default function ZamowAnalizePage() {
               </div>
             </div>
           )}
+
+          {/* New Case Form */}
+          <section id="zamow-analize" className="py-12 md:py-24 lg:py-32">
+            <div className="container px-4 md:px-6">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+                Zamów Analizę
+              </h2>
+              <p className="text-muted-foreground text-center">
+                Wypełnij formularz, aby zamówić analizę dokumentów prawnych.
+              </p>
+              <NewCaseForm />
+            </div>
+          </section>
         </div>
       </main>
 

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -398,6 +397,53 @@ export default function KontaktPage() {
                   <p className="text-sm">ul. Długa 46/47, Gdańsk</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Updated Contact Form */}
+        <section id="kontakt" className="py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Kontakt</h2>
+            <p className="text-muted-foreground text-center mb-12">
+              Skontaktuj się z nami, aby uzyskać więcej informacji.
+            </p>
+
+            <div className="max-w-2xl mx-auto bg-card text-card-foreground p-8 rounded-lg shadow-lg">
+              <form className="grid gap-6" onSubmit={handleSubmit}>
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Imię i Nazwisko</Label>
+                  <Input id="name" name="name" placeholder="Jan Kowalski" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" placeholder="jan.kowalski@example.com" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="subject">Temat</Label>
+                  <Input id="subject" name="subject" placeholder="Zapytanie o usługę" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="message">Wiadomość</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    placeholder="Wpisz swoją wiadomość tutaj..."
+                    rows={5}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    "Wysyłanie..."
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Wyślij Wiadomość
+                    </>
+                  )}
+                </Button>
+              </form>
             </div>
           </div>
         </section>

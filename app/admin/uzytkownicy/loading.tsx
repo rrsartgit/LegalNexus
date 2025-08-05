@@ -1,73 +1,97 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function UsersLoadingPage() {
+export default function Loading() {
   return (
-    <div className="space-y-6">
-      {/* Header Skeleton */}
-      <div className="flex justify-between items-center">
-        <div>
-          <div className="h-8 bg-gray-200 rounded w-64 mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
-        </div>
-        <div className="h-10 bg-gray-200 rounded w-40 animate-pulse"></div>
+    <div className="grid gap-6 p-6 md:p-8 lg:p-10">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-10 w-32" />
       </div>
-
-      {/* Stats Cards Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                  <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
-                </div>
-                <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              <Skeleton className="h-4 w-24" />
+            </CardTitle>
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-4 w-32 mt-2" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              <Skeleton className="h-4 w-24" />
+            </CardTitle>
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-4 w-32 mt-2" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              <Skeleton className="h-4 w-24" />
+            </CardTitle>
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-4 w-32 mt-2" />
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Filters Skeleton */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse"></div>
-            <div className="w-full md:w-48 h-10 bg-gray-200 rounded animate-pulse"></div>
-            <div className="w-full md:w-48 h-10 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table Skeleton */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
-                    <div className="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
-                  </div>
-                  <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-                  <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                  <div className="flex space-x-2">
-                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                </div>
+      <div className="border rounded-lg overflow-hidden">
+        <div className="relative w-full overflow-auto">
+          <table className="w-full caption-bottom text-sm">
+            <thead className="[&_tr]:border-b">
+              <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-[100px]">
+                  <Skeleton className="h-4 w-16" />
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                  <Skeleton className="h-4 w-24" />
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                  <Skeleton className="h-4 w-20" />
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+                  <Skeleton className="h-4 w-28" />
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 text-right">
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr:last-child]:border-0">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <Skeleton className="h-4 w-16" />
+                  </td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <Skeleton className="h-4 w-24" />
+                  </td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <Skeleton className="h-4 w-20" />
+                  </td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                    <Skeleton className="h-4 w-28" />
+                  </td>
+                  <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-right">
+                    <Skeleton className="h-4 w-16 ml-auto" />
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

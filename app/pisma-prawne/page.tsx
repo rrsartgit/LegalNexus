@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Clock, Shield, Star, Download, Scale, Users, ArrowRight, Gavel } from "lucide-react"
 import Link from "next/link"
+import { NewCaseForm } from "@/components/new-case-form"
 
 export default function PismaPrawnePage() {
   const documentCategories = [
@@ -209,6 +210,17 @@ export default function PismaPrawnePage() {
                 </Button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* New Case Form Section */}
+        <section id="pisma-prawne" className="py-12 md:py-24 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+              Pisma prawne
+            </h2>
+            <p className="text-muted-foreground text-center">Profesjonalne przygotowanie pism prawnych.</p>
+            <NewCaseForm />
           </div>
         </section>
 

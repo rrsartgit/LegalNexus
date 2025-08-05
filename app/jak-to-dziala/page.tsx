@@ -312,6 +312,40 @@ export default function JakToDzialaPage() {
             </div>
           </div>
         </section>
+
+        {/* New Process Steps */}
+        <section id="jak-to-dziala" className="py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">
+              Jak to działa?
+            </h2>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
+                  1
+                </div>
+                <h3 className="mt-4 text-xl font-bold">Zarejestruj się</h3>
+                <p className="text-muted-foreground">Szybka i prosta rejestracja w naszym systemie.</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
+                  2
+                </div>
+                <h3 className="mt-4 text-xl font-bold">Wybierz usługę</h3>
+                <p className="text-muted-foreground">
+                  Wybierz spośród analizy dokumentów, pism prawnych, konsultacji lub reprezentacji.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">
+                  3
+                </div>
+                <h3 className="mt-4 text-xl font-bold">Otrzymaj pomoc</h3>
+                <p className="text-muted-foreground">Nasi eksperci dostarczą Ci profesjonalną pomoc prawną.</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

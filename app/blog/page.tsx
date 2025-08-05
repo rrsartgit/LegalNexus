@@ -118,6 +118,14 @@ export default function BlogPage() {
         </div>
       </section>
 
+      {/* Blog Section */}
+      <section id="blog" className="py-12 md:py-24 lg:py-32">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-8">Blog</h2>
+          <p className="text-muted-foreground text-center">Wkrótce pojawią się nowe wpisy na blogu!</p>
+        </div>
+      </section>
+
       {/* Search and Categories */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

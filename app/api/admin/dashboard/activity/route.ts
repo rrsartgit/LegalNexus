@@ -59,8 +59,34 @@ export async function GET() {
       })
     })
 
+    // Mock data for activity
+    const mockActivity = [
+      { id: "1", user_email: "admin@example.com", action: "Login", timestamp: new Date().toISOString() },
+      {
+        id: "2",
+        user_email: "client1@example.com",
+        action: "Created new order",
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: "3",
+        user_email: "operator1@example.com",
+        action: "Updated case status",
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+      },
+      {
+        id: "4",
+        user_email: "client2@example.com",
+        action: "Viewed legal document",
+        timestamp: new Date(Date.now() - 10800000).toISOString(),
+      },
+    ]
+
+    // Combine activities with mock data
+    const combinedActivities = [...activities, ...mockActivity]
+
     // Sort by timestamp and limit to 20
-    const sortedActivities = activities
+    const sortedActivities = combinedActivities
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 20)
 

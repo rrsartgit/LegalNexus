@@ -1,203 +1,129 @@
-# Platforma Analizy Dokumentów
+# Legal API Nexus
 
-System zarządzania zleceniami analizy dokumentów prawnych - platforma SaaS łącząca klientów z operatorami wykonującymi analizy.
+This project is a comprehensive platform for legal services, including document analysis, legal writing, consultations, and representation. It features a Next.js frontend and a FastAPI backend, integrated with Supabase for authentication and data management.
 
-## Funkcjonalności
+## Features
 
-### Dla Klientów
-- ✅ Rejestracja i logowanie
-- ✅ Tworzenie zleceń analizy dokumentów
-- ✅ Wgrywanie plików (PDF, DOC, DOCX, TXT, JPG, PNG)
-- ✅ Śledzenie statusu zlecenia
-- ✅ Komunikacja z operatorem
-- ✅ Podgląd fragmentu analizy przed płatnością
-- ✅ Bezpieczne płatności online
-- ✅ Dostęp do pełnej analizy po opłaceniu
+- **Document Analysis**: Quick and precise analysis of legal documents.
+- **Legal Writing**: Professional preparation of legal documents.
+- **Consultations**: Individual consultations with experienced lawyers.
+- **Representation**: Representation in court and before administrative bodies.
+- **User Management**: Admin panel for managing users and law firms.
+- **Order Management**: Client and operator panels for managing legal orders.
+- **AI Assistant**: AI-powered assistant for legal queries.
 
-### Dla Operatorów
-- ✅ Panel administracyjny
-- ✅ Kolejka zleceń do realizacji
-- ✅ Pobieranie dokumentów klientów
-- ✅ Zarządzanie statusem zleceń
-- ✅ Dodawanie komentarzy i komunikacja z klientami
-- ✅ Wklejanie analiz (fragment publiczny + pełna treść)
-- ✅ Statystyki i raporty
-
-## Technologie
-
-### Backend
-- **FastAPI** - nowoczesny framework webowy Python
-- **SQLAlchemy** - ORM do zarządzania bazą danych
-- **Pydantic** - walidacja danych
-- **JWT** - autoryzacja i uwierzytelnianie
-- **SQLite/PostgreSQL** - baza danych
-- **Stripe** - obsługa płatności
+## Technologies Used
 
 ### Frontend
-- **React** - biblioteka UI
-- **TypeScript** - typowany JavaScript
-- **Tailwind CSS** - stylowanie
-- **React Query** - zarządzanie stanem serwera
-
-## Instalacja i Uruchomienie
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- `@tanstack/react-query` for data fetching
+- `@supabase/supabase-js` for authentication
 
 ### Backend
+- FastAPI
+- Python
+- SQLAlchemy
+- PostgreSQL (via Supabase)
+- `uvicorn` for serving the API
 
-1. **Klonowanie repozytorium**
-\`\`\`bash
-git clone <repository-url>
-cd legal-api-nexus
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Python (v3.9 or higher)
+- pip
+- Supabase project with PostgreSQL database
+
+### Setup
+
+1.  **Clone the repository:**
+    \`\`\`bash
+    git clone https://github.com/your-repo/legal-api-nexus.git
+    cd legal-api-nexus
+    \`\`\`
+
+2.  **Backend Setup:**
+    \`\`\`bash
+    pip install -r requirements.txt
+    \`\`\`
+    Create a `.env` file in the root directory with your Supabase credentials:
+    \`\`\`
+    SUPABASE_URL="YOUR_SUPABASE_URL"
+    SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
+    SUPABASE_SERVICE_ROLE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
+    DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@db.YOUR_SUPABASE_REF.supabase.co:5432/postgres"
+    \`\`\`
+    Run the backend:
+    \`\`\`bash
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    \`\`\`
+
+3.  **Frontend Setup:**
+    \`\`\`bash
+    cd frontend
+    npm install
+    \`\`\`
+    Create a `.env.local` file in the `frontend` directory with your Supabase public credentials:
+    \`\`\`
+    NEXT_PUBLIC_SUPABASE_URL="YOUR_SUPABASE_URL"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
+    \`\`\`
+    Run the frontend:
+    \`\`\`bash
+    npm run dev
+    \`\`\`
+
+4.  **Access the Application:**
+    - Frontend: `http://localhost:3000`
+    - Backend API: `http://localhost:8000`
+
+## Project Structure
+
+\`\`\`
+.
+├── app/                  # FastAPI backend application
+│   ├── api/              # API endpoints
+│   ├── core/             # Core configurations
+│   ├── db/               # Database session management
+│   ├── models/           # SQLAlchemy models
+│   ├── services/         # Business logic services
+│   └── main.py           # FastAPI application entry point
+├── frontend/             # Next.js frontend application
+│   ├── app/              # Next.js App Router pages and layouts
+│   ├── components/       # React components
+│   ├── lib/              # Frontend utilities and API clients
+│   ├── public/           # Static assets
+│   ├── styles/           # Global CSS
+│   └── ...
+├── public/               # Shared static assets (e.g., placeholder images)
+├── scripts/              # Database migration/seeding scripts
+├── __tests__/            # Jest tests for frontend and backend
+├── .gitignore
+├── .gitpod.yml
+├── README.md
+├── components.json       # shadcn/ui components configuration
+├── jest.config.js
+├── jest.setup.js
+├── middleware.ts         # Next.js middleware
+├── next.config.mjs
+├── openapi.yaml          # OpenAPI specification for the backend
+├── package.json          # Frontend dependencies
+├── postcss.config.mjs
+├── requirements.txt      # Backend dependencies
+├── tailwind.config.ts
+└── tsconfig.json
 \`\`\`
 
-2. **Utworzenie środowiska wirtualnego**
-\`\`\`bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# lub
-venv\Scripts\activate  # Windows
-\`\`\`
+## Contributing
 
-3. **Instalacja zależności**
-\`\`\`bash
-pip install -r requirements.txt
-\`\`\`
+Contributions are welcome! Please follow standard GitHub flow: fork the repository, create a branch, make your changes, and open a pull request.
 
-4. **Konfiguracja środowiska**
-\`\`\`bash
-cp .env.example .env
-# Edytuj plik .env i ustaw odpowiednie wartości
-\`\`\`
+## License
 
-5. **Uruchomienie serwera**
-\`\`\`bash
-uvicorn app.main:app --reload
-\`\`\`
-
-API będzie dostępne pod adresem: http://localhost:8000
-Dokumentacja API: http://localhost:8000/docs
-
-### Frontend
-
-1. **Przejście do katalogu frontend**
-\`\`\`bash
-cd frontend
-\`\`\`
-
-2. **Instalacja zależności**
-\`\`\`bash
-npm install
-# lub
-pnpm install
-\`\`\`
-
-3. **Uruchomienie aplikacji**
-\`\`\`bash
-npm run dev
-# lub
-pnpm dev
-\`\`\`
-
-Aplikacja będzie dostępna pod adresem: http://localhost:3000
-
-## Struktura Projektu
-
-\`\`\`
-legal-api-nexus/
-├── app/
-│   ├── api/v1/
-│   │   ├── endpoints/          # Endpointy API
-│   │   └── schemas/            # Schematy Pydantic
-│   ├── core/                   # Konfiguracja
-│   ├── db/                     # Sesja bazy danych
-│   ├── models/                 # Modele SQLAlchemy
-│   └── tests/                  # Testy
-├── frontend/
-│   ├── components/             # Komponenty React
-│   ├── lib/                    # Utilities i API client
-│   └── app/                    # Strony Next.js
-├── uploads/                    # Wgrane pliki
-├── requirements.txt            # Zależności Python
-└── README.md
-\`\`\`
-
-## Workflow Zlecenia
-
-1. **Złożenie zlecenia** - Klient tworzy zlecenie i wgrywa dokumenty
-2. **Podjęcie przez operatora** - Operator przypisuje zlecenie do siebie
-3. **Analiza dokumentów** - Operator analizuje w zewnętrznym narzędziu
-4. **Przygotowanie odpowiedzi** - Operator wkleja fragment i pełną analizę
-5. **Oczekiwanie na płatność** - Klient widzi fragment i może opłacić
-6. **Dostęp do pełnej analizy** - Po płatności klient otrzymuje pełną treść analizy
-
-## API Endpoints
-
-### Autoryzacja
-- `POST /api/v1/auth/register` - Rejestracja użytkownika
-- `POST /api/v1/auth/login` - Logowanie
-- `GET /api/v1/auth/me` - Informacje o aktualnym użytkowniku
-
-### Zlecenia
-- `GET /api/v1/orders/` - Lista zleceń
-- `POST /api/v1/orders/` - Tworzenie zlecenia
-- `GET /api/v1/orders/{id}` - Szczegóły zlecenia
-- `PUT /api/v1/orders/{id}` - Aktualizacja zlecenia
-- `POST /api/v1/orders/{id}/assign` - Przypisanie zlecenia do operatora
-
-### Dokumenty
-- `POST /api/v1/documents/{order_id}/upload` - Wgrywanie plików
-- `GET /api/v1/documents/{order_id}/documents` - Lista dokumentów
-- `DELETE /api/v1/documents/{id}` - Usuwanie dokumentu
-
-### Analizy
-- `POST /api/v1/analyses/` - Tworzenie analizy
-- `GET /api/v1/analyses/{order_id}/preview` - Podgląd analizy
-- `GET /api/v1/analyses/{order_id}/full` - Pełna analiza (po opłaceniu)
-
-### Płatności
-- `POST /api/v1/payments/{order_id}/create-payment-intent` - Tworzenie płatności
-- `POST /api/v1/payments/{payment_id}/confirm` - Potwierdzenie płatności
-
-## Testowanie
-
-\`\`\`bash
-# Uruchomienie testów
-pytest app/tests/
-
-# Testy z pokryciem kodu
-pytest --cov=app app/tests/
-\`\`\`
-
-## Deployment
-
-### Wymagania produkcyjne
-- Python 3.8+
-- PostgreSQL (zalecane zamiast SQLite)
-- Redis (dla kolejki zadań)
-- Nginx (reverse proxy)
-
-### Zmienne środowiskowe produkcyjne
-\`\`\`bash
-DATABASE_URL=postgresql://user:password@localhost/legal_api
-SECRET_KEY=your-production-secret-key
-STRIPE_SECRET_KEY=sk_live_your_live_stripe_key
-\`\`\`
-
-## Bezpieczeństwo
-
-- ✅ Hashowanie haseł (bcrypt)
-- ✅ JWT tokeny z wygasaniem
-- ✅ Walidacja uprawnień na poziomie API
-- ✅ Bezpieczne przechowywanie plików
-- ✅ Walidacja typów plików
-- ✅ Ograniczenia rozmiaru plików
-
-## Wsparcie
-
-W przypadku problemów lub pytań:
-1. Sprawdź dokumentację API: `/docs`
-2. Przejrzyj logi aplikacji
-3. Skontaktuj się z zespołem deweloperskim
-
-## Licencja
-
-Projekt jest własnością [Nazwa Firmy]. Wszystkie prawa zastrzeżone.
+This project is licensed under the MIT License.

@@ -1,103 +1,129 @@
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.db.session import get_db, Base
-from app.models.base import User, UserRole
-from app.api.v1.endpoints.auth import get_password_hash
+from app.db.base import Base
+from app.db.session import get_db
+from app.models.order import Order
+from app.models.user import User
+import pytest
 
-# Test database
+# Setup test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-@pytest.fixture
-def client():
+@pytest.fixture(scope="module")
+def setup_database():
     Base.metadata.create_all(bind=engine)
-    with TestClient(app) as c:
-        yield c
+    yield
     Base.metadata.drop_all(bind=engine)
 
-@pytest.fixture
-def test_user(client):
-    # Create test user
-    db = TestingSessionLocal()
-    user = User(
-        email="test@example.com",
-        password_hash=get_password_hash("testpassword"),
-        first_name="Test",
-        last_name="User",
-        role=UserRole.CLIENT
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    db.close()
-    return user
+@pytest.fixture(scope="function")
+def db_session(setup_database):
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
+    yield session
+    session.close()
+    transaction.rollback()
+    connection.close()
 
-@pytest.fixture
-def auth_headers(client, test_user):
-    # Login and get token
-    response = client.post("/api/v1/auth/login", json={
-        "email": "test@example.com",
-        "password": "testpassword"
-    })
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+@pytest.fixture(scope="function")
+def client(db_session):
+    def override_get_db():
+        yield db_session
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
 
-def test_create_order(client, auth_headers):
+def test_create_order(client, db_session):
+    # Create a dummy client user
+    client_user = User(id=1, email="client@example.com", password="hashedpassword", role="client")
+    db_session.add(client_user)
+    db_session.commit()
+    db_session.refresh(client_user)
+
     response = client.post(
         "/api/v1/orders/",
         json={
-            "title": "Test Order",
-            "description": "Test description",
-            "price": 100.00
+            "client_id": client_user.id,
+            "service_type": "Analiza Dokumentów",
+            "status": "Nowe",
+            "description": "Potrzebna analiza umowy najmu.",
+            "price": 150.00,
+            "currency": "PLN"
         },
-        headers=auth_headers
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["title"] == "Test Order"
-    assert data["status"] == "NEW"
+    assert data["service_type"] == "Analiza Dokumentów"
+    assert data["status"] == "Nowe"
+    assert data["client_id"] == client_user.id
 
-def test_get_orders(client, auth_headers):
-    # Create an order first
-    client.post(
-        "/api/v1/orders/",
-        json={"title": "Test Order", "description": "Test description"},
-        headers=auth_headers
-    )
-    
-    response = client.get("/api/v1/orders/", headers=auth_headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["title"] == "Test Order"
+def test_read_orders(client, db_session):
+    client_user = User(id=2, email="client2@example.com", password="hashedpassword", role="client")
+    db_session.add(client_user)
+    db_session.commit()
+    db_session.refresh(client_user)
 
-def test_get_order_by_id(client, auth_headers):
-    # Create an order first
-    create_response = client.post(
-        "/api/v1/orders/",
-        json={"title": "Test Order", "description": "Test description"},
-        headers=auth_headers
-    )
-    order_id = create_response.json()["id"]
-    
-    response = client.get(f"/api/v1/orders/{order_id}", headers=auth_headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["title"] == "Test Order"
+    order = Order(client_id=client_user.id, service_type="Konsultacja", status="W toku")
+    db_session.add(order)
+    db_session.commit()
 
-def test_unauthorized_access(client):
     response = client.get("/api/v1/orders/")
-    assert response.status_code == 401
+    assert response.status_code == 200
+    data = response.json()
+    assert any(o["service_type"] == "Konsultacja" for o in data)
+
+def test_read_single_order(client, db_session):
+    client_user = User(id=3, email="client3@example.com", password="hashedpassword", role="client")
+    db_session.add(client_user)
+    db_session.commit()
+    db_session.refresh(client_user)
+
+    order = Order(client_id=client_user.id, service_type="Pismo Prawne", status="Zakończone")
+    db_session.add(order)
+    db_session.commit()
+
+    response = client.get(f"/api/v1/orders/{order.id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["service_type"] == "Pismo Prawne"
+
+def test_update_order(client, db_session):
+    client_user = User(id=4, email="client4@example.com", password="hashedpassword", role="client")
+    db_session.add(client_user)
+    db_session.commit()
+    db_session.refresh(client_user)
+
+    order = Order(client_id=client_user.id, service_type="Reprezentacja", status="Oczekujące")
+    db_session.add(order)
+    db_session.commit()
+
+    response = client.put(
+        f"/api/v1/orders/{order.id}",
+        json={"status": "W realizacji", "price": 200.00},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "W realizacji"
+    assert data["price"] == 200.00
+
+def test_delete_order(client, db_session):
+    client_user = User(id=5, email="client5@example.com", password="hashedpassword", role="client")
+    db_session.add(client_user)
+    db_session.commit()
+    db_session.refresh(client_user)
+
+    order = Order(client_id=client_user.id, service_type="Inne", status="Anulowane")
+    db_session.add(order)
+    db_session.commit()
+
+    response = client.delete(f"/api/v1/orders/{order.id}")
+    assert response.status_code == 204
+
+    response = client.get(f"/api/v1/orders/{order.id}")
+    assert response.status_code == 404
