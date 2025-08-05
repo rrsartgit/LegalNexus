@@ -1,12 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Montserrat } from "next/font/google" // Import Montserrat from next/font/google
-import "./globals.css" // Import globals.css at the top of the file
+import { Montserrat } from "next/font/google"
+import "./globals.css"
 import ClientLayout from "./clientLayout"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-montserrat", // Define as a CSS variable
+  variable: "--font-montserrat",
 })
 
 export const metadata: Metadata = {

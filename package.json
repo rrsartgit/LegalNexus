@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "latest",
+    "@ai-sdk/react": "latest",
     "@hookform/resolvers": "^3.3.4",
     "@next/bundle-analyzer": "latest",
     "@radix-ui/react-accordion": "latest",

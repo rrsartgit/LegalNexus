@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth"
 import { toast } from "@/components/ui/use-toast"
 
 interface LoginFormProps {
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
@@ -22,15 +22,17 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
     const result = await login(email, password)
+
     if (result.success) {
       toast({
         title: "Zalogowano pomyślnie!",
-        description: "Przekierowujemy Cię do panelu.",
+        description: "Zostałeś przekierowany do swojego panelu.",
       })
-      onSuccess()
+      onSuccess?.()
     } else {
-      setError(result.error || "Wystąpił błąd podczas logowania.")
+      setError(result.error || "Wystąpił nieznany błąd podczas logowania.")
       toast({
         title: "Błąd logowania",
         description: result.error || "Sprawdź swoje dane i spróbuj ponownie.",
@@ -40,21 +42,28 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-      <div className="grid gap-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
-          placeholder="m@example.com"
-          required
+          placeholder="jan.kowalski@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
-      <div className="grid gap-2">
+      <div>
         <Label htmlFor="password">Hasło</Label>
-        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input
+          id="password"
+          type="password"
+          placeholder="********"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
       </div>
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <Button type="submit" className="w-full" disabled={loading}>

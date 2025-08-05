@@ -10,22 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, PlusCircle, Eye, CheckCircle, XCircle } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "@/components/ui/use-toast"
 import { useAuth } from "@/frontend/lib/auth"
 
 export function SprawyManager() {
   const [cases, setCases] = useState<Case[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentCase, setCurrentCase] = useState<Case | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const { toast } = useToast()
   const { user } = useAuth()
+
+  useEffect(() => {
+    fetchCases()
+  }, [])
 
   const fetchCases = async () => {
     try {
@@ -45,9 +48,82 @@ export function SprawyManager() {
     }
   }
 
-  useEffect(() => {
-    fetchCases()
-  }, [])
+  const handleAddEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentCase) return
+
+    setLoading(true)
+    setError(null)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
+
+      if (currentCase.id === 0) {
+        // Add new case (mock ID generation)
+        const newCase = {
+          ...currentCase,
+          id: cases.length + 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        setCases((prev) => [...prev, newCase])
+        toast({ title: "Sprawa dodana pomyślnie!" })
+      } else {
+        // Update existing case
+        setCases((prev) =>
+          prev.map((c) => (c.id === currentCase.id ? { ...currentCase, updated_at: new Date().toISOString() } : c)),
+        )
+        toast({ title: "Sprawa zaktualizowana pomyślnie!" })
+      }
+      setIsModalOpen(false)
+      setCurrentCase(null)
+    } catch (err: any) {
+      setError(err.message || "Wystąpił błąd podczas zapisu sprawy.")
+      toast({
+        title: "Błąd",
+        description: err.message || "Wystąpił błąd podczas zapisu sprawy.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
+      setCases((prev) => prev.filter((c) => c.id !== id))
+      toast({ title: "Sprawa usunięta pomyślnie!" })
+    } catch (err: any) {
+      setError(err.message || "Wystąpił błąd podczas usuwania sprawy.")
+      toast({
+        title: "Błąd",
+        description: err.message || "Wystąpił błąd podczas usuwania sprawy.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openAddModal = () => {
+    setCurrentCase({
+      id: 0,
+      title: "",
+      description: "",
+      status: "open",
+      client_id: "", // This would typically be pre-filled or selected from a list
+      created_at: "",
+      updated_at: "",
+    })
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (caseItem: Case) => {
+    setCurrentCase(caseItem)
+    setIsModalOpen(true)
+  }
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -61,42 +137,6 @@ export function SprawyManager() {
         return "warning" // Assuming 'warning' variant exists or can be styled
       default:
         return "outline"
-    }
-  }
-
-  const handleCreateCase = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const data = {
-      client_id: user?.id || 0, // Assuming client_id is current user's ID
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-    }
-
-    if (!data.client_id) {
-      toast({
-        title: "Błąd",
-        description: "Brak ID klienta. Upewnij się, że jesteś zalogowany.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      await casesApi.createCase(data)
-      toast({
-        title: "Sukces",
-        description: "Nowa sprawa została utworzona.",
-      })
-      setIsCreateDialogOpen(false)
-      fetchCases() // Refresh list
-    } catch (err) {
-      console.error("Failed to create case:", err)
-      toast({
-        title: "Błąd",
-        description: "Nie udało się utworzyć sprawy.",
-        variant: "destructive",
-      })
     }
   }
 
@@ -119,8 +159,8 @@ export function SprawyManager() {
   }
 
   const openViewDialog = (caseItem: Case) => {
-    setSelectedCase(caseItem)
-    setIsViewDialogOpen(true)
+    setCurrentCase(caseItem)
+    setIsModalOpen(true)
   }
 
   if (loading) {
@@ -140,7 +180,7 @@ export function SprawyManager() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Zarządzanie Sprawami</CardTitle>
         {user?.role === "CLIENT" && ( // Only clients can create new cases
-          <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+          <Button onClick={openAddModal} size="sm">
             <PlusCircle className="mr-2 h-4 w-4" /> Utwórz Nową Sprawę
           </Button>
         )}
@@ -201,6 +241,17 @@ export function SprawyManager() {
                             <span className="sr-only">Wstrzymaj</span>
                           </Button>
                         )}
+                        <Button variant="outline" size="sm" onClick={() => openEditModal(caseItem)}>
+                          Edytuj
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="ml-2"
+                          onClick={() => handleDelete(caseItem.id)}
+                        >
+                          Usuń
+                        </Button>
                       </>
                     )}
                   </TableCell>
@@ -209,69 +260,78 @@ export function SprawyManager() {
             )}
           </TableBody>
         </Table>
-
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Szczegóły Sprawy #{selectedCase?.id}</DialogTitle>
-              <DialogDescription>Informacje o wybranej sprawie.</DialogDescription>
-            </DialogHeader>
-            {selectedCase && (
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Tytuł:</Label>
-                  <span className="col-span-3">{selectedCase.title}</span>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Status:</Label>
-                  <span className="col-span-3">
-                    <Badge variant={getStatusBadgeVariant(selectedCase.status)}>{selectedCase.status}</Badge>
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label className="text-right pt-2">Opis:</Label>
-                  <Textarea readOnly value={selectedCase.description} className="col-span-3 min-h-[120px]" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Utworzono:</Label>
-                  <span className="col-span-3">{new Date(selectedCase.created_at).toLocaleString()}</span>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Ostatnia aktualizacja:</Label>
-                  <span className="col-span-3">{new Date(selectedCase.updated_at).toLocaleString()}</span>
-                </div>
-                {/* Add more details like associated documents, client info etc. */}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Utwórz Nową Sprawę</DialogTitle>
-              <DialogDescription>Wypełnij formularz, aby zgłosić nową sprawę prawną.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateCase} className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Tytuł Sprawy</Label>
-                <Input id="title" name="title" placeholder="Krótki tytuł sprawy" required />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Opis Sprawy</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Szczegółowy opis sprawy"
-                  className="min-h-[120px]"
-                  required
-                />
-              </div>
-              <Button type="submit">Utwórz Sprawę</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
       </CardContent>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{currentCase?.id === 0 ? "Dodaj nową sprawę" : "Edytuj sprawę"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddEdit} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Tytuł
+              </Label>
+              <Input
+                id="title"
+                value={currentCase?.title || ""}
+                onChange={(e) => setCurrentCase({ ...currentCase!, title: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Opis
+              </Label>
+              <Textarea
+                id="description"
+                value={currentCase?.description || ""}
+                onChange={(e) => setCurrentCase({ ...currentCase!, description: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <Select
+                value={currentCase?.status || "open"}
+                onValueChange={(value) =>
+                  setCurrentCase({ ...currentCase!, status: value as "open" | "in_progress" | "closed" })
+                }
+              >
+                <SelectTrigger id="status" className="col-span-3">
+                  <SelectValue placeholder="Wybierz status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="open">Otwarta</SelectItem>
+                  <SelectItem value="in_progress">W toku</SelectItem>
+                  <SelectItem value="closed">Zamknięta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="client_id" className="text-right">
+                ID Klienta
+              </Label>
+              <Input
+                id="client_id"
+                value={currentCase?.client_id || ""}
+                onChange={(e) => setCurrentCase({ ...currentCase!, client_id: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Zapisywanie..." : "Zapisz zmiany"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

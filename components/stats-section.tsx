@@ -2,30 +2,35 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 
-interface StatsSectionProps {
-  t: any
-}
-
-export function StatsSection({ t }: StatsSectionProps) {
-  const stats = [
-    { value: "500+", label: t.stats.lawFirms },
-    { value: "10K+", label: t.stats.lawyers },
-    { value: "99.9%", label: t.stats.uptime },
-    { value: "24/7", label: t.stats.support },
-  ]
-
+export function StatsSection() {
   return (
-    <section className="bg-gray-50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className="text-center">
-              <CardContent className="p-6">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
+    <section id="stats" className="py-12 md:py-24 lg:py-32">
+      <div className="container px-4 md:px-6">
+        <div className="text-center space-y-4 mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Nasze osiągnięcia</h2>
+          <p className="max-w-[900px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Liczby mówią same za siebie. Zaufaj profesjonalistom.
+          </p>
+        </div>
+        <div className="grid gap-8 md:grid-cols-3">
+          <Card className="text-center">
+            <CardContent className="flex flex-col items-center justify-center p-6">
+              <div className="text-5xl font-bold text-primary">99%</div>
+              <p className="text-lg text-muted-foreground">Zadowolonych klientów</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center">
+            <CardContent className="flex flex-col items-center justify-center p-6">
+              <div className="text-5xl font-bold text-primary">24h</div>
+              <p className="text-lg text-muted-foreground">Średni czas odpowiedzi</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center">
+            <CardContent className="flex flex-col items-center justify-center p-6">
+              <div className="text-5xl font-bold text-primary">500+</div>
+              <p className="text-lg text-muted-foreground">Rozwiązanych spraw</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>

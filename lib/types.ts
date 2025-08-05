@@ -6,23 +6,18 @@ export interface User extends AuthUser {
   id: string
   email: string
   role: "client" | "admin" | "operator"
-  name?: string
 }
 
 export interface LawFirm {
-  id: string
+  id: number
   name: string
   address: string
-  city: string
-  postal_code: string
   phone: string
   email: string
-  website?: string
-  description?: string
   specializations: string[]
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  description: string
+  rating: number
+  reviews: number
 }
 
 export interface Specialization {
@@ -72,17 +67,19 @@ export interface GeneratedDocument {
 }
 
 export interface Case {
-  id: string
-  name: string
-  clientId: string
-  status: "new" | "analyzing" | "analysis_ready" | "documents_ready" | "completed" | "rejected"
+  id: number
+  title: string
+  description: string
+  status: "open" | "in_progress" | "closed"
+  client_id: string
+  assigned_law_firm_id?: number
   documents: Document[]
   analysis?: Analysis
   generatedDocuments: GeneratedDocument[]
   clientNotes?: string
   operatorNotes?: string
-  createdAt: Date
-  updatedAt: Date
+  created_at: string
+  updatedAt: string
 }
 
 export interface Subscription {
@@ -135,4 +132,13 @@ export interface UserManagementUser {
   last_login_at: string
   cases_count: number
   subscription_status: "active" | "inactive" | "none"
+}
+
+export interface Order {
+  id: number
+  user_id: string
+  service_type: string
+  status: "pending" | "processing" | "completed" | "cancelled"
+  created_at: string
+  updated_at: string
 }

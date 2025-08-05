@@ -1,38 +1,45 @@
 "use client"
 
 import type React from "react"
-
-import { useEffect, useState } from "react"
-import { clientsApi } from "@/frontend/lib/api"
-import type { Client } from "@/frontend/lib/api" // Assuming Client type is exported from api.ts
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Loader2, PlusCircle, Edit, Trash2 } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "@/components/ui/use-toast"
+import type { User } from "@/lib/types"
 
 export function KlienciManager() {
-  const [clients, setClients] = useState<Client[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [currentClient, setCurrentClient] = useState<Client | null>(null)
-  const { toast } = useToast()
 
-  const fetchClients = async () => {
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      const response = await clientsApi.getClients()
-      setClients(response.data)
-    } catch (err) {
-      setError("Nie udało się załadować listy klientów.")
-      console.error("Failed to fetch clients:", err)
+      // Mock API call
+      const mockUsers: User[] = [
+        { id: "user1", email: "client1@example.com", role: "client" },
+        { id: "user2", email: "admin1@example.com", role: "admin" },
+        { id: "user3", email: "operator1@example.com", role: "operator" },
+      ]
+      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
+      setUsers(mockUsers)
+    } catch (err: any) {
+      setError(err.message || "Nie udało się załadować użytkowników.")
       toast({
         title: "Błąd",
-        description: "Nie udało się załadować listy klientów.",
+        description: err.message || "Nie udało się załadować użytkowników.",
         variant: "destructive",
       })
     } finally {
@@ -40,182 +47,152 @@ export function KlienciManager() {
     }
   }
 
-  useEffect(() => {
-    fetchClients()
-  }, [])
-
-  const handleSaveClient = async (e: React.FormEvent) => {
+  const handleAddEdit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const data = {
-      email: formData.get("email") as string,
-      name: formData.get("name") as string,
-      phone: formData.get("phone") as string,
-    }
+    if (!currentUser) return
 
+    setLoading(true)
+    setError(null)
     try {
-      // Assuming create/update client endpoints exist in clientsApi
-      // For now, this is a placeholder as API only has getClients/getClientById
-      if (currentClient) {
-        // await clientsApi.updateClient(currentClient.id, data);
-        toast({
-          title: "Informacja",
-          description: "Funkcja edycji klienta nie jest jeszcze zaimplementowana w API.",
-        })
+      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
+
+      if (currentUser.id === "") {
+        // Add new user (mock ID generation)
+        const newUser = { ...currentUser, id: `user${users.length + 1}` }
+        setUsers((prev) => [...prev, newUser])
+        toast({ title: "Użytkownik dodany pomyślnie!" })
       } else {
-        // await clientsApi.createClient(data);
-        toast({
-          title: "Informacja",
-          description: "Funkcja dodawania klienta nie jest jeszcze zaimplementowana w API.",
-        })
+        // Update existing user
+        setUsers((prev) => prev.map((user) => (user.id === currentUser.id ? currentUser : user)))
+        toast({ title: "Użytkownik zaktualizowany pomyślnie!" })
       }
-      setIsDialogOpen(false)
-      setCurrentClient(null)
-      fetchClients() // Refresh list
-    } catch (err) {
-      console.error("Failed to save client:", err)
+      setIsModalOpen(false)
+      setCurrentUser(null)
+    } catch (err: any) {
+      setError(err.message || "Wystąpił błąd podczas zapisu użytkownika.")
       toast({
         title: "Błąd",
-        description: "Nie udało się zapisać klienta.",
+        description: err.message || "Wystąpił błąd podczas zapisu użytkownika.",
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleDeleteClient = async (id: number) => {
-    if (!confirm("Czy na pewno chcesz usunąć tego klienta?")) return
+  const handleDelete = async (id: string) => {
+    setLoading(true)
+    setError(null)
     try {
-      // Assuming delete client endpoint exists in clientsApi
-      // await clientsApi.deleteClient(id);
-      toast({
-        title: "Informacja",
-        description: "Funkcja usuwania klienta nie jest jeszcze zaimplementowana w API.",
-      })
-      fetchClients() // Refresh list
-    } catch (err) {
-      console.error("Failed to delete client:", err)
+      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate network delay
+      setUsers((prev) => prev.filter((user) => user.id !== id))
+      toast({ title: "Użytkownik usunięty pomyślnie!" })
+    } catch (err: any) {
+      setError(err.message || "Wystąpił błąd podczas usuwania użytkownika.")
       toast({
         title: "Błąd",
-        description: "Nie udało się usunąć klienta.",
+        description: err.message || "Wystąpił błąd podczas usuwania użytkownika.",
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const openCreateDialog = () => {
-    setCurrentClient(null)
-    setIsDialogOpen(true)
+  const openAddModal = () => {
+    setCurrentUser({ id: "", email: "", role: "client" }) // Default new user to client role
+    setIsModalOpen(true)
   }
 
-  const openEditDialog = (client: Client) => {
-    setCurrentClient(client)
-    setIsDialogOpen(true)
+  const openEditModal = (user: User) => {
+    setCurrentUser(user)
+    setIsModalOpen(true)
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500 p-4">{error}</div>
-  }
+  if (loading) return <p>Ładowanie użytkowników...</p>
+  if (error) return <p className="text-red-500">{error}</p>
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Zarządzanie Klientami</CardTitle>
-        <Button onClick={openCreateDialog} size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" /> Dodaj Klienta
-        </Button>
+        <Button onClick={openAddModal}>Dodaj Użytkownika</Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Nazwa</TableHead>
-              <TableHead>Telefon</TableHead>
-              <TableHead className="text-right">Akcje</TableHead>
+              <TableHead>Rola</TableHead>
+              <TableHead>Akcje</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
-                  Brak zarejestrowanych klientów.
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="sm" onClick={() => openEditModal(user)}>
+                    Edytuj
+                  </Button>
+                  <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleDelete(user.id)}>
+                    Usuń
+                  </Button>
                 </TableCell>
               </TableRow>
-            ) : (
-              clients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.id}</TableCell>
-                  <TableCell>{client.email}</TableCell>
-                  <TableCell>{client.name || "N/A"}</TableCell>
-                  <TableCell>{client.phone || "N/A"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openEditDialog(client)}>
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Edytuj</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client.id)}>
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                      <span className="sr-only">Usuń</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{currentClient ? "Edytuj Klienta" : "Dodaj Nowego Klienta"}</DialogTitle>
-              <DialogDescription>
-                {currentClient
-                  ? "Zaktualizuj dane klienta."
-                  : "Wypełnij formularz, aby dodać nowego klienta do systemu."}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSaveClient} className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  defaultValue={currentClient?.email || ""}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Nazwa
-                </Label>
-                <Input id="name" name="name" defaultValue={currentClient?.name || ""} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Telefon
-                </Label>
-                <Input id="phone" name="phone" defaultValue={currentClient?.phone || ""} className="col-span-3" />
-              </div>
-              <div className="flex justify-end">
-                <Button type="submit">{currentClient ? "Zapisz Zmiany" : "Dodaj Klienta"}</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </CardContent>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{currentUser?.id === "" ? "Dodaj nowego użytkownika" : "Edytuj użytkownika"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddEdit} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={currentUser?.email || ""}
+                onChange={(e) => setCurrentUser({ ...currentUser!, email: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                Rola
+              </Label>
+              <Select
+                value={currentUser?.role || "client"}
+                onValueChange={(value) =>
+                  setCurrentUser({ ...currentUser!, role: value as "admin" | "client" | "operator" })
+                }
+              >
+                <SelectTrigger id="role" className="col-span-3">
+                  <SelectValue placeholder="Wybierz rolę" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Klient</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="operator">Operator</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Zapisywanie..." : "Zapisz zmiany"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

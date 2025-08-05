@@ -1,7 +1,9 @@
 "use client"
 
+import { CardDescription } from "@/components/ui/card"
+
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,9 +11,29 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Building2, Users, FileText, Plus, Search, Edit, Trash2 } from "lucide-react"
 import type { Kancelaria, Klient, Sprawa } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview")
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/logowanie") // Redirect to login if not authenticated
+    } else if (!loading && user) {
+      // Redirect based on role if on a generic dashboard path
+      if (user.role === "admin" && window.location.pathname !== "/admin") {
+        router.push("/admin")
+      } else if (user.role === "operator" && window.location.pathname !== "/panel-operatora") {
+        router.push("/panel-operatora")
+      } else if (user.role === "client" && window.location.pathname !== "/panel-klienta") {
+        router.push("/panel-klienta")
+      }
+    }
+  }, [user, loading, router])
 
   // Mock data for development
   const mockKancelarie: Kancelaria[] = [
@@ -94,6 +116,18 @@ export default function Dashboard() {
       zakonczona: "bg-gray-100 text-gray-800",
     }
     return statusMap[status as keyof typeof statusMap] || "bg-gray-100 text-gray-800"
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p>Ładowanie panelu...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will be redirected by useEffect
   }
 
   return (
@@ -364,6 +398,36 @@ export default function Dashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Witaj, {user.email}!</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Twoja rola: {user.role}</div>
+            <p className="text-xs text-muted-foreground">To jest Twój panel użytkownika.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Aktywne sprawy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">5</div>
+            <p className="text-xs text-muted-foreground">Liczba spraw w toku.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ostatnie zamówienia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">Liczba ostatnich zamówień.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

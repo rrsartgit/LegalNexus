@@ -1,66 +1,63 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Network, Search, Shield, Code, Zap, Building } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileText, Scale, Phone, Gavel } from "lucide-react"
 
-interface FeaturesSectionProps {
-  t: any
-}
-
-export function FeaturesSection({ t }: FeaturesSectionProps) {
-  const features = [
-    {
-      icon: Network,
-      title: t.features.domainDriven.title,
-      description: t.features.domainDriven.description,
-    },
-    {
-      icon: Search,
-      title: t.features.search.title,
-      description: t.features.search.description,
-    },
-    {
-      icon: Shield,
-      title: t.features.security.title,
-      description: t.features.security.description,
-    },
-    {
-      icon: Code,
-      title: "Zgodność z JSON:API",
-      description: "Pełna zgodność ze standardami JSON:API, HATEOAS, wersjonowaniem i dokumentacją OpenAPI.",
-    },
-    {
-      icon: Zap,
-      title: "Wysoka Wydajność",
-      description: "Cache'owanie Redis, optymalizacja zapytań i skalowanie horyzontalne dla maksymalnej wydajności.",
-    },
-    {
-      icon: Building,
-      title: "Architektura Multi-tenant",
-      description: "Wsparcie dla wielu kancelarii z pełną izolacją danych i separacją konfiguracji.",
-    },
-  ]
-
+export function FeaturesSection() {
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.features.title}</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">{t.features.subtitle}</p>
+    <section id="features" className="py-12 md:py-24 lg:py-32 bg-muted">
+      <div className="container px-4 md:px-6">
+        <div className="text-center space-y-4 mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Nasze kluczowe funkcje</h2>
+          <p className="max-w-[900px] mx-auto text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Oferujemy kompleksowe rozwiązania prawne, dostosowane do Twoich potrzeb.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="p-8">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                  <feature.icon className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Analiza dokumentów</CardTitle>
+              <FileText className="h-6 w-6 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Szybka i precyzyjna analiza dokumentów prawnych z wykorzystaniem AI.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Pisma prawne</CardTitle>
+              <Scale className="h-6 w-6 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Profesjonalne przygotowanie pism procesowych, umów i innych dokumentów.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Konsultacje online</CardTitle>
+              <Phone className="h-6 w-6 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Indywidualne konsultacje z doświadczonymi prawnikami, dostępne z każdego miejsca.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Reprezentacja</CardTitle>
+              <Gavel className="h-6 w-6 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Reprezentacja w sądzie i przed organami administracji publicznej.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>

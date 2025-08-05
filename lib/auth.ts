@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     const { data, error } = await supabase.auth.getUser()
     if (data?.user) {
-      // Assuming user_metadata contains the role
       setUser({
         id: data.user.id,
         email: data.user.email || "",
@@ -41,14 +40,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         fetchUser()
       }
     })
 
     return () => {
-      authListener?.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [fetchUser, supabase])
 
@@ -66,6 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user.email || "",
         role: (data.user.user_metadata?.role as "client" | "admin" | "operator") || "client",
       })
+      // Redirect based on role after successful login
+      if (data.user.user_metadata?.role === "admin") {
+        router.push("/admin")
+      } else if (data.user.user_metadata?.role === "operator") {
+        router.push("/panel-operatora")
+      } else {
+        router.push("/panel-klienta")
+      }
       return { success: true }
     }
     return { success: false, error: "Unknown login error" }
@@ -93,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user.email || "",
         role: "client",
       })
+      router.push("/panel-klienta") // Redirect new users to client panel
       return { success: true }
     }
     return { success: false, error: "Unknown registration error" }

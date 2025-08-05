@@ -10,56 +10,81 @@ import { useAuth } from "@/lib/auth"
 import { toast } from "@/components/ui/use-toast"
 
 interface RegisterFormProps {
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const { register, loading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    const result = await register(email, password)
-    if (result.success) {
-      toast({
-        title: "Rejestracja zakończona sukcesem!",
-        description: "Twoje konto zostało utworzone. Możesz się teraz zalogować.",
-      })
-      onSuccess()
-    } else {
-      setError(result.error || "Wystąpił błąd podczas rejestracji.")
+
+    if (password !== confirmPassword) {
+      setError("Hasła nie są zgodne.")
       toast({
         title: "Błąd rejestracji",
-        description: result.error || "Spróbuj ponownie z innym adresem email.",
+        description: "Hasła nie są zgodne.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const result = await register(email, password)
+
+    if (result.success) {
+      toast({
+        title: "Rejestracja zakończona pomyślnie!",
+        description: "Twoje konto zostało utworzone. Możesz się teraz zalogować.",
+      })
+      onSuccess?.()
+    } else {
+      setError(result.error || "Wystąpił nieznany błąd podczas rejestracji.")
+      toast({
+        title: "Błąd rejestracji",
+        description: result.error || "Spróbuj ponownie później.",
         variant: "destructive",
       })
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="register-email">Email</Label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="register-email"
+          id="email"
           type="email"
-          placeholder="m@example.com"
-          required
+          placeholder="jan.kowalski@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="register-password">Hasło</Label>
+      <div>
+        <Label htmlFor="password">Hasło</Label>
         <Input
-          id="register-password"
+          id="password"
           type="password"
-          required
+          placeholder="********"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="confirm-password">Potwierdź hasło</Label>
+        <Input
+          id="confirm-password"
+          type="password"
+          placeholder="********"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
         />
       </div>
       {error && <p className="text-red-500 text-sm">{error}</p>}
