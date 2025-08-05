@@ -1,8 +1,7 @@
 "use client"
-
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Menu,
   User,
@@ -20,7 +19,7 @@ import {
   Gavel,
   BookOpen,
 } from "lucide-react"
-import { useAuth } from "@/frontend/lib/auth" // Corrected import path
+import { useAuth } from "@/frontend/lib/auth"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useRouter } from "next/navigation" // Import useRouter
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   onSectionChange: (section: string) => void
@@ -38,19 +37,15 @@ interface HeaderProps {
 }
 
 export function Header({ onSectionChange, activeSection }: HeaderProps) {
-  const { user, isAuthenticated, signOut } = useAuth() // Use signOut from useAuth
+  const { user, isAuthenticated, signOut } = useAuth()
   const router = useRouter()
-  const [isScrolled, setIsScrolled] = useState(false) // Keep if needed for scroll effects
 
   const navItems = [
     { name: "Strona Główna", section: "home", icon: Home },
     { name: "Jak to działa", section: "jak-to-dziala", icon: Lightbulb },
     { name: "Funkcje", section: "funkcje", icon: BarChart },
-    // { name: "Cennik", section: "cennik", icon: DollarSign }, // Commented out as requested
-    // { name: "Kancelarie", section: "kancelarie", icon: Briefcase }, // Commented out as requested
     { name: "Blog", section: "blog", icon: BookOpen },
     { name: "Poradniki", section: "poradniki", icon: BookOpen },
-    // { name: "Dokumentacja API", section: "dokumentacja-api", icon: FileText }, // Commented out as requested
     { name: "O nas", section: "o-nas", icon: Users },
     { name: "Kontakt", section: "kontakt", icon: Phone },
   ]
@@ -70,29 +65,26 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
   ]
 
   const handleLogout = async () => {
-    await signOut() // Call actual signOut function
-    router.push("/") // Redirect to home page after logout
+    await signOut()
+    onSectionChange("home")
   }
 
-  const getPanelSection = () => {
+  const handlePanelRedirect = () => {
     if (user?.role === "admin") {
-      return "admin"
+      router.push("/dashboard")
     } else if (user?.role === "client") {
-      return "panel-klienta"
+      router.push("/dashboard")
     } else if (user?.role === "operator") {
-      return "panel-operatora"
+      router.push("/dashboard")
     }
-    return null
   }
-
-  const panelSection = getPanelSection()
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-sm transition-all duration-300 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <button
           onClick={() => onSectionChange("home")}
-          className="flex items-center gap-2 font-bold text-lg text-blue-700 hover:text-blue-800 transition-colors"
+          className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors"
         >
           <Scale className="h-6 w-6" />
           LegalNexus
@@ -104,8 +96,8 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
             <button
               key={item.name}
               onClick={() => onSectionChange(item.section)}
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                activeSection === item.section ? "text-blue-700" : "text-gray-600"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                activeSection === item.section ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {item.name}
@@ -113,7 +105,7 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+              <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-primary">
                 Usługi
               </Button>
             </DropdownMenuTrigger>
@@ -128,7 +120,7 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-sm font-medium text-gray-600 hover:text-blue-600">
+              <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-primary">
                 Informacje
               </Button>
             </DropdownMenuTrigger>
@@ -145,12 +137,13 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
 
         {/* Auth/User Actions */}
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-user.jpg" alt={user?.email || "User"} /> {/* Use email for alt */}
+                    <AvatarImage src="/placeholder-user.jpg" alt={user?.email || "User"} />
                     <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -163,12 +156,10 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {panelSection && (
-                  <DropdownMenuItem onClick={() => router.push(`/${panelSection}`)}>
-                    <User className="mr-2 h-4 w-4" />
-                    Mój Panel ({user?.role === "admin" ? "Admin" : user?.role === "client" ? "Klient" : "Operator"})
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={handlePanelRedirect}>
+                  <User className="mr-2 h-4 w-4" />
+                  Mój Panel
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   Wyloguj
@@ -202,19 +193,19 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
                   <button
                     key={item.name}
                     onClick={() => onSectionChange(item.section)}
-                    className="flex items-center gap-3 text-lg font-medium text-gray-700 hover:text-blue-600 text-left"
+                    className="flex items-center gap-3 text-lg font-medium hover:text-primary text-left"
                   >
                     <item.icon className="h-5 w-5" />
                     {item.name}
                   </button>
                 ))}
                 <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-semibold text-gray-500 mb-2">Usługi</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Usługi</h3>
                   {servicesDropdown.map((item) => (
                     <button
                       key={item.name}
                       onClick={() => onSectionChange(item.section)}
-                      className="flex items-center gap-3 text-base py-2 text-gray-700 hover:text-blue-600 text-left w-full"
+                      className="flex items-center gap-3 text-base py-2 hover:text-primary text-left w-full"
                     >
                       <item.icon className="h-4 w-4" />
                       {item.name}
@@ -222,12 +213,12 @@ export function Header({ onSectionChange, activeSection }: HeaderProps) {
                   ))}
                 </div>
                 <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-semibold text-gray-500 mb-2">Informacje</h3>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2">Informacje</h3>
                   {informationDropdown.map((item) => (
                     <button
                       key={item.name}
                       onClick={() => onSectionChange(item.section)}
-                      className="flex items-center gap-3 text-base py-2 text-gray-700 hover:text-blue-600 text-left w-full"
+                      className="flex items-center gap-3 text-base py-2 hover:text-primary text-left w-full"
                     >
                       <item.icon className="h-4 w-4" />
                       {item.name}

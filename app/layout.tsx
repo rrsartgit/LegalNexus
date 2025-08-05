@@ -1,18 +1,24 @@
-import type { Metadata } from "next"
 import type React from "react"
+import type { Metadata } from "next"
+import { Montserrat } from "next/font/google"
+import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "../frontend/lib/auth" // Corrected import path for AuthProvider
+import { AuthProvider } from "@/frontend/lib/auth"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import "./globals.css" // Ensure this path is correct for global styles
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+})
+
+const queryClient = new QueryClient()
 
 export const metadata: Metadata = {
   title: "Legal API Nexus - Zarządzanie Kancelariami Prawnymi",
   description: "System zarządzania kancelariami prawnymi, klientami i sprawami",
     generator: 'v0.dev'
 }
-
-const queryClient = new QueryClient()
 
 export default function RootLayout({
   children,
@@ -21,11 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <head>{/* If you removed Google Fonts, ensure no other font imports are here */}</head>
-      <body>
+      <body className={`${montserrat.variable} font-montserrat`}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               {children}
               <Toaster />
             </ThemeProvider>

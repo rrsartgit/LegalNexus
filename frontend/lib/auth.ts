@@ -67,9 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUpWithEmail = async (email: string, password: string) => {
     try {
       const response = await authApi.register({ email, password })
-      const { user: userData } = response.data // Register might not return a token directly
-      // After successful registration, you might want to automatically log them in
-      // or redirect to login page. For now, we'll just return the user.
+      const { user: userData } = response.data
       return { user: userData, error: null }
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || "Błąd rejestracji."
@@ -81,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("token")
     setUser(null)
     setIsAuthenticated(false)
-    router.push("/") // Redirect to home page
   }
 
   return (

@@ -1,42 +1,31 @@
 import axios from "axios"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-const axiosInstance = axios.create({
+// Create axios instance
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 })
 
-// Request interceptor to add Authorization header
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  },
-)
+// Add token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token")
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
-// Response interceptor to handle 401 errors
-axiosInstance.interceptors.response.use(
+// Handle 401 responses
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid, clear it and redirect to login
+    if (error.response?.status === 401) {
       localStorage.removeItem("token")
-      // You might want to use Next.js router here, but for a simple interceptor,
-      // direct window.location is often used or a global event emitter.
-      // For Next.js client-side, you'd typically handle this in components
-      // or use a custom hook that wraps axios calls.
-      // For now, we'll just log and let the component handle the redirect.
-      console.error("Unauthorized: Token expired or invalid. Redirecting to login.")
-      // window.location.href = "/logowanie"; // This would force a full page reload
+      window.location.href = "/logowanie"
     }
     return Promise.reject(error)
   },
@@ -185,54 +174,62 @@ export interface CreateCaseRequest {
   description: string
 }
 
+// Auth API
 export const authApi = {
-  login: (data: LoginRequest) => axiosInstance.post<LoginResponse>("/api/v1/auth/login", data),
-  register: (data: RegisterRequest) => axiosInstance.post<RegisterResponse>("/api/v1/auth/register", data),
-  getMe: () => axiosInstance.get<UserResponse>("/api/v1/auth/me"),
+  login: (data: { email: string; password: string }) => apiClient.post("/api/v1/auth/login", data),
+  register: (data: { email: string; password: string }) => apiClient.post("/api/v1/auth/register", data),
+  getMe: () => apiClient.get("/api/v1/auth/me"),
 }
 
+// Orders API
 export const ordersApi = {
-  getOrders: () => axiosInstance.get<Order[]>("/api/v1/orders/"),
-  createOrder: (data: CreateOrderRequest) => axiosInstance.post<Order>("/api/v1/orders/", data),
-  getOrderById: (orderId: number) => axiosInstance.get<Order>(`/api/v1/orders/${orderId}`),
-  updateOrderStatus: (orderId: number, status: string) =>
-    axiosInstance.put<Order>(`/api/v1/orders/${orderId}/status`, { status }),
+  getAll: () => apiClient.get("/api/v1/orders"),
+  create: (data: any) => apiClient.post("/api/v1/orders", data),
+  getById: (id: string) => apiClient.get(`/api/v1/orders/${id}`),
+  update: (id: string, data: any) => apiClient.put(`/api/v1/orders/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/api/v1/orders/${id}`),
 }
 
+// Law Firms API
 export const lawFirmsApi = {
-  getLawFirms: () => axiosInstance.get<LawFirm[]>("/api/v1/kancelarie/"),
-  createLawFirm: (data: CreateLawFirmRequest) => axiosInstance.post<LawFirm>("/api/v1/kancelarie/", data),
-  getLawFirmById: (firmId: number) => axiosInstance.get<LawFirm>(`/api/v1/kancelarie/${firmId}`),
-  updateLawFirm: (firmId: number, data: Partial<LawFirm>) =>
-    axiosInstance.put<LawFirm>(`/api/v1/kancelarie/${firmId}`, data),
-  deleteLawFirm: (firmId: number) => axiosInstance.delete(`/api/v1/kancelarie/${firmId}`),
+  getAll: () => apiClient.get("/api/v1/law-firms"),
+  create: (data: any) => apiClient.post("/api/v1/law-firms", data),
+  getById: (id: string) => apiClient.get(`/api/v1/law-firms/${id}`),
+  update: (id: string, data: any) => apiClient.put(`/api/v1/law-firms/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/api/v1/law-firms/${id}`),
 }
 
+// Clients API
 export const clientsApi = {
-  getClients: () => axiosInstance.get<Client[]>("/api/v1/klienci/"),
-  getClientById: (clientId: number) => axiosInstance.get<Client>(`/api/v1/klienci/${clientId}`),
-  // Add create, update, delete if needed
+  getAll: () => apiClient.get("/api/v1/clients"),
+  create: (data: any) => apiClient.post("/api/v1/clients", data),
+  getById: (id: string) => apiClient.get(`/api/v1/clients/${id}`),
+  update: (id: string, data: any) => apiClient.put(`/api/v1/clients/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/api/v1/clients/${id}`),
 }
 
+// Cases API
 export const casesApi = {
-  getCases: () => axiosInstance.get<Case[]>("/api/v1/sprawy/"),
-  createCase: (data: CreateCaseRequest) => axiosInstance.post<Case>("/api/v1/sprawy/", data),
-  getCaseById: (caseId: number) => axiosInstance.get<Case>(`/api/v1/sprawy/${caseId}`),
-  updateCaseStatus: (caseId: number, status: string) =>
-    axiosInstance.put<Case>(`/api/v1/sprawy/${caseId}/status`, { status }),
+  getAll: () => apiClient.get("/api/v1/cases"),
+  create: (data: any) => apiClient.post("/api/v1/cases", data),
+  getById: (id: string) => apiClient.get(`/api/v1/cases/${id}`),
+  update: (id: string, data: any) => apiClient.put(`/api/v1/cases/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/api/v1/cases/${id}`),
 }
 
+// Dashboard API
 export const dashboardApi = {
-  getStats: () => axiosInstance.get<DashboardStatsResponse>("/api/v1/admin/dashboard/stats"),
-  getActivity: () => axiosInstance.get<any[]>("/api/v1/admin/dashboard/activity"), // Define a proper type for activity if available
+  getStats: () => apiClient.get("/api/v1/dashboard/stats"),
+  getActivity: () => apiClient.get("/api/v1/dashboard/activity"), // Define a proper type for activity if available
 }
 
+// Admin Users API
 export const adminUsersApi = {
-  getUsers: () => axiosInstance.get<AdminUser[]>("/api/v1/admin/users/"),
-  getUserById: (userId: number) => axiosInstance.get<AdminUser>(`/api/v1/admin/users/${userId}`),
-  updateUserStatus: (userId: number, isActive: boolean) =>
-    axiosInstance.put(`/api/v1/admin/users/${userId}/status`, { is_active: isActive }),
-  // Add other admin user management functions as needed
+  getAll: () => apiClient.get("/api/v1/admin/users"),
+  create: (data: any) => apiClient.post("/api/v1/admin/users", data),
+  getById: (id: string) => apiClient.get(`/api/v1/admin/users/${id}`),
+  update: (id: string, data: any) => apiClient.put(`/api/v1/admin/users/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/api/v1/admin/users/${id}`),
 }
 
-export default axiosInstance
+export default apiClient
