@@ -11,7 +11,7 @@ export function HeroSection() {
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-              LegalNexus – Inteligentna Platforma Prawna
+              Kancelaria X – Inteligentna Platforma Prawna
             </h1>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
               Szybkie odpowiedzi, zarządzanie dokumentami i wsparcie AI – wszystko w jednym miejscu. Bez zbędnych
@@ -36,8 +36,8 @@ export function HeroSection() {
           <div className="relative">
             <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden ring-1 ring-gray-200 dark:ring-gray-800">
               <Image
-                src="/images/legal-tech-symbol.png"
-                alt="Prawo i technologia"
+                src="/images/digital-gavel.png"
+                alt="Młotek sędziowski – cyfrowa transformacja prawa"
                 fill
                 className="object-cover"
                 priority
