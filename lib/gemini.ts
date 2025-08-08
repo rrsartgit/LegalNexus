@@ -1,9 +1,9 @@
 import { google } from "@ai-sdk/google"
 import { generateText, streamText } from "ai"
 
-const model = google("gemini-2.0-flash-exp", {
-  apiKey: "AIzaSyDbqFSRtuETTCQnQQARvsllJV6H573z_Hg",
-})
+// This uses the GOOGLE_GENERATIVE_AI_API_KEY environment variable automatically.
+// Do not expose the key on the client. Server only.
+export const geminiModel = google("gemini-2.0-flash-exp")
 
 export interface LegalQuery {
   question: string
@@ -100,7 +100,7 @@ export async function generateLegalResponse(query: LegalQuery): Promise<LegalRes
        Base your answer on the provided legal context, but if you don't find the answer in the context, state that clearly.`
 
   const { text } = await generateText({
-    model,
+    model: geminiModel,
     system: systemPrompt,
     prompt: query.question,
     maxTokens: 1000,
@@ -134,7 +134,7 @@ export function streamLegalResponse(query: LegalQuery) {
        ${relevantContext.join("\n\n")}`
 
   return streamText({
-    model,
+    model: geminiModel,
     system: systemPrompt,
     prompt: query.question,
     maxTokens: 1000,
