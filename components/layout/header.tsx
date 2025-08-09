@@ -178,3 +178,5 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
     </header>
   )
 }
+
+export default Header
