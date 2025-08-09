@@ -1,25 +1,42 @@
 -- Create legal_documents table for storing user-generated legal documents
 CREATE TABLE IF NOT EXISTS legal_documents (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    type VARCHAR(100) NOT NULL, -- 'pozew', 'umowa', 'odwolanie', etc.
-    recipient_name VARCHAR(255),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    title TEXT NOT NULL,
+    type TEXT NOT NULL,
+    recipient_name TEXT,
     recipient_address TEXT,
+    content TEXT NOT NULL,
     status VARCHAR(50) DEFAULT 'draft', -- 'draft', 'sent', 'completed'
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create index for faster queries
-CREATE INDEX IF NOT EXISTS idx_legal_documents_user_id ON legal_documents(user_id);
-CREATE INDEX IF NOT EXISTS idx_legal_documents_type ON legal_documents(type);
+CREATE INDEX IF NOT EXISTS idx_legal_documents_user ON legal_documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_legal_documents_status ON legal_documents(status);
 
 -- Enable RLS (Row Level Security)
 ALTER TABLE legal_documents ENABLE ROW LEVEL SECURITY;
 
--- Create policy for users to only see their own documents
-CREATE POLICY "Users can only see their own documents" ON legal_documents
-    FOR ALL USING (auth.uid() = user_id);
+-- Policies (user can see/modify own docs)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'legal_documents' AND policyname = 'Users select own legal documents'
+  ) THEN
+    CREATE POLICY "Users select own legal documents" ON legal_documents
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'legal_documents' AND policyname = 'Users insert own legal documents'
+  ) THEN
+    CREATE POLICY "Users insert own legal documents" ON legal_documents
+      FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'legal_documents' AND policyname = 'Users update own legal documents'
+  ) THEN
+    CREATE POLICY "Users update own legal documents" ON legal_documents
+      FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;

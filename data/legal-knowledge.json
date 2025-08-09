@@ -1,22 +1,27 @@
 [
   {
-    "id": "kc-3531",
-    "title": "Kodeks Cywilny – Swoboda umów (art. 353¹)",
-    "content": "Strony zawierające umowę mogą ułożyć stosunek prawny według swojego uznania, byleby jego treść lub cel nie sprzeciwiały się właściwości (naturze) stosunku, ustawie ani zasadom współżycia społecznego."
+    "id": "kc-ogolne-zasady",
+    "title": "Kodeks Cywilny - Zasady ogólne",
+    "content": "Czynność prawna dokonana pod wpływem błędu może zostać uchylona, jeżeli błąd był istotny (art. 84 k.c.). Nieważna jest czynność prawna sprzeczna z ustawą albo mająca na celu obejście ustawy (art. 58 k.c.)."
   },
   {
-    "id": "kc-przedawnienie-117",
-    "title": "Kodeks Cywilny – Przedawnienie roszczeń (art. 117 § 1)",
-    "content": "Jeżeli ustawa nie stanowi inaczej, roszczenie majątkowe przedawnia się z upływem lat dziesięciu, a roszczenie o świadczenia okresowe oraz roszczenie związane z prowadzeniem działalności gospodarczej – z upływem lat trzech."
+    "id": "kp-wypowiedzenie",
+    "title": "Kodeks Pracy - Wypowiedzenie umowy",
+    "content": "Wypowiedzenie umowy o pracę powinno nastąpić na piśmie. W przypadku umowy na czas nieokreślony pracodawca musi wskazać przyczynę uzasadniającą wypowiedzenie (art. 30 §4 k.p.). Okresy wypowiedzenia zależą od stażu pracy u danego pracodawcy."
   },
   {
-    "id": "kp-wypowiedzenie-30",
-    "title": "Kodeks Pracy – Wypowiedzenie umowy (art. 30 § 1 oraz okresy wypowiedzenia)",
-    "content": "Każda ze stron może wypowiedzieć umowę o pracę zawartą na czas nieokreślony z zachowaniem okresu wypowiedzenia. Okres wypowiedzenia: 2 tygodnie (< 6 mies.), 1 miesiąc (≥ 6 mies.), 3 miesiące (≥ 3 lata)."
+    "id": "kpa-odwolanie",
+    "title": "KPA - Odwołanie od decyzji",
+    "content": "Od decyzji wydanej w pierwszej instancji służy odwołanie do organu wyższego stopnia w terminie czternastu dni od doręczenia decyzji stronie (art. 127 §1, art. 129 §1 k.p.a.)."
   },
   {
-    "id": "kpa-odwolanie-127",
-    "title": "KPA – Odwołanie od decyzji (art. 127 § 1 i termin)",
-    "content": "Od decyzji wydanej w pierwszej instancji służy odwołanie do organu wyższego stopnia, w terminie 14 dni od doręczenia decyzji, za pośrednictwem organu, który wydał decyzję."
+    "id": "kpc-nakaz-zaplaty",
+    "title": "KPC - Nakaz zapłaty i sprzeciw",
+    "content": "Pozwany może wnieść sprzeciw od nakazu zapłaty w terminie dwóch tygodni od doręczenia. Wniesienie sprzeciwu powoduje utratę mocy nakazu zapłaty (przepisy o postępowaniu upominawczym)."
+  },
+  {
+    "id": "rodo-informacyjne",
+    "title": "RODO - Obowiązki informacyjne",
+    "content": "Administrator danych musi przekazać osobie, której dane dotyczą, informacje o celach i podstawach przetwarzania, odbiorcach, okresie przechowywania oraz prawach przysługujących osobie."
   }
 ]

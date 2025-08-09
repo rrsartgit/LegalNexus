@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogIn, LogOut, FileText, Scale, Info, Home, BookOpen, Shield, Gavel } from "lucide-react"
+import { Menu, User, LogIn, LogOut, FileText, Scale, Info, Home, BookOpen, Shield } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { usePathname } from "next/navigation"
 
 interface HeaderProps {
   onMenuToggle?: (isOpen: boolean) => void
@@ -28,33 +27,18 @@ interface HeaderProps {
 export function Header({ onMenuToggle, showMenuButton = false, onNavigate, currentSection }: HeaderProps) {
   const { user, isAuthenticated, signOut } = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
-  const pathname = usePathname()
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    const onScroll = () => setIsScrolled(window.scrollY > 50)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const navItems = [
     { name: "Strona Główna", key: "home", icon: Home },
-    { name: "Asystent AI", key: "asystent-ai", icon: FileText },
-    { name: "Blog", key: "blog", icon: BookOpen },
-    { name: "Poradniki", key: "poradniki", icon: BookOpen },
-  ]
-
-  const servicesDropdown = [
-    { name: "Analiza dokumentów", href: "/analiza-dokumentow", icon: FileText },
-    { name: "Pisma prawne", href: "/pisma-prawne", icon: Scale },
-    { name: "Konsultacje", href: "/konsultacje", icon: Gavel },
-    { name: "Reprezentacja", href: "/reprezentacja", icon: Gavel },
+    { name: "Asystent AI", key: "asystent-ai", icon: FileText, href: "/asystent-ai" },
+    { name: "Blog", key: "blog", icon: BookOpen, href: "/blog" },
+    { name: "Poradniki", key: "poradniki", icon: BookOpen, href: "/poradniki" },
   ]
 
   const informationDropdown = [
@@ -66,14 +50,8 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
 
   const companyDropdown = [{ name: "Jak to działa", href: "/jak-to-dziala", icon: Info }]
 
-  const handleLogout = async () => {
-    await signOut()
-    window.location.href = "/"
-  }
-
   const getUserPanelLink = () => {
     if (!user) return "/panel-klienta"
-
     switch (user.role) {
       case "admin":
         return "/admin"
@@ -84,27 +62,28 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
     }
   }
 
+  const handleLogout = async () => {
+    await signOut()
+    window.location.href = "/"
+  }
+
   const handleNavClick = (item: any) => {
-    if (item.href) {
-      window.location.href = item.href
-    } else if (onNavigate) {
-      onNavigate(item.key)
-    }
+    if (item.href) window.location.href = item.href
+    else if (onNavigate) onNavigate(item.key)
   }
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all ${
         isScrolled ? "shadow-md" : ""
       }`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg text-blue-700 dark:text-blue-400">
           <Scale className="h-6 w-6" />
-          LegalNexus
+          Kancelaria X
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-6">
           {navItems.map((item) => (
             <Button
@@ -119,35 +98,9 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
             </Button>
           ))}
 
-          {/* Services Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                Usługi
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              {servicesDropdown.map((item) => (
-                <DropdownMenuItem key={item.name} asChild>
-                  <Link href={item.href} className="flex items-center">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Information Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-              >
+              <Button variant="ghost" className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Informacje
               </Button>
             </DropdownMenuTrigger>
@@ -163,13 +116,9 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Company Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-              >
+              <Button variant="ghost" className="text-sm font-medium text-gray-600 dark:text-gray-300">
                 Firma
               </Button>
             </DropdownMenuTrigger>
@@ -186,10 +135,8 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
           </DropdownMenu>
         </nav>
 
-        {/* Auth/User Actions */}
         <div className="flex items-center gap-4">
           <ThemeToggle />
-
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -210,22 +157,18 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    <p className="text-xs leading-none text-muted-foreground capitalize">
-                      {user.role === "client" ? "Klient" : user.role === "operator" ? "Operator" : "Administrator"}
-                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={getUserPanelLink()}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Mój panel</span>
-                  </Link>
+                  <Link href={getUserPanelLink()}>Mój panel</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/ustawienia-bezpieczenstwa">Bezpieczeństwo</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Wyloguj</span>
+                  <LogOut className="mr-2 h-4 w-4" /> Wyloguj
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -233,26 +176,23 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
             <div className="flex gap-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/logowanie">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Logowanie
+                  <LogIn className="mr-2 h-4 w-4" /> Logowanie
                 </Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="/rejestracja">
-                  <User className="mr-2 h-4 w-4" />
-                  Rejestracja
+                  <User className="mr-2 h-4 w-4" /> Rejestracja
                 </Link>
               </Button>
             </div>
           )}
 
-          {/* Mobile Navigation Toggle */}
           {showMenuButton && (
             <Sheet onOpenChange={onMenuToggle}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle navigation menu</span>
+                  <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
@@ -262,51 +202,11 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
                       key={item.name}
                       variant="ghost"
                       onClick={() => handleNavClick(item)}
-                      className="flex items-center gap-3 text-lg font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 justify-start"
+                      className="justify-start"
                     >
-                      <item.icon className="h-5 w-5" />
                       {item.name}
                     </Button>
                   ))}
-                  <div className="border-t pt-4 mt-4">
-                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Usługi</h3>
-                    {servicesDropdown.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-3 text-base py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="border-t pt-4 mt-4">
-                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Informacje</h3>
-                    {informationDropdown.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-3 text-base py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="border-t pt-4 mt-4">
-                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Firma</h3>
-                    {companyDropdown.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-3 text-base py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>

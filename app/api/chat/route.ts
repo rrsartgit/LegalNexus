@@ -1,34 +1,33 @@
 import { NextResponse } from "next/server"
-import { streamText } from "ai"
-import { geminiModel } from "@/lib/gemini"
-import { buildSystemPrompt, retrieveTopK } from "@/lib/rag"
+import { generateText } from "ai"
+import { google } from "@ai-sdk/google"
+import { retrieveContext } from "@/lib/rag"
 
-// POST /api/chat - streaming chat with RAG
+// RAG chat endpoint using Gemini via the AI SDK.
+// Uses GOOGLE_GENERATIVE_AI_API_KEY from env (no hardcoding). [^6]
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    // Expect { messages: [{ role: "user" | "assistant" | "system", content: string }, ...] }
-    const messages = (body?.messages ?? []) as Array<{ role: string; content: string }>
+    const { message } = await req.json()
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "Brak wiadomości" }, { status: 400 })
+    }
 
-    // last user question
-    const lastUser = [...messages].reverse().find((m) => m.role === "user")
-    const question = lastUser?.content?.slice(0, 4000) || "Brak pytania."
-    const language: "pl" | "en" = /[ąćęłńóśźż]/i.test(question) ? "pl" : "en"
+    // Retrieve top-k context with embeddings + cosine similarity. [^4][^5]
+    const { context, sources } = await retrieveContext(message)
 
-    // Retrieval
-    const contexts = retrieveTopK(question, 3)
-    const system = buildSystemPrompt(language, contexts)
+    const system =
+      "Jesteś asystentem prawnym. Odpowiadasz zwięźle i po polsku, bazując WYŁĄCZNIE na dostarczonym kontekście. " +
+      "Jeśli kontekst nie wystarcza, powiedz czego brakuje. Dodaj krótką listę kroków praktycznych."
 
-    const result = await streamText({
-      model: geminiModel,
+    const { text } = await generateText({
+      model: google("gemini-1.5-flash"),
       system,
-      prompt: question,
-      // Keep tokens generous but safe
-      maxTokens: 900,
+      prompt: `Kontekst:\n${context}\n\nPytanie użytkownika: ${message}\n\nOdpowiedź:`,
     })
 
-    return result.toAIStreamResponse()
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Chat error" }, { status: 500 })
+    return NextResponse.json({ text, sources })
+  } catch (e) {
+    console.error(e)
+    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 })
   }
 }

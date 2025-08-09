@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/lib/auth"
-import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/use-toast"
@@ -19,55 +19,84 @@ export default function LogowaniePage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const { signInWithEmail, loading, isAuthenticated } = useAuth()
+  const [otpMode, setOtpMode] = useState(false)
+  const [otpCode, setOtpCode] = useState("")
+  const [mfaCode, setMfaCode] = useState("")
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+
+  const {
+    signInWithEmail,
+    signInWithOAuth,
+    signInWithOtpEmail,
+    verifyOtpEmail,
+    verifyMfaChallenge,
+    loading,
+    isAuthenticated,
+  } = useAuth()
   const router = useRouter()
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/panel-klienta")
     }
   }, [isAuthenticated, router])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const { user, error } = await signInWithEmail(email, password)
-
-    if (error) {
-      toast({
-        title: "Błąd logowania",
-        description: error,
-        variant: "destructive",
-      })
-    } else if (user) {
-      toast({
-        title: "Zalogowano pomyślnie!",
-        description: `Witaj z powrotem, ${user.name}!`,
-      })
-
-      // Redirect based on user role
-      if (user.role === "admin") {
-        router.push("/admin")
-      } else if (user.role === "operator") {
-        router.push("/panel-operatora")
-      } else {
-        router.push("/panel-klienta")
-      }
+    const res = await signInWithEmail(email, password)
+    if (res.error) {
+      toast({ title: "Błąd logowania", description: res.error, variant: "destructive" })
+    } else if (res.mfa?.factorId) {
+      setMfaFactorId(res.mfa.factorId)
+      toast({ title: "Wymagana weryfikacja 2FA", description: "Podaj kod z aplikacji." })
+    } else if (res.user) {
+      toast({ title: "Zalogowano pomyślnie!", description: `Witaj z powrotem, ${res.user.name}!` })
+      router.push("/panel-klienta")
     }
   }
 
-  const handleSocialLogin = (provider: string) => {
-    toast({
-      title: "Funkcja w budowie",
-      description: `Logowanie przez ${provider} zostanie wkrótce dodane.`,
-    })
+  const handleOAuth = async (provider: "google" | "facebook") => {
+    const ok = await signInWithOAuth(provider)
+    if (!ok) {
+      toast({
+        title: `Logowanie przez ${provider} niedostępne`,
+        description: "Upewnij się, że konfiguracja dostawcy w Supabase jest poprawna.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const startOtp = async () => {
+    if (!email) return toast({ title: "Podaj email" })
+    const ok = await signInWithOtpEmail(email)
+    if (ok) {
+      setOtpMode(true)
+      toast({ title: "Kod wysłany", description: "Sprawdź skrzynkę pocztową." })
+    } else {
+      toast({ title: "Nie udało się wysłać kodu", variant: "destructive" })
+    }
+  }
+
+  const confirmOtp = async () => {
+    const res = await verifyOtpEmail(email, otpCode)
+    if (res?.user) router.push("/panel-klienta")
+    else toast({ title: "Błędny lub wygasły kod", variant: "destructive" })
+  }
+
+  const confirmMfa = async () => {
+    if (!mfaFactorId || !mfaCode) return
+    const ok = await verifyMfaChallenge(mfaFactorId, mfaCode)
+    if (ok) {
+      toast({ title: "Zweryfikowano 2FA" })
+      router.push("/panel-klienta")
+    } else {
+      toast({ title: "Nieprawidłowy kod 2FA", variant: "destructive" })
+    }
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-montserrat">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-
       <main className="flex-1 py-12">
         <div className="max-w-md mx-auto px-4">
           <Button variant="ghost" asChild className="mb-6">
@@ -84,12 +113,12 @@ export default function LogowaniePage() {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              {/* Social Login */}
+              {/* OAuth */}
               <div className="space-y-3">
                 <Button
                   variant="outline"
                   className="w-full bg-transparent"
-                  onClick={() => handleSocialLogin("google")}
+                  onClick={() => void handleOAuth("google")}
                   disabled={loading}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -112,11 +141,10 @@ export default function LogowaniePage() {
                   </svg>
                   Zaloguj przez Google
                 </Button>
-
                 <Button
                   variant="outline"
                   className="w-full bg-transparent"
-                  onClick={() => handleSocialLogin("facebook")}
+                  onClick={() => void handleOAuth("facebook")}
                   disabled={loading}
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -135,56 +163,96 @@ export default function LogowaniePage() {
                 </div>
               </div>
 
-              {/* Login Form */}
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Adres email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="twoj@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Hasło</Label>
-                  <div className="relative">
+              {/* Password login */}
+              {!otpMode && (
+                <form onSubmit={handlePasswordLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Adres email</Label>
                     <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Wprowadź hasło"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      id="email"
+                      type="email"
+                      placeholder="twoj@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <Link href="/zapomnialem-hasla" className="text-sm text-blue-600 hover:underline">
-                    Zapomniałeś hasła?
-                  </Link>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Hasło</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Wprowadź hasło"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={loading}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Logowanie..." : "Zaloguj się"}
-                </Button>
-              </form>
+                  {mfaFactorId && (
+                    <div className="space-y-2">
+                      <Label htmlFor="mfa">Kod 2FA</Label>
+                      <Input
+                        id="mfa"
+                        value={mfaCode}
+                        onChange={(e) => setMfaCode(e.target.value)}
+                        placeholder="123456"
+                      />
+                      <Button type="button" onClick={() => void confirmMfa()} className="w-full">
+                        Potwierdź 2FA
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <Button type="button" variant="ghost" onClick={() => void startOtp()}>
+                      Zaloguj kodem OTP
+                    </Button>
+                    <Link href="/zapomnialem-hasla" className="text-sm text-blue-600 hover:underline">
+                      Zapomniałeś hasła?
+                    </Link>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Logowanie..." : "Zaloguj się"}
+                  </Button>
+                </form>
+              )}
+
+              {/* OTP login */}
+              {otpMode && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>Kod OTP</Label>
+                    <Input
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      placeholder="Wpisz 6-cyfrowy kod"
+                    />
+                  </div>
+                  <Button className="w-full" onClick={() => void confirmOtp()} disabled={loading}>
+                    Potwierdź kod
+                  </Button>
+                  <Button variant="ghost" className="w-full" onClick={() => setOtpMode(false)}>
+                    Wróć do logowania hasłem
+                  </Button>
+                </div>
+              )}
 
               <div className="text-center">
                 <span className="text-gray-600">Nie masz konta? </span>
@@ -193,20 +261,14 @@ export default function LogowaniePage() {
                 </Link>
               </div>
 
-              {/* Development access info */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm">
-                <h4 className="font-medium text-blue-800 mb-2">Dostęp do paneli (rozwój):</h4>
-                <ul className="text-blue-700 space-y-1">
-                  <li>• Panel klienta: dowolny email bez "admin" lub "operator"</li>
-                  <li>• Panel operatora: email zawierający "operator"</li>
-                  <li>• Panel administratora: email zawierający "admin"</li>
-                </ul>
+              <div className="mt-4 p-3 bg-blue-50 rounded text-xs flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-blue-600" />
+                Włącz 2FA po zalogowaniu w sekcji "Bezpieczeństwo".
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
-
       <Footer />
     </div>
   )

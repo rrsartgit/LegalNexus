@@ -1,81 +1,47 @@
-import legalDocs from "@/data/legal-knowledge.json"
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { cosineSimilarity, embedMany } from "ai"
+import { google } from "@ai-sdk/google"
 
-export type LegalDoc = {
-  id: string
-  title: string
-  content: string
+type KBItem = { id: string; title: string; content: string }
+
+let kbCache: KBItem[] | null = null
+let embedsCache: number[][] | null = null
+
+function loadKB(): KBItem[] {
+  if (kbCache) return kbCache
+  const file = path.join(process.cwd(), "data", "legal-knowledge.json")
+  const raw = readFileSync(file, "utf8")
+  kbCache = JSON.parse(raw)
+  return kbCache!
 }
 
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean)
-}
+export async function retrieveContext(question: string, topK = 4) {
+  const kb = loadKB()
+  const chunks = kb.map((k) => k.content)
 
-function termFreq(tokens: string[]): Map<string, number> {
-  const map = new Map<string, number>()
-  for (const t of tokens) map.set(t, (map.get(t) || 0) + 1)
-  return map
-}
-
-function score(query: string, doc: LegalDoc): number {
-  // Lightweight lexical similarity (BM25-like without IDF for simplicity)
-  const qTokens = tokenize(query)
-  const dTokens = tokenize(doc.content + " " + doc.title)
-  const dFreq = termFreq(dTokens)
-  let s = 0
-  for (const q of qTokens) {
-    const f = dFreq.get(q) || 0
-    if (f > 0) s += 1 + Math.log(1 + f)
-    else {
-      // partial match for Polish inflections (rudimentary)
-      for (const [term, f2] of dFreq) {
-        if (term.startsWith(q) || q.startsWith(term)) {
-          s += 0.25 * (1 + Math.log(1 + f2))
-          break
-        }
-      }
-    }
+  if (!embedsCache) {
+    const { embeddings } = await embedMany({
+      model: google.textEmbeddingModel("text-embedding-004"),
+      values: chunks,
+    })
+    embedsCache = embeddings
   }
-  // length normalization
-  return s / Math.sqrt(1 + dTokens.length / 200)
-}
 
-export function retrieveTopK(query: string, k = 3): LegalDoc[] {
-  const ranked = (legalDocs as LegalDoc[])
-    .map((d) => ({ d, s: score(query, d) }))
-    .filter((x) => x.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, k)
-    .map((x) => x.d)
-  return ranked
-}
+  const { embeddings: qEmb } = await embedMany({
+    model: google.textEmbeddingModel("text-embedding-004"),
+    values: [question],
+  })
+  const q = qEmb[0]
 
-export function buildSystemPrompt(language: "pl" | "en", contexts: LegalDoc[]): string {
-  const contextBlock =
-    contexts.length > 0
-      ? contexts
-          .map(
-            (c, i) =>
-              `[#${i + 1}] ${c.title}\nFragment (nie traktuj jako porady prawnej, lecz materiał kontekstowy):\n${c.content}`,
-          )
-          .join("\n\n")
-      : "Brak dopasowanego kontekstu – odpowiedz ogólnie i wskaż konieczność konsultacji z prawnikiem."
+  const ranked = embedsCache!.map((e, i) => ({ idx: i, sim: cosineSimilarity(q, e) }))
+  ranked.sort((a, b) => b.sim - a.sim)
 
-  if (language === "pl") {
-    return `Jesteś profesjonalnym asystentem prawnym AI dla polskiego systemu prawnego. 
-Udzielaj rzetelnych, rzeczowych odpowiedzi w języku polskim, a na końcu dodawaj krótkie zastrzeżenie o konieczności weryfikacji przez prawnika.
-Jeśli kontekst nie wystarcza, odpowiedz co możesz i wskaż czego brakuje.
+  const selected = ranked.slice(0, topK).map((r) => kb[r.idx])
+  const context = selected.map((s) => `Źródło: ${s.title}\n${s.content}`).join("\n\n")
 
-Kontekst (RAG):
-${contextBlock}`
+  return {
+    context,
+    sources: selected.map((s) => ({ id: s.id, title: s.title })),
   }
-  return `You are a professional legal AI assistant. 
-Provide accurate, concise answers in English, and include a short disclaimer that a qualified lawyer should verify the response.
-If the context is insufficient, say what is missing.
-
-Context (RAG):
-${contextBlock}`
 }
