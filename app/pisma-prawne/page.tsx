@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { toast } from "@/components/ui/use-toast"
 import { Loader2, PlusCircle } from "lucide-react"
 
 type DocumentItem = {
@@ -31,14 +30,12 @@ export default function PismaPrawnePage() {
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [loadingList, setLoadingList] = useState(false)
 
-  const fetchDocs = async () => {
+  async function fetchDocs() {
     try {
       setLoadingList(true)
       const res = await fetch("/api/documents")
       const data = await res.json()
-      if (data.documents) setDocs(data.documents)
-    } catch {
-      // ignore
+      setDocs(data.documents || [])
     } finally {
       setLoadingList(false)
     }
@@ -48,54 +45,35 @@ export default function PismaPrawnePage() {
     void fetchDocs()
   }, [])
 
-  const submit = async () => {
-    if (!title || !content) {
-      toast({ title: "Uzupełnij wymagane pola", variant: "destructive" })
-      return
-    }
+  async function submit() {
+    if (!title || !content) return
     try {
       setLoading(true)
-      const res = await fetch("/api/documents", {
-        method: "POST",
-        body: (() => {
-          const fd = new FormData()
-          fd.append("title", title)
-          fd.append("content", content)
-          fd.append("type", type)
-          fd.append("recipientName", recipientName)
-          fd.append("recipientAddress", recipientAddress)
-          return fd
-        })(),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Błąd")
-      toast({ title: "Pismo zapisane jako szkic" })
+      const fd = new FormData()
+      fd.append("title", title)
+      fd.append("type", type)
+      fd.append("recipientName", recipientName)
+      fd.append("recipientAddress", recipientAddress)
+      fd.append("content", content)
+      const res = await fetch("/api/documents", { method: "POST", body: fd })
+      if (!res.ok) throw new Error("Błąd zapisu")
       setTitle("")
       setContent("")
       setRecipientName("")
       setRecipientAddress("")
-      void fetchDocs()
-    } catch (e: any) {
-      toast({ title: "Błąd zapisu pisma", description: e.message, variant: "destructive" })
+      await fetchDocs()
     } finally {
       setLoading(false)
     }
   }
 
-  const markSubmitted = async (id: string) => {
-    try {
-      const res = await fetch(`/api/documents/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "submitted" }),
-      })
-      if (res.ok) {
-        toast({ title: "Pismo przesłane do analizy" })
-        void fetchDocs()
-      }
-    } catch {
-      toast({ title: "Nie udało się zaktualizować statusu", variant: "destructive" })
-    }
+  async function markSubmitted(id: string) {
+    const res = await fetch(`/api/documents/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "submitted" }),
+    })
+    if (res.ok) await fetchDocs()
   }
 
   return (
@@ -105,7 +83,6 @@ export default function PismaPrawnePage() {
         <Card>
           <CardHeader>
             <CardTitle>Utwórz pismo</CardTitle>
-            <p className="text-sm text-muted-foreground">Zapisz jako szkic i wyślij do operatora</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -115,7 +92,7 @@ export default function PismaPrawnePage() {
               </div>
               <div>
                 <Label htmlFor="type">Typ</Label>
-                <Input id="type" value={type} onChange={(e) => setType(e.target.value)} placeholder="np. sprzeciw" />
+                <Input id="type" value={type} onChange={(e) => setType(e.target.value)} />
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
@@ -130,7 +107,7 @@ export default function PismaPrawnePage() {
             </div>
             <div>
               <Label htmlFor="content">Treść</Label>
-              <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} rows={10} />
+              <Textarea id="content" rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
             </div>
             <Button onClick={() => void submit()} disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
@@ -142,19 +119,18 @@ export default function PismaPrawnePage() {
         <Card>
           <CardHeader>
             <CardTitle>Moje pisma</CardTitle>
-            <p className="text-sm text-muted-foreground">Lista zapisanych pism</p>
           </CardHeader>
           <CardContent className="space-y-3">
-            {loadingList && <div className="text-sm text-muted-foreground">Ładowanie...</div>}
-            {docs.length === 0 && !loadingList && <div className="text-sm text-muted-foreground">Brak pism</div>}
+            {loadingList && <div>Ładowanie…</div>}
+            {!loadingList && docs.length === 0 && <div>Brak pism</div>}
             {docs.map((d) => (
-              <div key={d.id} className="border rounded-md p-3 bg-white flex items-center justify-between">
+              <div key={d.id} className="border rounded p-3 bg-white flex items-center justify-between">
                 <div>
                   <div className="font-medium">{d.title}</div>
                   <div className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString("pl-PL")}</div>
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="mr-2">{`Typ: ${d.type}`}</Badge>
-                    <Badge>{`Status: ${d.status}`}</Badge>
+                  <div className="mt-1 flex gap-2">
+                    <Badge variant="secondary">Typ: {d.type}</Badge>
+                    <Badge>Status: {d.status}</Badge>
                   </div>
                 </div>
                 {d.status === "draft" && (

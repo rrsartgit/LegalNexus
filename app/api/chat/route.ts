@@ -1,32 +1,32 @@
-import { retrieveTopK, buildSystemPrompt } from "@/lib/rag"
-import { geminiModel } from "@/lib/ai/gemini-server"
-import { streamText } from "ai"
+import { NextResponse } from "next/server"
+import { generateText } from "ai"
+import { google } from "@ai-sdk/google"
+import { retrieveContext } from "@/lib/rag"
 
-// POST /api/chat
+// Wykorzystujemy AI SDK + Gemini, klucz pobierany z GOOGLE_GENERATIVE_AI_API_KEY [^6].
+// RAG: embeddingi + cosine similarity i dołączenie kontekstu [^4][^5].
 export async function POST(req: Request) {
   try {
-    const { question, language } = await req.json()
-    const q = typeof question === "string" && question.trim().length > 0 ? question.trim() : "Brak pytania."
-    const lang: "pl" | "en" = language === "pl" || language === "en" ? language : /[ąćęłńóśźż]/i.test(q) ? "pl" : "en"
+    const { message } = await req.json()
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "Brak wiadomości" }, { status: 400 })
+    }
 
-    const { context, sources } = retrieveTopK(q, 3)
-    const system = buildSystemPrompt(lang, context)
+    const { context, sources } = await retrieveContext(message)
 
-    const result = await streamText({
-      model: geminiModel,
+    const system =
+      "Jesteś asystentem prawnym. Odpowiadasz zwięźle po polsku wyłącznie w oparciu o kontekst. " +
+      "Jeśli kontekst jest niewystarczający, wskaż, czego brakuje, oraz zaproponuj praktyczne kroki."
+
+    const { text } = await generateText({
+      model: google("gemini-1.5-flash"),
       system,
-      prompt: q,
-      maxTokens: 800,
+      prompt: `Kontekst:\n${context}\n\nPytanie: ${message}\n\nOdpowiedź:`,
     })
 
-    // AI SDK helper zwraca strumień odpowiedzi HTTP kompatybilny z fetch/event-stream. [^1]
-    return result.toDataStreamResponse({
-      headers: {
-        "X-RAG-Sources": encodeURIComponent(JSON.stringify(sources)),
-      },
-    })
-  } catch (err) {
-    console.error("Chat API error:", err)
-    return new Response("Internal Server Error", { status: 500 })
+    return NextResponse.json({ text, sources })
+  } catch (e) {
+    console.error(e)
+    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 })
   }
 }

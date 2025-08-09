@@ -1,23 +1,23 @@
+import type React from "react"
+import type { Metadata } from "next"
 import "./globals.css"
-import type { ReactNode } from "react"
+import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
-import Header from "@/components/layout/header"
 
-export const metadata = {
-  title: "Kancelaria X",
-  description: "Nowoczesne usługi prawne wspierane przez AI i RAG.",
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Kancelaria X — Nowoczesne Usługi Prawne",
+  description: "Kancelaria X: analiza dokumentów, konsultacje oraz wsparcie AI dla prawa w Polsce.",
     generator: 'v0.dev'
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Header />
-          <main role="main" className="min-h-[calc(100vh-64px)]">
-            {children}
-          </main>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
         </ThemeProvider>
       </body>
     </html>

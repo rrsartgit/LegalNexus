@@ -1,218 +1,177 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Header } from "@/components/layout/header"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAuth, mockLogin } from "@/lib/auth"
+import { Textarea } from "@/components/ui/textarea"
 import {
   FileText,
-  Filter,
-  User,
-  Settings,
   BarChart3,
   Users,
   MessageSquare,
-  CheckCircle2,
-  Clock4,
-  AlertCircle,
+  Settings,
+  Filter,
   Search,
+  CheckCircle2,
+  AlertCircle,
+  Clock4,
 } from "lucide-react"
 
-interface Task {
+type Tab = "zadania" | "statystyki" | "klienci" | "szablony" | "ustawienia"
+
+type Task = {
   id: string
-  caseId: string
-  clientName: string
-  type: string
   title: string
+  clientName: string
   priority: "high" | "medium" | "low"
-  deadline: Date
+  deadline: string
   status: "pending" | "in_progress" | "completed"
-  documents: string[]
-  clientNotes: string
 }
+const mockTasks: Task[] = [
+  {
+    id: "1",
+    title: "Analiza nakazu zapłaty",
+    clientName: "Jan Kowalski",
+    priority: "high",
+    deadline: "2025-08-18",
+    status: "pending",
+  },
+  {
+    id: "2",
+    title: "Sprzeciw od nakazu",
+    clientName: "Anna Nowak",
+    priority: "medium",
+    deadline: "2025-08-20",
+    status: "in_progress",
+  },
+  {
+    id: "3",
+    title: "Analiza wezwania",
+    clientName: "Piotr Wiśniewski",
+    priority: "low",
+    deadline: "2025-08-25",
+    status: "completed",
+  },
+]
 
-type Template = { id: string; name: string; content: string }
-
-export default function PanelOperatoraPage() {
-  const { user, isAuthenticated } = useAuth()
-  const [activeTab, setActiveTab] = useState<"zadania" | "statystyki" | "klienci" | "szablony" | "ustawienia">(
-    "zadania",
-  )
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
+export default function OperatorPanel() {
+  const [tab, setTab] = useState<Tab>("zadania")
   useEffect(() => {
-    if (!isAuthenticated) {
-      mockLogin("operator@example.com", "operator")
-    }
-  }, [isAuthenticated])
-
-  const mockTasks: Task[] = [
-    {
-      id: "1",
-      caseId: "1",
-      clientName: "Jan Kowalski",
-      type: "analysis",
-      title: "Analiza nakazu zapłaty",
-      priority: "high",
-      deadline: new Date("2025-07-20"),
-      status: "pending",
-      documents: ["nakaz_zaplaty.pdf"],
-      clientNotes: "Nie zgadzam się z nakazem, uważam że jest bezpodstawny.",
-    },
-    {
-      id: "2",
-      caseId: "2",
-      clientName: "Anna Nowak",
-      type: "document",
-      title: "Sprzeciw od nakazu zapłaty",
-      priority: "medium",
-      deadline: new Date("2025-07-22"),
-      status: "in_progress",
-      documents: ["analiza_completed.pdf"],
-      clientNotes: "Proszę o szybkie przygotowanie sprzeciwu.",
-    },
-    {
-      id: "3",
-      caseId: "3",
-      clientName: "Piotr Wiśniewski",
-      type: "analysis",
-      title: "Analiza wezwania komornika",
-      priority: "low",
-      deadline: new Date("2025-07-25"),
-      status: "completed",
-      documents: ["wezwanie_komornik.jpg"],
-      clientNotes: "",
-    },
-  ]
-
-  const sidebarItems = [
-    { id: "zadania", label: "Zadania do wykonania", icon: FileText },
-    { id: "statystyki", label: "Statystyki", icon: BarChart3 },
-    { id: "klienci", label: "Klienci", icon: Users },
-    { id: "szablony", label: "Szablony odpowiedzi", icon: MessageSquare },
-    { id: "ustawienia", label: "Ustawienia", icon: Settings },
-  ] as const
-
-  const getPriorityBadge = (priority: Task["priority"]) => {
-    const map = {
-      high: "bg-red-100 text-red-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      low: "bg-green-100 text-green-800",
-    }
-    return map[priority]
-  }
-
-  const getStatusBadge = (status: Task["status"]) => {
-    const map = {
-      pending: { label: "Oczekuje", color: "bg-blue-100 text-blue-800", icon: Clock4 },
-      in_progress: { label: "W trakcie", color: "bg-yellow-100 text-yellow-800", icon: AlertCircle },
-      completed: { label: "Zakończone", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-    }
-    return map[status]
-  }
-
-  if (!isAuthenticated) {
-    return <div className="p-10 text-center">Ładowanie...</div>
-  }
+    /* ewentualne sprawdzenie roli */
+  }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
-      <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} showMenuButton />
-
-      <div className="flex flex-1">
-        <aside
-          className={`bg-white shadow-lg transition-all duration-300 ${sidebarOpen ? "w-64" : "w-64 hidden lg:block"}`}
-        >
-          <div className="p-6 h-full flex flex-col">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                <User className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium">{user?.name ?? "Operator"}</p>
-                <p className="text-xs text-gray-500">Panel operatora</p>
-              </div>
-            </div>
-
-            <nav className="space-y-2 flex-1">
-              {sidebarItems.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id as typeof activeTab)}
-                  className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
-                    activeTab === id ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon className="h-5 w-5 mr-3" />
-                  {label}
-                </button>
-              ))}
-            </nav>
-          </div>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header />
+      <main className="container mx-auto px-4 py-6 grid lg:grid-cols-[260px,1fr] gap-6">
+        <aside className="space-y-2">
+          <Button
+            variant={tab === "zadania" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setTab("zadania")}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Zadania do wykonania
+          </Button>
+          <Button
+            variant={tab === "statystyki" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setTab("statystyki")}
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Statystyki
+          </Button>
+          <Button
+            variant={tab === "klienci" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setTab("klienci")}
+          >
+            <Users className="mr-2 h-4 w-4" />
+            Klienci
+          </Button>
+          <Button
+            variant={tab === "szablony" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setTab("szablony")}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Szablony odpowiedzi
+          </Button>
+          <Button
+            variant={tab === "ustawienia" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setTab("ustawienia")}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Ustawienia
+          </Button>
         </aside>
 
-        <main className="flex-1 p-6">
-          {activeTab === "zadania" && (
+        <section className="space-y-6">
+          {tab === "zadania" && (
             <>
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Zadania do wykonania</h1>
-                <Button variant="outline" size="sm">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Zadania</h2>
+                <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
                   Filtruj
                 </Button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <StatCard
-                  title="Oczekujące"
-                  value={mockTasks.filter((t) => t.status === "pending").length}
-                  color="bg-blue-100 text-blue-800"
-                />
-                <StatCard
-                  title="W trakcie"
-                  value={mockTasks.filter((t) => t.status === "in_progress").length}
-                  color="bg-yellow-100 text-yellow-800"
-                />
-                <StatCard
-                  title="Zakończone"
-                  value={mockTasks.filter((t) => t.status === "completed").length}
-                  color="bg-green-100 text-green-800"
-                />
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Oczekujące</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-3xl font-semibold">
+                    {mockTasks.filter((t) => t.status === "pending").length}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>W trakcie</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-3xl font-semibold">
+                    {mockTasks.filter((t) => t.status === "in_progress").length}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Zakończone</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-3xl font-semibold">
+                    {mockTasks.filter((t) => t.status === "completed").length}
+                  </CardContent>
+                </Card>
               </div>
-
-              <div className="overflow-x-auto rounded-lg bg-white shadow">
+              <div className="overflow-x-auto rounded bg-white shadow">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-100 text-left">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">Tytuł</th>
-                      <th className="px-4 py-3">Klient</th>
-                      <th className="px-4 py-3">Priorytet</th>
-                      <th className="px-4 py-3">Termin</th>
-                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-2">Tytuł</th>
+                      <th className="px-4 py-2">Klient</th>
+                      <th className="px-4 py-2">Termin</th>
+                      <th className="px-4 py-2">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {mockTasks.map((task) => {
-                      const priorityClass = getPriorityBadge(task.priority)
-                      const statusMeta = getStatusBadge(task.status)
+                    {mockTasks.map((t) => {
+                      const meta =
+                        t.status === "pending"
+                          ? { label: "Oczekuje", icon: Clock4, cls: "bg-blue-100 text-blue-800" }
+                          : t.status === "in_progress"
+                            ? { label: "W trakcie", icon: AlertCircle, cls: "bg-yellow-100 text-yellow-800" }
+                            : { label: "Zakończone", icon: CheckCircle2, cls: "bg-green-100 text-green-800" }
                       return (
-                        <tr key={task.id} className="border-t">
-                          <td className="px-4 py-3 whitespace-nowrap">{task.title}</td>
-                          <td className="px-4 py-3">{task.clientName}</td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${priorityClass}`}>
-                              {task.priority === "high" ? "Wysoki" : task.priority === "medium" ? "Średni" : "Niski"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">{task.deadline.toLocaleDateString("pl-PL")}</td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${statusMeta.color}`}
-                            >
-                              <statusMeta.icon className="h-3 w-3" />
-                              {statusMeta.label}
+                        <tr key={t.id} className="border-t">
+                          <td className="px-4 py-2">{t.title}</td>
+                          <td className="px-4 py-2">{t.clientName}</td>
+                          <td className="px-4 py-2">{new Date(t.deadline).toLocaleDateString("pl-PL")}</td>
+                          <td className="px-4 py-2">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${meta.cls}`}>
+                              <meta.icon className="h-3 w-3" />
+                              {meta.label}
                             </span>
                           </td>
                         </tr>
@@ -224,7 +183,7 @@ export default function PanelOperatoraPage() {
             </>
           )}
 
-          {activeTab === "statystyki" && (
+          {tab === "statystyki" && (
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
@@ -244,36 +203,26 @@ export default function PanelOperatoraPage() {
                 </CardHeader>
                 <CardContent className="text-3xl font-semibold">4.7/5</CardContent>
               </Card>
-              <Card className="md:col-span-3">
-                <CardHeader>
-                  <CardTitle>Wydajność tygodniowa</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-40 bg-gradient-to-r from-blue-50 to-green-50 rounded border flex items-center justify-center text-sm text-muted-foreground">
-                    Wykres (placeholder)
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
 
-          {activeTab === "klienci" && (
+          {tab === "klienci" && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input placeholder="Szukaj klienta..." className="max-w-sm" />
                 <Button variant="outline">
-                  <Search className="h-4 w-4 mr-2" />
+                  <Search className="mr-2 h-4 w-4" />
                   Szukaj
                 </Button>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                {["Jan Kowalski", "Anna Nowak", "Piotr Wiśniewski", "Kancelaria ABC"].map((name, i) => (
+                {["Jan Kowalski", "Anna Nowak", "Piotr Wiśniewski", "Kancelaria ABC"].map((n, i) => (
                   <Card key={i}>
                     <CardHeader>
-                      <CardTitle className="text-base">{name}</CardTitle>
+                      <CardTitle className="text-base">{n}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                      Ostatnie pismo: {new Date(Date.now() - i * 86400000).toLocaleDateString("pl-PL")}
+                      Ostatnia aktywność: {new Date(Date.now() - i * 86400000).toLocaleDateString("pl-PL")}
                     </CardContent>
                   </Card>
                 ))}
@@ -281,15 +230,15 @@ export default function PanelOperatoraPage() {
             </div>
           )}
 
-          {activeTab === "szablony" && <TemplatesManager />}
+          {tab === "szablony" && <TemplatesManager />}
 
-          {activeTab === "ustawienia" && (
+          {tab === "ustawienia" && (
             <div className="grid md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Preferencje powiadomień</CardTitle>
+                  <CardTitle>Powiadomienia</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <CardContent className="text-sm text-muted-foreground">
                   E-mail: włączone
                   <br />
                   SMS: wyłączone
@@ -299,7 +248,7 @@ export default function PanelOperatoraPage() {
                 <CardHeader>
                   <CardTitle>Integracje</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <CardContent className="text-sm text-muted-foreground">
                   CRM: połączony
                   <br />
                   Archiwum: połączone
@@ -307,150 +256,54 @@ export default function PanelOperatoraPage() {
               </Card>
             </div>
           )}
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   )
 }
 
-function StatCard({ title, value, color }: { title: string; value: number; color: string }) {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className={`mt-2 text-3xl font-semibold ${color}`}>{value}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
 function TemplatesManager() {
-  const [templates, setTemplates] = useState<Template[]>([
+  const [templates, setTemplates] = useState<{ id: string; name: string; content: string }[]>([
     { id: "t1", name: "Sprzeciw od nakazu zapłaty", content: "Wnoszę sprzeciw od nakazu zapłaty..." },
     { id: "t2", name: "Wezwanie do zapłaty", content: "Wzywam do zapłaty kwoty..." },
   ])
   const [name, setName] = useState("")
   const [content, setContent] = useState("")
 
-  const add = () => {
-    if (!name || !content) return
-    setTemplates((t) => [{ id: Math.random().toString(36).slice(2), name, content }, ...t])
-    setName("")
-    setContent```tsx file="app/asystent-ai/page.tsx"
-"use client"
-
-import { useState } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Loader2, Send } from 'lucide-react'
-
-type ChatMessage = { role: "user" | "assistant"; content: string; sources?: { id: string; title: string }[] }
-
-export default function AsystentAIPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  const ask = async () => {
-    const question = input.trim()
-    if (!question) return
-    setInput("")
-    setMessages((m) => [...m, { role: "user", content: question }])
-
-    try {
-      setLoading(true)
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question }),
-      })
-      const data = await res.json()
-      const answer: ChatMessage = {
-        role: "assistant",
-        content: data.text ?? "Przepraszam, nie mogę teraz odpowiedzieć.",
-        sources: data.sources,
-      }
-      setMessages((m) => [...m, answer])
-    } catch {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: "Wystąpił błąd. Spróbuj ponownie za chwilę." },
-      ])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      void ask()
-    }
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Asystent AI (RAG)</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Zadaj pytanie z zakresu polskiego prawa. Model korzysta z kontekstu z bazy wiedzy (RAG).
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-2">
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`rounded-lg p-4 $\
-                    m.role === \"user" ? "bg-blue-50 text-gray-900" : "bg-white border"`}
-                >
-                  <div className="text-xs font-medium mb-2">
-                    {m.role === "user" ? "Ty" : "Asystent"}
-                  </div>
-                  <div className="whitespace-pre-wrap">{m.content}</div>
-                  {m.sources && m.sources.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {m.sources.map((s) => (
-                        <Badge key={s.id} variant="secondary" className="bg-gray-100">
-                          Źródło: {s.title}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {messages.length === 0 && (
-                <div className="text-sm text-muted-foreground">
-                  Przykład: "Jakie są przesłanki wypowiedzenia umowy o pracę przez pracodawcę?"
-                </div>
-              )}
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Nowy szablon</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input placeholder="Nazwa" value={name} onChange={(e) => setName(e.target.value)} />
+          <Textarea placeholder="Treść" rows={8} value={content} onChange={(e) => setContent(e.target.value)} />
+          <Button
+            onClick={() => {
+              if (!name || !content) return
+              setTemplates((t) => [{ id: crypto.randomUUID(), name, content }, ...t])
+              setName("")
+              setContent("")
+            }}
+          >
+            Dodaj
+          </Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Szablony</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {templates.map((t) => (
+            <div key={t.id} className="border rounded p-3 bg-white">
+              <div className="font-medium">{t.name}</div>
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{t.content}</div>
             </div>
-
-            <div className="space-y-2">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder="Napisz swoje pytanie. Ctrl/Cmd + Enter, aby wysłać."
-              />
-              <div className="flex justify-end">
-                <Button onClick={() => void ask()} disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  Wyślij
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
-      <Footer />
+          ))}
+        </CardContent>
+      </Card>
     </div>
   )
 }

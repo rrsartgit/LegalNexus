@@ -1,4 +1,6 @@
 -- Create legal_documents table for storing user-generated legal documents
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS legal_documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
@@ -7,8 +9,8 @@ CREATE TABLE IF NOT EXISTS legal_documents (
     recipient_name TEXT,
     recipient_address TEXT,
     content TEXT NOT NULL,
-    status VARCHAR(50) DEFAULT 'draft', -- 'draft', 'sent', 'completed'
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    status VARCHAR(50) NOT NULL DEFAULT 'draft', -- 'draft', 'sent', 'completed'
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- Create index for faster queries

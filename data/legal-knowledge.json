@@ -1,27 +1,27 @@
 [
   {
     "id": "kc-ogolne-zasady",
-    "title": "Kodeks Cywilny - Zasady ogólne",
+    "title": "Kodeks Cywilny — Zasady ogólne",
     "content": "Czynność prawna dokonana pod wpływem błędu może zostać uchylona, jeżeli błąd był istotny (art. 84 k.c.). Nieważna jest czynność prawna sprzeczna z ustawą albo mająca na celu obejście ustawy (art. 58 k.c.)."
   },
   {
     "id": "kp-wypowiedzenie",
-    "title": "Kodeks Pracy - Wypowiedzenie umowy",
-    "content": "Wypowiedzenie umowy o pracę powinno nastąpić na piśmie. W przypadku umowy na czas nieokreślony pracodawca musi wskazać przyczynę uzasadniającą wypowiedzenie (art. 30 §4 k.p.). Okresy wypowiedzenia zależą od stażu pracy u danego pracodawcy."
+    "title": "Kodeks Pracy — Wypowiedzenie umowy",
+    "content": "Wypowiedzenie umowy o pracę powinno nastąpić na piśmie. Przy umowie na czas nieokreślony pracodawca wskazuje przyczynę (art. 30 §4 k.p.). Okresy wypowiedzenia zależą od stażu pracy."
   },
   {
     "id": "kpa-odwolanie",
-    "title": "KPA - Odwołanie od decyzji",
-    "content": "Od decyzji wydanej w pierwszej instancji służy odwołanie do organu wyższego stopnia w terminie czternastu dni od doręczenia decyzji stronie (art. 127 §1, art. 129 §1 k.p.a.)."
+    "title": "KPA — Odwołanie od decyzji",
+    "content": "Od decyzji w I instancji służy odwołanie do organu wyższego stopnia w terminie 14 dni od doręczenia (art. 127 §1, art. 129 §1 k.p.a.)."
   },
   {
     "id": "kpc-nakaz-zaplaty",
-    "title": "KPC - Nakaz zapłaty i sprzeciw",
-    "content": "Pozwany może wnieść sprzeciw od nakazu zapłaty w terminie dwóch tygodni od doręczenia. Wniesienie sprzeciwu powoduje utratę mocy nakazu zapłaty (przepisy o postępowaniu upominawczym)."
+    "title": "KPC — Nakaz zapłaty i sprzeciw",
+    "content": "Pozwany wnosi sprzeciw od nakazu zapłaty w terminie 2 tygodni. Wniesienie sprzeciwu powoduje utratę mocy nakazu."
   },
   {
     "id": "rodo-informacyjne",
-    "title": "RODO - Obowiązki informacyjne",
-    "content": "Administrator danych musi przekazać osobie, której dane dotyczą, informacje o celach i podstawach przetwarzania, odbiorcach, okresie przechowywania oraz prawach przysługujących osobie."
+    "title": "RODO — Obowiązki informacyjne",
+    "content": "Administrator przekazuje cele i podstawy przetwarzania, odbiorców, okres przechowywania i prawa osoby, której dane dotyczą."
   }
 ]

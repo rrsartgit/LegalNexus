@@ -23,7 +23,6 @@ export default function AsystentAIPage() {
     if (!question) return
     setInput("")
     setMessages((m) => [...m, { role: "user", content: question }])
-
     try {
       setLoading(true)
       const res = await fetch("/api/chat", {
@@ -32,21 +31,16 @@ export default function AsystentAIPage() {
         body: JSON.stringify({ message: question }),
       })
       const data = await res.json()
-      const answer: ChatMessage = {
-        role: "assistant",
-        content: data.text ?? "Przepraszam, nie mogę teraz odpowiedzieć.",
-        sources: data.sources,
-      }
-      setMessages((m) => [...m, answer])
-    } catch (e) {
-      setMessages((m) => [...m, { role: "assistant", content: "Wystąpił błąd. Spróbuj ponownie za chwilę." }])
+      setMessages((m) => [...m, { role: "assistant", content: data.text ?? "Brak odpowiedzi.", sources: data.sources }])
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: "Błąd serwera. Spróbuj ponownie." }])
     } finally {
       setLoading(false)
     }
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
       void ask()
     }
@@ -60,22 +54,20 @@ export default function AsystentAIPage() {
           <CardHeader>
             <CardTitle>Asystent AI (RAG)</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Zadaj pytanie z zakresu polskiego prawa. Model korzysta z kontekstu z bazy wiedzy (RAG).
+              Odpowiedzi powstają z użyciem Retrieval-Augmented Generation na polskich aktach prawnych (przykładowa
+              baza).
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-2">
               {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`rounded-lg p-4 ${m.role === "user" ? "bg-blue-50 text-gray-900" : "bg-white border"}`}
-                >
+                <div key={i} className={`rounded-lg p-4 ${m.role === "user" ? "bg-blue-50" : "bg-white border"}`}>
                   <div className="text-xs font-medium mb-2">{m.role === "user" ? "Ty" : "Asystent"}</div>
                   <div className="whitespace-pre-wrap">{m.content}</div>
-                  {m.sources && m.sources.length > 0 && (
+                  {!!m.sources?.length && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {m.sources.map((s) => (
-                        <Badge key={s.id} variant="secondary" className="bg-gray-100">
+                      {m.sources!.map((s) => (
+                        <Badge key={s.id} variant="secondary">
                           Źródło: {s.title}
                         </Badge>
                       ))}
@@ -85,7 +77,7 @@ export default function AsystentAIPage() {
               ))}
               {messages.length === 0 && (
                 <div className="text-sm text-muted-foreground">
-                  Przykład: "Jakie są przesłanki wypowiedzenia umowy o pracę przez pracodawcę?"
+                  Przykład: "Jakie są przesłanki wypowiedzenia umowy o pracę?"
                 </div>
               )}
             </div>
@@ -95,7 +87,7 @@ export default function AsystentAIPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Napisz swoje pytanie. Ctrl/Cmd + Enter, aby wysłać."
+                placeholder="Zadaj pytanie (Ctrl/Cmd+Enter aby wysłać)"
               />
               <div className="flex justify-end">
                 <Button onClick={() => void ask()} disabled={loading}>
