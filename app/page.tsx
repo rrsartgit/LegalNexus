@@ -1,48 +1,29 @@
-"use client"
-
-import { useState } from "react"
-import { Header } from "@/components/layout/header"
-import { HeroSection } from "@/components/hero-section"
-import { FeaturesSection } from "@/components/features-section"
-import { StatsSection } from "@/components/stats-section"
-import { AsystentAISection } from "@/components/sections/asystent-ai-section"
-import { BlogSection } from "@/components/sections/blog-section"
-import { PoradnikiSection } from "@/components/sections/poradniki-section"
+import HeroSection from "@/components/hero-section"
 
 export default function HomePage() {
-  const [currentSection, setCurrentSection] = useState("home")
-
-  const handleNavigate = (section: string) => {
-    setCurrentSection(section)
-  }
-
-  const handleBack = () => {
-    setCurrentSection("home")
-  }
-
-  const renderCurrentSection = () => {
-    switch (currentSection) {
-      case "asystent-ai":
-        return <AsystentAISection onBack={handleBack} />
-      case "blog":
-        return <BlogSection onBack={handleBack} />
-      case "poradniki":
-        return <PoradnikiSection onBack={handleBack} />
-      default:
-        return (
-          <>
-            <HeroSection />
-            <FeaturesSection />
-            <StatsSection />
-          </>
-        )
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header onNavigate={handleNavigate} currentSection={currentSection} showMenuButton={true} />
-      {renderCurrentSection()}
+    <div className="flex w-full flex-col">
+      <HeroSection />
+      <section className="mx-auto w-full max-w-7xl px-4 pb-24">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-lg border p-6">
+            <h3 className="mb-2 text-lg font-semibold">Analiza dokumentów</h3>
+            <p className="text-sm text-muted-foreground">Szybkie i bezpieczne przetwarzanie umów, wniosków i pism.</p>
+          </div>
+          <div className="rounded-lg border p-6">
+            <h3 className="mb-2 text-lg font-semibold">Asystent AI</h3>
+            <p className="text-sm text-muted-foreground">
+              Odpowiedzi zasilane kontekstem (RAG) na podstawie aktów prawnych.
+            </p>
+          </div>
+          <div className="rounded-lg border p-6">
+            <h3 className="mb-2 text-lg font-semibold">Panele</h3>
+            <p className="text-sm text-muted-foreground">
+              Rozbudowany panel administratora i operatora do zarządzania sprawami.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

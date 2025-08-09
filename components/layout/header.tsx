@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogIn, LogOut, FileText, Scale, Info, Home, BookOpen, Shield } from "lucide-react"
+import { Menu, User, LogIn, LogOut, Scale } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 
 interface HeaderProps {
   onMenuToggle?: (isOpen: boolean) => void
@@ -24,31 +26,27 @@ interface HeaderProps {
   currentSection?: string
 }
 
+const nav = [
+  { href: "/o-nas", label: "O nas" },
+  { href: "/funkcje", label: "Funkcje" },
+  { href: "/cennik", label: "Cennik" },
+  { href: "/blog", label: "Blog" },
+  { href: "/asystent-ai", label: "Asystent AI" },
+  { href: "/panel-klienta", label: "Panel klienta" },
+  { href: "/panel-operatora", label: "Panel operatora" },
+  { href: "/admin", label: "Admin" },
+]
+
 export function Header({ onMenuToggle, showMenuButton = false, onNavigate, currentSection }: HeaderProps) {
   const { user, isAuthenticated, signOut } = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener("scroll", onScroll)
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
-
-  const navItems = [
-    { name: "Strona Główna", key: "home", icon: Home },
-    { name: "Asystent AI", key: "asystent-ai", icon: FileText, href: "/asystent-ai" },
-    { name: "Blog", key: "blog", icon: BookOpen, href: "/blog" },
-    { name: "Poradniki", key: "poradniki", icon: BookOpen, href: "/poradniki" },
-  ]
-
-  const informationDropdown = [
-    { name: "Regulamin", href: "/regulamin", icon: BookOpen },
-    { name: "Polityka prywatności", href: "/polityka-prywatnosci", icon: Shield },
-    { name: "RODO", href: "/rodo", icon: Shield },
-    { name: "FAQ", href: "/faq", icon: Info },
-  ]
-
-  const companyDropdown = [{ name: "Jak to działa", href: "/jak-to-dziala", icon: Info }]
 
   const getUserPanelLink = () => {
     if (!user) return "/panel-klienta"
@@ -74,65 +72,29 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all ${
+      className={`sticky top-0 z-50 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm transition-all border-b ${
         isScrolled ? "shadow-md" : ""
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg text-blue-700 dark:text-blue-400">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 max-w-7xl">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
           <Scale className="h-6 w-6" />
-          Kancelaria X
+          <span className="text-xl">Kancelaria X</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Button
-              key={item.name}
-              variant="ghost"
-              onClick={() => handleNavClick(item)}
-              className={`text-sm font-medium transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${
-                currentSection === item.key ? "text-blue-700 dark:text-blue-400" : "text-gray-600 dark:text-gray-300"
-              }`}
+        <nav className="hidden lg:flex items-center gap-4">
+          {nav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "text-sm text-muted-foreground transition-colors hover:text-foreground",
+                pathname === item.href && "text-foreground font-medium",
+              )}
             >
-              {item.name}
-            </Button>
+              {item.label}
+            </Link>
           ))}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Informacje
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              {informationDropdown.map((item) => (
-                <DropdownMenuItem key={item.name} asChild>
-                  <Link href={item.href} className="flex items-center">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Firma
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              {companyDropdown.map((item) => (
-                <DropdownMenuItem key={item.name} asChild>
-                  <Link href={item.href} className="flex items-center">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -197,14 +159,14 @@ export function Header({ onMenuToggle, showMenuButton = false, onNavigate, curre
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
                 <div className="flex flex-col gap-4 p-4">
-                  {navItems.map((item) => (
+                  {nav.map((item) => (
                     <Button
-                      key={item.name}
+                      key={item.href}
                       variant="ghost"
                       onClick={() => handleNavClick(item)}
                       className="justify-start"
                     >
-                      {item.name}
+                      {item.label}
                     </Button>
                   ))}
                 </div>

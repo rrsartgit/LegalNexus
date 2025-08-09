@@ -1,33 +1,32 @@
-import { NextResponse } from "next/server"
-import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
-import { retrieveContext } from "@/lib/rag"
+import { retrieveTopK, buildSystemPrompt } from "@/lib/rag"
+import { geminiModel } from "@/lib/ai/gemini-server"
+import { streamText } from "ai"
 
-// RAG chat endpoint using Gemini via the AI SDK.
-// Uses GOOGLE_GENERATIVE_AI_API_KEY from env (no hardcoding). [^6]
+// POST /api/chat
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json()
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Brak wiadomości" }, { status: 400 })
-    }
+    const { question, language } = await req.json()
+    const q = typeof question === "string" && question.trim().length > 0 ? question.trim() : "Brak pytania."
+    const lang: "pl" | "en" = language === "pl" || language === "en" ? language : /[ąćęłńóśźż]/i.test(q) ? "pl" : "en"
 
-    // Retrieve top-k context with embeddings + cosine similarity. [^4][^5]
-    const { context, sources } = await retrieveContext(message)
+    const { context, sources } = retrieveTopK(q, 3)
+    const system = buildSystemPrompt(lang, context)
 
-    const system =
-      "Jesteś asystentem prawnym. Odpowiadasz zwięźle i po polsku, bazując WYŁĄCZNIE na dostarczonym kontekście. " +
-      "Jeśli kontekst nie wystarcza, powiedz czego brakuje. Dodaj krótką listę kroków praktycznych."
-
-    const { text } = await generateText({
-      model: google("gemini-1.5-flash"),
+    const result = await streamText({
+      model: geminiModel,
       system,
-      prompt: `Kontekst:\n${context}\n\nPytanie użytkownika: ${message}\n\nOdpowiedź:`,
+      prompt: q,
+      maxTokens: 800,
     })
 
-    return NextResponse.json({ text, sources })
-  } catch (e) {
-    console.error(e)
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 })
+    // AI SDK helper zwraca strumień odpowiedzi HTTP kompatybilny z fetch/event-stream. [^1]
+    return result.toDataStreamResponse({
+      headers: {
+        "X-RAG-Sources": encodeURIComponent(JSON.stringify(sources)),
+      },
+    })
+  } catch (err) {
+    console.error("Chat API error:", err)
+    return new Response("Internal Server Error", { status: 500 })
   }
 }
