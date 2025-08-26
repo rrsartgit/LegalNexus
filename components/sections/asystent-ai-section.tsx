@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { BackButton } from "@/components/back-button"
 import { Bot, Send, Loader2, MessageSquare, Brain } from 'lucide-react'
-import { useChat } from "ai/react"
+import { useChat } from "@ai-sdk/react"
 import Image from "next/image"
 
 interface AsystentAISectionProps {

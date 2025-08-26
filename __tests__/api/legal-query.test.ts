@@ -1,6 +1,5 @@
 import { POST } from "@/app/api/legal-query/route"
 import { NextRequest } from "next/server"
-import jest from "jest"
 
 // Mock the Gemini API
 jest.mock("@/lib/gemini", () => ({
